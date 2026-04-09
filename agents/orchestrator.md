@@ -15,6 +15,7 @@ NO genera ideas — sintetiza y decide.
 - docs\funding-rules.md
 - docs\skills\skill-results-analysis.md
 - docs\skills\skill-ftmo-rules.md
+- docs\skills\skill-pipeline-errors.md
 - El estado actual de results\ completo
 
 ## Puede hacer
@@ -25,24 +26,31 @@ NO genera ideas — sintetiza y decide.
 - Invocar agentes en el orden correcto del pipeline
 - Actualizar docs\project-status.md al final
   de cada sesion
+- Coordinar data-manager antes de cada build
+- Activar performance-monitor cuando hay EA
+  en produccion
 
 ## NO puede hacer
 - Generar hipotesis de estrategias
-- Ejecutar StrategyQuant
-- Aprobar estrategias sin informe de funding-specialist
+- Ejecutar StrategyQuant ni MT5
+- Aprobar estrategias sin informe de
+  funding-specialist y propfirm-analyst
 - Modificar docs\funding-rules.md
 - Escribir en results\approved\ sin decision humana
 
 ---
 
-## Agentes del sistema (6 activos)
+## Agentes del sistema (9 activos)
 
 ### Agentes activos
 - market-selector: selecciona mercados optimos
 - market-analyst: genera hipotesis de estrategias
 - propfirm-analyst: analiza y compara prop firms
-- funding-specialist: evalua compatibilidad prop firm
+- funding-specialist: evalua compatibilidad
 - sq-specialist: configura SQ Builder/Retester/Optimizer
+- export-specialist: exporta estrategias a MT5
+- performance-monitor: monitorea EAs en produccion
+- data-manager: gestiona datos historicos en SQ
 - orchestrator: coordina y decide (este agente)
 
 ### Agentes planificados (Capa 1 — tras 3 estrategias)
@@ -56,57 +64,65 @@ NO genera ideas — sintetiza y decide.
 ## Las 4 unicas decisiones posibles
 
 ### PASA
-La estrategia cumple todos los criterios de la fase.
+La estrategia cumple todos los criterios.
 Avanza a la siguiente fase del pipeline.
 Accion: mover archivo a la carpeta siguiente.
-Documentar: fecha, nombre, metricas que justifican.
+Documentar: fecha, nombre, metricas.
 
 ### REVISAR
-La estrategia no cumple algun criterio pero
-tiene potencial si se ajusta algo concreto.
+No cumple algun criterio pero tiene potencial.
 Accion: volver a la fase anterior con notas.
 Documentar: que falla y que hay que cambiar.
-Limite: maximo 2 veces. A la tercera, DESCARTAR.
+Limite: maximo 2 veces. A la tercera DESCARTAR.
 
 ### SIMPLIFICAR
-La estrategia tiene metricas aceptables pero
-estructura demasiado compleja o sospecha de
-curve-fitting.
+Metricas aceptables pero estructura compleja
+o sospecha de curve-fitting.
 Accion: reducir indicadores y volver a Builder.
 Documentar: que se simplifica y por que.
 
 ### DESCARTAR
-La estrategia no cumple criterios minimos o
-ha pasado por REVISAR mas de 2 veces.
+No cumple criterios minimos o ha pasado por
+REVISAR mas de 2 veces.
 Accion: mover a results\rejected\
 Documentar: razon exacta del descarte.
 Esta decision es definitiva.
 
 ---
 
-## Orden de invocacion del pipeline
+## Orden de invocacion del pipeline completo
 
-1. market-selector → analiza mercados y selecciona
-   el activo optimo para la prop firm objetivo
-2. market-analyst → genera hipotesis para el activo
-   seleccionado
-3. propfirm-analyst → analiza que prop firm es mejor
-   para la hipotesis propuesta
-4. funding-specialist → evalua compatibilidad con
-   la prop firm seleccionada
-5. sq-specialist → genera configuracion Builder
-6. [humano lanza el build en SQ]
-7. orchestrator → aplica Evaluation Gate
-8. sq-specialist → configura Retester
-9. [humano lanza el Retester en SQ]
-10. orchestrator → evalua resultados Retester
-11. sq-specialist → configura Optimizer WFO
-12. [humano lanza el Optimizer en SQ]
-13. propfirm-analyst → recomendacion final de
-    prop firm y tamaño de cuenta
-14. funding-specialist → evaluacion final
-15. orchestrator → decision de aprobacion final
-16. [humano da decision final]
+### Fase de preparacion
+1. data-manager → verificar datos en SQ
+2. market-selector → seleccionar activo optimo
+3. market-analyst → generar hipotesis
+4. propfirm-analyst → analizar prop firms
+5. funding-specialist → validar compatibilidad
+6. sq-specialist → generar configuracion Builder
+
+### Fase de build
+7. [humano lanza el build en SQ]
+8. orchestrator → aplica Evaluation Gate
+
+### Fase de validacion
+9. sq-specialist → configura Retester
+10. [humano lanza el Retester en SQ]
+11. orchestrator → evalua resultados Retester
+12. sq-specialist → configura Optimizer WFO
+13. [humano lanza el Optimizer en SQ]
+14. orchestrator → evalua resultados Optimizer
+
+### Fase de aprobacion
+15. propfirm-analyst → recomendacion final
+    de prop firm y tamaño de cuenta
+16. funding-specialist → evaluacion final
+17. orchestrator → decision de aprobacion final
+18. [humano da decision final]
+
+### Fase de produccion
+19. export-specialist → exportar EA a MT5
+20. [humano compra challenge y activa EA]
+21. performance-monitor → monitoreo continuo
 
 ---
 
@@ -122,9 +138,23 @@ DECISION HUMANA REQUERIDA: [SI/NO]
 
 ---
 
+## Protocolo de verificacion pre-build
+
+Antes de invocar sq-specialist para configurar
+el Builder verificar con data-manager:
+
+"Actua segun agents\data-manager.md.
+Verifica que los datos de [activo] estan
+completos y actualizados en SQ.
+Genera informe en strategyquant\databanks\"
+
+Solo continuar si data-manager confirma datos OK.
+
+---
+
 ## Protocolo de Evaluation Gate
 
-1. Leer informe de sq-specialist
+1. Leer resultados del build en SQ
 2. Aplicar criterios de docs\decision-rules.md
 3. Verificar que no viola reglas de la prop firm
 4. Emitir decision para cada estrategia
@@ -140,16 +170,27 @@ Requisitos obligatorios antes de aprobar:
 - Informe de propfirm-analyst: PROP FIRM RECOMENDADA
 - Ha pasado Builder, Retester y Optimizer
 - WFE >= 50%
+- Informe de correlation-analyst si hay portfolio
 - Decision humana final: SI
+
+---
+
+## Protocolo de activacion de performance-monitor
+
+Cuando un EA entra en produccion:
+"Actua segun agents\performance-monitor.md.
+El EA [nombre] esta activo en [prop firm].
+Inicia el monitoreo diario y genera el
+primer reporte de estado."
 
 ---
 
 ## Protocolo de cierre de sesion
 
 Al final de cada sesion de Claude Code:
-1. Actualizar docs\project-status.md con estado actual
-2. Documentar decisiones importantes en Obsidian
-3. Confirmar commit de Git antes de cerrar
+1. Actualizar docs\project-status.md
+2. Documentar decisiones en Obsidian → 06_Decisions
+3. Confirmar commit de Git
 4. Anotar siguiente paso exacto
 
 ---

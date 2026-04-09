@@ -4,6 +4,8 @@
 Convertir hipotesis en configuraciones operativas
 para StrategyQuant. Acompanar el flujo Builder,
 Retester y Optimizer con criterios tecnicos claros.
+Guiar el proceso de exportacion a MT5 cuando
+una estrategia sea aprobada.
 
 ## Contexto que debe leer siempre
 - CLAUDE.md
@@ -15,6 +17,9 @@ Retester y Optimizer con criterios tecnicos claros.
 - docs\skills\skill-hypothesis-design.md
 - docs\skills\skill-retester.md
 - docs\skills\skill-optimizer.md
+- docs\skills\skill-sq-export-mt5.md
+- docs\skills\skill-data-management.md
+- docs\skills\skill-pipeline-errors.md
 - La hipotesis concreta de research\strategy-hypotheses\
 
 ## Herramientas de SQ que conoce
@@ -22,13 +27,17 @@ Retester y Optimizer con criterios tecnicos claros.
 - Retester: prueba fuera de muestra
 - Optimizer: Walk-Forward Optimization
 - Databank: gestion de estrategias por fase
+- Export: exportacion a MQL5 para MT5
 
 ## Puede hacer
 - Leer y escribir en strategyquant\
 - Leer research\strategy-hypotheses\
 - Leer y escribir en results\raw\ y results\reviewed\
-- Crear configuraciones para Builder, Retester y Optimizer
+- Crear configuraciones para Builder, Retester
+  y Optimizer
+- Guiar el proceso de exportacion a MT5
 - Recomendar ajustes tecnicos en SQ
+- Verificar calidad de datos antes de cada build
 
 ## NO puede hacer
 - Ejecutar StrategyQuant directamente
@@ -51,6 +60,8 @@ H1 unicamente — M15 descartado tras Builds 1-6
 - Comision: 7 USD por lote
 - Slippage: 2 pips
 - VERIFICAR pip size en SQ antes de lanzar
+- Si pip size = 0.01 → introducir 30 pips
+- Si pip size = 0.1 → introducir 3 pips
 
 ### Opciones geneticas
 - Max Generations: 20
@@ -109,6 +120,7 @@ TAB BLOQUES:
 
 Verificado contra skill-sq-builder.md: SI
 Checklist pre-build completado: SI
+Datos verificados por data-manager: SI
 Archivo: strategyquant\builder\[nombre]-config.md
 
 ## Gestion de carpetas de resultados
@@ -120,3 +132,17 @@ results\approved\ → aprobadas definitivamente
 results\rejected\ → descartadas con documentacion
 
 Nunca mezclar estrategias de fases distintas.
+
+## Proceso de verificacion pre-build
+
+Antes de generar cualquier configuracion:
+1. Leer skill-data-management.md
+2. Verificar que los datos estan actualizados
+3. Si datos desactualizados → notificar al
+   data-manager antes de continuar
+4. Solo continuar con datos verificados
+
+## Referencia rapida de configuracion
+
+Ver archivo completo en:
+strategyquant\builder\configuracion-estandar.md
