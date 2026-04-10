@@ -1,56 +1,15 @@
-# Skill: Contexto de Mercado
+# Skill: Contexto de Mercado — Referencia Tecnica
 
 ## Proposito
-Guia para el market-analyst.
-Define cuando usar cada estilo de estrategia segun
-las condiciones del mercado y el activo analizado.
-
----
-
-## ESTILOS DE ESTRATEGIA Y CUANDO USARLOS
-
-### Trend Following
-Logica: entrar en la direccion de la tendencia
-y mantener hasta que cambia.
-
-CUANDO FUNCIONA BIEN:
-- ADX por encima de 25 de forma consistente
-- Precio respeta claramente las medias moviles
-- Sesiones de alta liquidez (Londres, Nueva York)
-- Periodos de expansion economica o crisis prolongada
-
-CUANDO NO FUNCIONA:
-- Mercado lateral o en rango
-- ADX por debajo de 20 de forma consistente
-- Muchos falsos breakouts
-- Periodos de baja volatilidad
-
-INDICADORES CLAVE:
-- ADX > 25: tendencia fuerte
-- ADX 20-25: tendencia moderada
-- ADX < 20: mercado lateral, evitar trend following
-- EMA(50) H1: direccion de tendencia principal
-- EMA(200) H1: tendencia de largo plazo
-
-### Mean Reversion
-Logica: entrar contra la tendencia a corto plazo
-esperando que el precio vuelva a la media.
-
-CUANDO FUNCIONA BIEN:
-- ADX por debajo de 20
-- Precio oscila entre soportes y resistencias claros
-- Sesiones de baja volatilidad
-- Periodos de estabilidad economica
-
-CUANDO NO FUNCIONA:
-- Mercado en tendencia fuerte (ADX > 30)
-- Despues de noticias de alto impacto
-- En periodos de crisis
-
-INDICADORES CLAVE:
-- ADX < 20: bueno para mean reversion
-- RSI < 30 o > 70: señal de entrada
-- Bandas de Bollinger: precio en extremos
+Referencia tecnica sobre las caracteristicas de
+cada mercado disponible en el proyecto.
+Esta skill NO se usa para decidir que indicadores
+activar ni que logica proponer — SQ decide eso.
+Se usa unicamente para:
+1. Configurar comisiones correctas por activo
+2. Verificar que el activo tiene suficiente
+   volatilidad para H1
+3. Informar al market-selector para el scoring
 
 ---
 
@@ -58,115 +17,177 @@ INDICADORES CLAVE:
 
 ### Sesion de Asia (00:00 - 08:00 UTC)
 Caracter: baja volatilidad, movimientos pequeños.
-Mejor para: mean reversion, estrategias de rango.
-EUR/USD: muy poco movimiento.
+Forex: muy poco movimiento en majors.
+XAU/USD: moderada actividad.
 
 ### Sesion de Londres (08:00 - 16:00 UTC)
 Caracter: alta volatilidad, tendencias claras.
-Mejor para: trend following, breakouts.
-Pares mas activos: EUR/USD, GBP/USD.
+Pares mas activos: EUR/USD, GBP/USD, EUR/GBP.
+Indices europeos: DE40, UK100.
 
 ### Sesion de Nueva York (13:00 - 22:00 UTC)
 Caracter: alta volatilidad 13:00-17:00 UTC.
-Mejor para: trend following, continuacion de tendencia.
-Noticias clave: NFP, CPI, Fed — siempre 13:30 UTC.
+Pares activos: todos los USD.
+Indices US: US30, US500, NAS100.
+Noticias clave: NFP, CPI, Fed — 13:30 UTC.
 
 ### Solapamiento Londres-NY (13:00 - 16:00 UTC)
-Caracter: maxima liquidez del dia.
-Mejor para: trend following con ADX alto.
+Maxima liquidez del dia para Forex y metales.
+
+### Sesion 24/7 (Cripto)
+BTC/USD y ETH/USD operan 24/7.
+Mayor volatilidad en apertura US y Asia.
 
 ---
 
-## REGIMENES DE MERCADO EUR/USD
+## CARACTERISTICAS POR TIPO DE ACTIVO
 
-### Regimen de tendencia (ADX > 25)
-Anos historicos tipicos: 2014-2015, 2017, 2022.
-Estrategia recomendada: trend following H1.
-Config Builder: EMA + ADX, ventana Londres-NY.
+### Forex Majors
+Volatilidad: moderada en H1
+ATR H1 tipico: 8-15 pips (EUR/USD)
+Spread FTMO: 0.5-1.0 pips
+Ventaja: maxima liquidez, spreads bajos
+Riesgo: edge puede ser pequeño con comisiones
 
-### Regimen lateral (ADX < 20)
-Anos historicos tipicos: 2011-2013, 2019.
-Estrategia recomendada: mean reversion RSI.
-Config Builder: RSI extremos, ventana amplia.
+Activos: EUR/USD, GBP/USD, USD/JPY, USD/CHF,
+AUD/USD, NZD/USD, USD/CAD
 
-### Regimen de alta volatilidad (crisis)
-Anos tipicos: 2008-2009, 2020, 2022.
-Riesgo: drawdown puede dispararse.
-Accion: reducir tamaño de posicion.
+### Forex Crosses
+Volatilidad: moderada-alta en H1
+ATR H1 tipico: 10-25 pips segun par
+Spread FTMO: 0.8-2.0 pips
+Ventaja: mas volatilidad que majors
+Riesgo: spreads mas altos reducen el edge
 
----
+Activos: EUR/GBP, EUR/JPY, GBP/JPY, EUR/AUD,
+EUR/CHF, AUD/JPY, GBP/AUD, CAD/JPY, NZD/JPY
 
-## CARACTERISTICAS DE XAU/USD
+### Metales
+XAU/USD (Oro):
+- Volatilidad: alta en H1
+- ATR H1 tipico: 150-300 pips (1 pip = 0.01)
+- Spread FTMO: 30 pips
+- Ventaja: alta volatilidad favorece H1
+- Riesgo: spread alto puede consumir edge
+- CRITICO: verificar pip size en SQ antes de configurar
 
-### Diferencias con EUR/USD
-- Mayor volatilidad intradía
-- Spreads mucho mas altos (30 pips vs 0.5 pips)
-- Reacciona fuertemente a noticias macro
-- Correlacion inversa con USD en tendencias largas
-- Opera bien en sesion de Nueva York
+XAG/USD (Plata):
+- Volatilidad: alta en H1
+- Spread FTMO: 3 pips
+- Correlacion con oro: ~0.80
 
-### Configuracion recomendada para XAU/USD
-- Ventana de sesion: 08:00 a 20:00
-- Ratio TP/SL: minimo 2.5:1 por mayor volatilidad
-- SL: minimo 2.0 x ATR (mas amplio que EUR/USD)
-- TP: minimo 4.0 x ATR
-- Max trades por dia: 2
+### Indices
+Volatilidad: alta en H1
+ATR H1 tipico: variable segun indice
+Spread FTMO: 0.5-2.0 puntos segun indice
+Ventaja: tendencias claras en sesiones activas
+Riesgo: gaps overnight pueden afectar SL
 
-### CRITICO: Spread en SQ para XAU/USD
-1 pip en XAU/USD = 0.01 USD/oz
-Spread real FTMO en oro = aprox 30 USD/lote
-En SQ introducir: 30 pips (NO 0.5 como en EUR/USD)
-Si pip size en SQ = 0.1 → introducir 3 pips
-Verificar siempre antes de lanzar.
+Activos principales:
+- US30 (Dow): spread ~2.0 pts
+- US500 (S&P): spread ~0.5 pts
+- NAS100 (Nasdaq): spread ~1.5 pts
+- DE40 (DAX): spread ~1.5 pts
+- UK100 (FTSE): spread ~1.5 pts
+- JP225 (Nikkei): spread ~10 pts
 
----
+### Cripto
+Volatilidad: muy alta
+ATR H1 tipico: variable y alto
+Spread FTMO: alto y variable
+Ventaja: maxima volatilidad, 24/7
+Riesgo: spreads altos, comportamiento impredecible
 
-## COMBINACIONES RECOMENDADAS PARA H1
-
-### Combinacion 1 — NBAR Breakout con RSI (EUR/USD)
-Estilo: Trend Following
-Sesion: 08:00 a 20:00
-Indicadores: Highest High / Lowest Low + RSI
-SL/TP: ATR-based, ratio 2:1 minimo
-Razon: logica simple, 100% nativa en SQ,
-probada en builds anteriores
-
-### Combinacion 2 — Trend Following EMA y ADX (EUR/USD)
-Estilo: Trend Following
-Sesion: 08:00 a 20:00
-Indicadores: EMA(50) + ADX(14)
-SL/TP: ATR-based, ratio 2:1 minimo
-Razon: logica clasica con edge probado en H1
-
-### Combinacion 3 — Mean Reversion RSI (EUR/USD o XAU/USD)
-Estilo: Mean Reversion
-Sesion: 08:00 a 20:00
-Indicadores: RSI(14) extremos + EMA(200)
-SL/TP: ATR-based, ratio 2:1 minimo
-Razon: funciona bien en periodos de baja volatilidad
-
-### Combinacion 4 — NBAR Breakout (XAU/USD)
-Estilo: Trend Following
-Sesion: 08:00 a 20:00
-Indicadores: Highest High / Lowest Low + RSI
-SL: 2.0 x ATR / TP: 4.0 x ATR
-Spread en SQ: 30 pips
-Razon: alta volatilidad del oro favorece breakouts
+Activos:
+- BTC/USD: spread ~20 USD
+- ETH/USD: spread ~2 USD
+- Datos desde 2017-2018 unicamente
 
 ---
 
-## COMO ELEGIR EL ESTILO PARA UNA HIPOTESIS
+## CORRELACIONES ENTRE ACTIVOS
 
-Paso 1: Verificar ADX historico del mercado
-- Mas del 50% del tiempo ADX > 20 → trend following
-- Menos del 50% del tiempo ADX > 20 → mean reversion
+### Alta correlacion (> 0.7)
+- EUR/USD y GBP/USD: ~0.85
+- EUR/USD y EUR/GBP: ~0.70
+- AUD/USD y NZD/USD: ~0.85
+- XAU/USD y XAG/USD: ~0.80
+- US30 y US500: ~0.95
+- US500 y NAS100: ~0.85
 
-Paso 2: Elegir sesion objetivo
-- Trend following → Londres o solapamiento Londres-NY
-- Mean reversion → apertura Londres o sesion amplia
+### Correlacion moderada (0.3-0.7)
+- EUR/USD y USD/JPY: ~0.50 inversa
+- EUR/USD y XAU/USD: ~0.40
+- GBP/USD y AUD/USD: ~0.55
+- USD/JPY y US500: ~0.45
 
-Paso 3: Verificar contra skill-sq-builder.md
-Confirmar que la logica es implementable en SQ.
+### Baja correlacion (< 0.3)
+- EUR/USD y NAS100: ~0.20
+- XAU/USD y NAS100: ~0.15
+- GBP/JPY y XAU/USD: ~0.10
+- Forex y Cripto: generalmente < 0.2
 
-Paso 4: Verificar ratio TP/SL
-Minimo 2:1. Recomendado 2.5:1 o 3:1.
+---
+
+## GRUPOS DE DIVERSIFICACION
+
+Para el correlation-analyst — elegir 1 activo
+de cada grupo para maximizar diversificacion:
+
+- Grupo A: EUR/USD o GBP/USD (no ambos)
+- Grupo B: USD/JPY o USD/CHF
+- Grupo C: XAU/USD o XAG/USD (no ambos)
+- Grupo D: NAS100 o US500 (no ambos)
+- Grupo E: AUD/USD o NZD/USD (no ambos)
+- Grupo F: BTC/USD o ETH/USD (no ambos)
+- Grupo G: Crosses (EUR/GBP, GBP/JPY, etc)
+
+---
+
+## COMISIONES POR ACTIVO PARA BUILDER
+
+Verificar SIEMPRE en CLAUDE.md y con la prop firm
+objetivo antes de cada build.
+
+### Forex Majors
+- Spread: segun par (0.5-1.0 pips)
+- Comision: 7 USD por lote
+- Slippage: 0.5 pips
+
+### Forex Crosses
+- Spread: segun par (0.8-2.0 pips)
+- Comision: 7 USD por lote
+- Slippage: 0.8 pips
+
+### Metales
+- XAU/USD: spread 30 pips, comision 7 USD, slippage 2 pips
+- XAG/USD: spread 3 pips, comision 7 USD, slippage 1 pip
+
+### Indices
+- Spread: variable segun indice y prop firm
+- Comision: variable
+- VERIFICAR SIEMPRE antes de configurar
+
+### Cripto
+- Spread: alto y variable
+- VERIFICAR SIEMPRE antes de configurar
+- Mercado 24/7: ajustar opciones de negociacion
+
+---
+
+## USO DE ESTA SKILL
+
+Esta skill se usa SOLO como referencia tecnica:
+- Comisiones correctas por activo
+- Volatilidad esperada en H1
+- Correlaciones para diversificacion del portfolio
+- Caracteristicas de cada sesion de mercado
+
+Esta skill NO se usa para:
+- Decidir que indicadores activar
+- Recomendar logicas de entrada
+- Proponer estilos de estrategia
+- Sugerir configuraciones del Builder
+
+SQ decide la logica. Esta skill solo informa
+sobre las condiciones del mercado.
