@@ -1,5 +1,5 @@
 # Project Status — TradingLab
-Ultima actualizacion: 2026-04-09
+Ultima actualizacion: 2026-04-10
 
 ---
 
@@ -35,10 +35,8 @@ con gestion de portfolio consolidada, reporting automatico y alertas en tiempo r
 
 ## 2. ESTADO ACTUAL
 
-**Situacion:** Reconstruccion completa en nuevo dispositivo finalizada.
-Sistema de agentes ampliado a 10 agentes y 18 skills.
-Pipeline completamente documentado y listo para ejecutar.
-Sistema de tickets activo y vacio — pendiente de primera hipotesis.
+**Situacion:** Primer ciclo completo de agentes ejecutado en sesion 2026-04-10.
+TICKET-001 creado. Build 8 configurado y lanzado — en ejecucion.
 
 **Documentacion base:**
 - CLAUDE.md — constitucion del proyecto
@@ -51,10 +49,10 @@ Sistema de tickets activo y vacio — pendiente de primera hipotesis.
 
 **Agentes activos:** 10
 **Skills operativas:** 18 en docs\skills\
-**Tickets activos:** 0 — sistema listo, pendiente de primera hipotesis
+**Tickets activos:** 1 — TICKET-001 en fase build-running
 
-**Siguiente paso inmediato:** Invocar data-manager para verificar datos en SQ,
-luego lanzar el primer ciclo completo de agentes.
+**Siguiente paso inmediato:** Cuando Build 8 termine, anotar metricas en el ticket
+y lanzar evaluator-assistant para el Evaluation Gate.
 
 ---
 
@@ -219,23 +217,28 @@ Si se prueba M15 en el futuro: minimo 15+ trades/mes como hipotesis.
 
 ## 8. SISTEMA DE TICKETS
 
-**Estado actual:** Activo y vacio.
-El sistema esta completamente definido en `docs\skills\skill-ticket-system.md`
-pero no hay tickets abiertos porque todavia no se ha generado la primera hipotesis.
+**Estado actual:** 1 ticket activo.
 
-**Ubicacion de tickets:** `research\active-tickets\[TICKET-ID]-[nombre]\`
+| Ticket | Hipotesis | Fase | Ultima actividad |
+|--------|-----------|------|-----------------|
+| TICKET-001 | TrendFollowing-EURUSD-H1-EMA50-ADX | build-running | 2026-04-10 |
 
-**Estructura de cada ticket:**
+**Ubicacion:** `research\active-tickets\TICKET-001-TrendFollowing-EURUSD-H1-EMA50-ADX\`
+
+**Archivos del ticket:**
 - `hypothesis.md` — hipotesis original (no se modifica)
-- `evaluation-log.md` — log cronologico de observaciones de agentes
-- `gate-decisions.md` — registro de decisiones del Evaluation Gate
-- `current-phase.txt` — fase actual (preparacion / build-running / approved / etc.)
+- `evaluation-log.md` — entradas de 5 agentes: market-selector, market-analyst, propfirm-analyst, funding-specialist, sq-specialist
+- `gate-decisions.md` — sin decisiones de gate todavia
+- `current-phase.txt` — build-running
+
+**Alertas activas para el Evaluation Gate:**
+- Alerta 1: verificar gaps > 14 dias sin trades (frecuencia 6-12 t/mes)
+- Alerta 2: filtrar candidatas con DD IS > 6.5%
+- Alerta 3: contar meses con < 4 dias de trading
 
 **Protocolo de inicio de sesion:**
 Al inicio de cada sesion el orchestrator escanea `research\active-tickets\`
 y clasifica los tickets en: ACTIVO (< 48h), STALE (> 48h sin actividad), BLOQUEADO.
-
-**Nomenclatura:** `TICKET-001-NBARBreakout-H1-EURUSD`
 
 ---
 
@@ -281,45 +284,20 @@ La automatizacion sin estrategias validadas = automatizar perdidas.
 
 ## 11. SIGUIENTE ACCION CONCRETA
 
-En orden estricto de ejecucion:
+**Estado sesion 2026-04-10:** Pipeline de preparacion completado. Build 8 lanzado.
 
-1. **Invocar data-manager para verificar datos en SQ**
-   - Confirmar EUR/USD M1: simbolo EURUSD_M1_dukas, desde 2003, ~8.6M registros
-   - Confirmar XAU/USD M1: simbolo XAUUSD_M1_dukas, desde 2003, ~8.6M registros
-   - Verificar que no hay gaps significativos
-   - Verificar que los datos estan actualizados (< 30 dias)
+**Completado en esta sesion:**
+1. data-manager — datos verificados (EURUSD_M1_dukas y XAUUSD_M1_dukas, 2003-actual)
+2. market-selector — EUR/USD seleccionado (score 8.70 vs XAU/USD 7.80)
+3. market-analyst — TICKET-001 generado: TrendFollowing-EURUSD-H1-EMA50-ADX
+4. propfirm-analyst — FTMO 2-Step 25k recomendado
+5. funding-specialist — COMPATIBLE con FTMO, 3 alertas para el Gate
+6. sq-specialist — Build 8 configurado y checklist pre-build completado
+7. orchestrator — TICKET-001 creado, fase build-running
 
-2. **Invocar market-selector para confirmar activo principal**
-   - Scoring EUR/USD vs XAU/USD
-   - Confirmar EUR/USD como activo principal del primer build
-   - Guardar informe en research\market-notes\
-
-3. **Invocar market-analyst para primera hipotesis H1**
-   - Mercado: EUR/USD
-   - Temporalidad: H1
-   - Estilos a explorar: Trend-following o Mean Reversion
-
-4. **Orchestrator crea TICKET-001**
-   - Crear carpeta: research\active-tickets\TICKET-001-[nombre-hipotesis]\
-   - Copiar hypothesis.md, crear evaluation-log.md y gate-decisions.md vacios
-   - Escribir "preparacion" en current-phase.txt
-
-5. **Invocar propfirm-analyst para prop firm optima**
-   - Evaluar hipotesis vs FTMO, E8 y TFT
-   - Confirmar prop firm principal para este build
-
-6. **Invocar funding-specialist para validacion**
-   - Verificar compatibilidad teorica con FTMO 2-Step
-   - Confirmar que el estilo no esta en lista de prohibidos
-
-7. **Invocar sq-specialist para configuracion del Builder**
-   - Usar skill-precbuild-checklist.md obligatoriamente
-   - Comisiones EUR/USD: 0.5 pips + 7 USD/lote + 0.5 pip
-   - In-sample: 2003-2020 exclusivamente
-   - Actualizar current-phase.txt a "build-pending"
-
-8. **Lanzar primer build H1 con comisiones reales**
-   - Actualizar current-phase.txt a "build-running"
-   - Guardar resultados en results\raw\build-results\
-   - Invocar evaluator-assistant cuando termine el build
-   - Aplicar Evaluation Gate (decision humana) antes de pasar al Retester
+**Siguiente accion cuando Build 8 termine:**
+1. Anotar en TICKET-001 evaluation-log.md: numero de candidatas, PF maximo, DD maximo
+2. Invocar evaluator-assistant con los resultados
+3. Aplicar criterios de descarte automatico
+4. Evaluation Gate — DECISION HUMANA
+5. Si PASA: invocar sq-specialist para configurar Retester
