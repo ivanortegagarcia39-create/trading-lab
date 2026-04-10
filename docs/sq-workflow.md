@@ -1,205 +1,290 @@
-# SQ Workflow — Pipeline de Estrategias
+# SQ Workflow — Pipeline Automatico de Estrategias
 
 ## Principio fundamental
-Ninguna estrategia avanza sin pasar la puerta de decision
-de la fase anterior. Las decisiones las tomamos nosotros,
-no Claude.
+Ninguna decision del pipeline depende de un humano.
+Los criterios numericos de skill-evaluation-auto.md
+deciden que avanza y que se descarta automaticamente.
+SQ decide la logica de las estrategias.
+El pipeline de validacion filtra el sobreajuste.
 
 ---
 
 ## Fase A — Datos
 
 ### Objetivo
-Tener datos historicos de calidad antes de lanzar cualquier build.
+Tener datos historicos de calidad verificados
+por el data-manager antes de lanzar cualquier build.
 
-### Mercados iniciales
+### Mercados activos
 - EUR/USD — Forex spot
 - XAU/USD — Oro spot
 
-### Temporalidades
-- H1 principal
+### Temporalidad
+- H1 unicamente
 
 ### Minimo requerido
-- 10 anos de datos historicos por mercado
-- 18 anos recomendado (2003-2020 in-sample)
+- 17 anos de datos historicos por mercado
+- Periodo IS: 2003.05.05 a 2020.12.31
+- Periodo OOS: 2021.01.01 a fecha actual
 
 ### Fuentes
 - Dukascopy: datos M1 disponibles en SQ
 
-### Donde guardarlos
-C:\Users\ivano\trading-lab\strategyquant\databanks\
-
 ### Configuracion estandar de comisiones
-Usar siempre en Builder Y Retester:
-
 EUR/USD:
-- Desviacion (spread): 0.5 pips
-- Comision: 7 USD por lote completo
-- Deslizamiento: 0.5 pips
+- Spread: 0.5 pips
+- Comision: 7 USD por lote
+- Slippage: 0.5 pips
 
 XAU/USD:
-- Desviacion (spread): 30 pips
-- Comision: 7 USD por lote completo
-- Deslizamiento: 2 pips
+- Spread: 30 pips
+- Comision: 7 USD por lote
+- Slippage: 2 pips
 
-NOTA CRITICA XAU/USD: 1 pip = 0.01 USD/oz
-El numero a introducir en SQ depende de como
-SQ defina el pip para ese instrumento.
-Verificar siempre antes de lanzar.
-
-Periodo OOS reservado: 2021.01.01 a 2026 (fecha actual)
-Este periodo NO se usa nunca en Builder.
-Solo se usa en Retester.
-
-### Puerta de decision
-Los datos estan importados y verificados en SQ
-Data Manager? SI/NO — si NO no se lanza ningun build.
+### Puerta automatica
+data-manager verifica datos automaticamente.
+Si datos OK → continuar.
+Si datos incompletos → actualizar antes de continuar.
+Sin decision humana.
 
 ---
 
-## Fase B — Hypothesis Design
+## Fase B — Configuracion de Busqueda
 
 ### Objetivo
-Tener una hipotesis clara ANTES de abrir Builder.
-Builder sin hipotesis previa genera basura.
+Configurar el Builder libre con paleta completa
+de bloques sin restriccion de logica.
 
-### Quien la genera
-Agente market-analyst + agente funding-specialist.
+### Quien configura
+market-analyst (configurador de busqueda)
+siguiendo exactamente skill-builder-libre.md
 
-### Donde se guarda
-C:\Users\ivano\trading-lab\research\strategy-hypotheses\
+### Lo que se configura
+- Activo y temporalidad (confirmado por market-selector)
+- Comisiones reales FTMO
+- Restricciones de riesgo (ratio 2:1, 1% riesgo, etc)
+- Paleta COMPLETA de bloques activada
+- Modo continuo 24-48 horas
+- Monte Carlo activado
 
-### Formato obligatorio
-Cada hipotesis debe incluir:
-- Nombre
-- Mercado y temporalidad
-- Logica de entrada en lenguaje natural
-- Sesion objetivo
-- Condiciones de salida
-- Invalidaciones
-- Compatibilidad teorica con FTMO
+### Lo que NO se configura
+- Indicadores especificos
+- Logica de entrada
+- Hipotesis de mercado
+- Tipo de estrategia (trend/mean reversion)
 
-### Puerta de decision
-La hipotesis tiene todos los campos completos
-y tiene sentido economico? SI/NO
+SQ decide todo esto libremente.
+
+### Puerta automatica
+Verificar que la paleta esta completa y las
+comisiones son correctas. Sin decision humana.
 
 ---
 
-## Fase C — Builder
+## Fase C — Builder Libre
 
 ### Objetivo
-Explorar variantes dentro del espacio definido
-por la hipotesis. No buscar milagros.
-
-### Configuracion obligatoria antes de lanzar
-Ver docs\skills\skill-precbuild-checklist.md
-
-### Donde guardar resultados
-C:\Users\ivano\trading-lab\results\raw\build-results\
-
-### Puerta de decision
-Hay estrategias con PF > 1.5 y DD < 7%
-con comisiones reales? SI/NO
-
----
-
-## Fase D — Evaluation Gate
-
-### Objetivo
-Filtrar el output del Builder antes de retestear.
-No todo lo que genera Builder merece un Retester.
-
-### Criterios de evaluacion
-- PF >= 1.5 con comisiones reales
-- Max Drawdown < 7%
-- Numero de trades >= 100
-- Consistencia por anos > 70%
-- Logica tiene sentido economico
-
-### Decisiones posibles
-- PASA → pasa a Retester
-- REVISAR → vuelve a Builder con ajustes
-- SIMPLIFICAR → reducir complejidad
-- DESCARTAR → documentar y archivar
-
-### Donde se mueven los archivos
-Las que PASAN:
-C:\Users\ivano\trading-lab\results\reviewed\
-
-Las DESCARTADAS:
-C:\Users\ivano\trading-lab\results\rejected\
-
----
-
-## Fase E — Retester
-
-### Objetivo
-Verificar que la estrategia funciona con datos
-fuera de muestra (out-of-sample 2021-2026).
+Explorar el mayor espacio de busqueda posible
+con +100 indicadores y millones de combinaciones.
+SQ genera candidatas sin restriccion de logica.
 
 ### Configuracion
-- Periodo: 2021.01.01 a fecha actual
-- Mismas comisiones que el Builder
-- Mismo simbolo y temporalidad
+Ver docs\skills\skill-builder-libre.md
 
-### Puerta de decision
-- PF out-of-sample >= 1.3
-- PF no cae mas del 30% respecto al in-sample
-- DD out-of-sample <= 7%
+### Modo de operacion
+- Modo continuo: ACTIVADO
+- 30 generaciones por ciclo, 100 por isla, 4 islas
+- Corre 24-48 horas minimo
+- El humano lo para cuando el PF maximo
+  no suba durante 6 horas consecutivas
+
+### Donde guardar resultados
+El databank de SQ almacena hasta 1000 candidatas
+automaticamente reemplazando las peores.
+
+### Puerta automatica
+El Builder genera candidatas continuamente.
+No hay decision humana sobre que genera.
 
 ---
 
-## Fase F — Optimizer
+## Fase D — Evaluation Gate Automatico
 
 ### Objetivo
-Optimizar parametros de una estrategia que ya
-merece la pena. NO para rescatar estrategias malas.
+Filtrar las candidatas del Builder aplicando
+criterios numericos 100% automaticos.
+Sin firma humana. Sin zona gris.
 
-### Metodo
-Walk-Forward Optimization (WFO)
-- Minimo 5 ventanas
-- WFE minimo aceptable: 50%
+### Quien ejecuta
+evaluator-assistant genera informes.
+orchestrator aplica criterios de
+skill-evaluation-auto.md automaticamente.
 
-### Puerta de decision
-WFE >= 50% y parametros estables entre ventanas.
+### Criterios de descarte automatico
+Si cumple CUALQUIERA → DESCARTAR sin consultar:
+- PF IS < 1.4
+- Max DD IS > 7%
+- Trades < 80
+- Trades/mes < 8
+- Win Rate < 30%
+- Ratio TP/SL < 1.8:1
+- Años negativos > 35%
+- Mas del 45% beneficio en un mes
+- DD maximo en ultimos 3 meses IS
+- Max racha perdedora > 8 trades
+
+### Criterios de aprobacion automatica
+Si cumple TODOS → PASA al Retester sin consultar:
+- PF IS >= 1.5
+- Max DD IS <= 6%
+- Trades >= 120
+- Trades/mes >= 10
+- Win Rate >= 38%
+- Ratio TP/SL >= 2:1
+- Años positivos >= 75%
+- Ningun mes > 40% beneficio total
+- DD maximo NO en ultimos 3 meses
+- Max racha perdedora <= 6
+
+### Resultado esperado
+De ~1000 candidatas: ~200-300 pasan al Retester
 
 ---
 
-## Fase G — Aprobacion final
+## Fase E — Retester + Paso 12b Automatico
 
-### Requisitos obligatorios
-- Informe de funding-specialist: COMPATIBLE CON FTMO
-- Ha pasado Builder, Retester y Optimizer
+### Objetivo
+Verificar que las estrategias funcionan con
+datos fuera de muestra (2021-fecha actual)
+y descartar automaticamente las que no.
+
+### Configuracion Retester
+- Periodo OOS: 2021.01.01 a fecha actual
+- Comisiones IDENTICAS al Builder
+- Filtros de clasificacion DESACTIVADOS
+- Ver configuracion-estandar-retester.md
+
+### Paso 12b — Analisis de degradacion OOS
+Criterios de descarte automatico:
+- PF OOS < 1.2 → DESCARTAR
+- Caida PF > 25% → DESCARTAR
+- DD OOS > 7% → DESCARTAR
+- Frecuencia OOS cae > 50% → DESCARTAR
+
+Todo dentro de limites → PASA al WFO
+
+Sin decision humana en ningun punto.
+
+### Resultado esperado
+De ~200-300 retestadas: ~100-150 pasan al WFO
+
+---
+
+## Fase F — Optimizer WFO Automatico
+
+### Objetivo
+Verificar robustez con Walk-Forward Optimization.
+Confirmar que los parametros son estables y
+el edge se mantiene en multiples ventanas OOS.
+
+### Configuracion
+- Metodo: Walk-Forward Rolling
+- Ventanas: minimo 5, recomendado 8
+- OOS por ventana: 25-30%
+- Max 3 parametros a optimizar
+- Rangos estrechos centrados en valores del Builder
+
+### Dictamen automatico
+Criterios de descarte:
+- WFE < 40% → DESCARTAR
+- 2 ventanas negativas consecutivas → DESCARTAR
+- DD OOS > 7.5% en cualquier ventana → DESCARTAR
+- PF OOS < 1.0 en ultima ventana → DESCARTAR
+- Parametros desviacion > 35% → DESCARTAR
+
+Criterios de aprobacion:
 - WFE >= 50%
-- Decision humana final: SI
+- Max 1 ventana negativa aislada
+- DD OOS <= 7% todas las ventanas
+- PF OOS ultima ventana >= 1.1
+- Parametros desviacion < 25%
+- PF OOS promedio >= 1.25
 
-### Donde se mueve
-C:\Users\ivano\trading-lab\results\approved\
+Sin decision humana.
+
+### Resultado esperado
+De ~100-150 optimizadas: ~5-15 aprobadas
+
+---
+
+## Fase G — Portfolio Automatico
+
+### Objetivo
+Seleccionar automaticamente las combinaciones
+de estrategias que maximicen la diversificacion
+y minimicen el DD combinado del portfolio.
+
+### Quien ejecuta
+correlation-analyst aplica criterios de
+skill-portfolio-selection.md automaticamente.
+
+### Criterios de inclusion
+- Score individual >= 55/100
+- Correlacion con cada activa < 0.5
+- DD combinado < 12%
+- Max 2 estrategias por activo
+- Max 3 estrategias por estilo
+
+### Decisiones posibles
+INCLUIR → entra en el portfolio automaticamente
+ESPERA → va a cola hasta que haya espacio
+DESCARTAR → correlacion > 0.7 con 2+ activas
+
+Sin decision humana.
+
+### Resultado esperado
+De ~5-15 aprobadas: ~3-10 incluidas en portfolio
+
+---
+
+## Fase H — Produccion
+
+### Objetivo
+Desplegar las estrategias aprobadas en cuentas
+de prop firms y monitorear automaticamente.
+
+### Proceso
+1. export-specialist exporta EA a MT5
+2. Forward test en demo 2 semanas
+   (UNICA intervencion humana del pipeline)
+3. Comprar challenge en prop firm
+4. performance-monitor monitorea 24/5
+
+### Mantenimiento automatico
+- Reportes semanales del performance-monitor
+- Rebalanceo mensual del correlation-analyst
+- Si deterioro → reemplazo automatico
+- Si portfolio incompleto → nuevo ciclo Builder
 
 ---
 
 ## Resumen visual del pipeline
 
-Datos → Hypothesis → Builder → Evaluation Gate
-→ Retester → Optimizer → Aprobacion final
-→ results\approved\
+Datos → Configuracion Busqueda → Builder Libre 24-48h
+→ Evaluation Gate AUTO → Retester → Paso 12b AUTO
+→ WFO → Dictamen AUTO → Portfolio AUTO
+→ Export → Demo (humano) → Challenge → Monitor
 
-Cada flecha es una puerta.
-Sin pasar la puerta anterior no se avanza.
+Cada flecha es una puerta AUTOMATICA.
+Solo la flecha Demo→Challenge requiere humano.
 
 ---
 
-## Aprendizajes criticos de builds anteriores
+## Aprendizajes criticos
 
-Build 1-2: logica de rango asiatico no nativa en SQ
-→ Verificar siempre contra skill-sq-builder.md
+Builds 1-8: hipotesis manual + firma humana = 0 aprobadas
+Build 9+: Builder libre + evaluacion automatica
 
-Build 3: filtros demasiado estrictos y opciones
-geneticas mal configuradas
-→ Usar siempre 20 generaciones y 50 por isla
-
-Build 4: sin comisiones reales — resultados irreales
-→ Comisiones FTMO obligatorias desde el Builder
-
-Build 5-6: M15 con comisiones reales — edge insuficiente
-→ H1 como temporalidad principal
+La leccion: el humano no debe decidir la logica
+ni filtrar las estrategias. SQ genera, los numeros
+filtran, el portfolio se construye por matematica.

@@ -1,25 +1,29 @@
-# Skill: Checklist Pre-Build
+# Skill: Checklist Pre-Build — Builder Libre
 
 ## Proposito
 Lista de verificacion obligatoria que el sq-specialist
-debe completar ANTES de lanzar cualquier build en SQ.
-Si algun punto falla — NO lanzar el build hasta corregirlo.
+debe completar ANTES de lanzar cualquier build libre.
+Si algun punto falla — NO lanzar hasta corregirlo.
+
+NOTA: Este checklist es para el Builder libre.
+No hay verificacion de hipotesis porque no hay
+hipotesis. SQ decide la logica libremente.
 
 ---
 
 ## BLOQUE 1 — VERIFICACION DE DATOS
 
-[ ] Los datos del mercado estan importados en SQ
+[ ] data-manager ha verificado los datos del activo
 [ ] El simbolo correcto esta seleccionado en Builder
-[ ] La fecha de inicio del build es correcta
-[ ] La fecha de fin es 2020.12.31 o anterior
-[ ] Los datos 2021-2026 NO estan incluidos en el build
-[ ] El periodo cubre minimo 10 anos de datos
+[ ] La fecha de inicio es 2003.05.05 o anterior
+[ ] La fecha de fin es 2020.12.31
+[ ] Los datos 2021-actual NO estan incluidos en el build
+[ ] El periodo cubre minimo 17 anos de datos
 [ ] La temporalidad M1 disponible para conversion a H1
 
 VERIFICACION EN SQ:
 Gestor de datos → buscar simbolo → confirmar
-que las fechas cubren el rango del build.
+que las fechas cubren el rango completo.
 
 SEÑAL DE ALERTA:
 Build termina en menos de 2 horas con mas de
@@ -28,55 +32,55 @@ Detener y verificar.
 
 ---
 
-## BLOQUE 2 — VERIFICACION DE HIPOTESIS
-
-[ ] La hipotesis tiene todos los campos obligatorios
-[ ] La logica se explica en una frase simple
-[ ] Cada condicion verificada contra skill-sq-builder.md
-[ ] No hay logica de rango de sesion asiatica
-[ ] No hay logica de noticias economicas
-[ ] No hay logica de dias de la semana en entradas
-[ ] SL es ATR-based (no porcentaje fijo)
-[ ] TP es ATR-based con ratio minimo 2:1 sobre el SL
-[ ] Ventana de sesion minimo 6 horas
-[ ] Temporalidad H1 confirmada — no M15
-[ ] Funding-specialist ha confirmado compatibilidad FTMO
-
-SEÑAL DE ALERTA:
-Si la hipotesis menciona "rango asiatico",
-"ruptura de apertura" o "nivel dinamico" →
-revisar skill-sq-builder.md. Probablemente NO nativo.
-
----
-
-## BLOQUE 3 — VERIFICACION DE CONFIGURACION EN SQ
+## BLOQUE 2 — VERIFICACION DE CONFIGURACION BUILDER LIBRE
 
 ### Tab Datos
-[ ] Simbolo correcto segun hipotesis
-[ ] Temporalidad: H1 (no M15)
-[ ] Fecha inicio correcta
+[ ] Simbolo correcto segun market-selector
+[ ] Temporalidad: H1
+[ ] Fecha inicio: 2003.05.05
 [ ] Fecha fin: 2020.12.31
 [ ] Precision: 1 minute data tick simulation
-[ ] Comisiones configuradas segun estandar FTMO:
-    EUR/USD: 0.5 pips + 7 USD/lote + 0.5 pip slippage
-    XAU/USD: 30 pips + 7 USD/lote + 2 pips slippage
+[ ] Comisiones configuradas segun activo:
+    Verificar en CLAUDE.md las comisiones exactas
+    del activo seleccionado
 
 ### Tab Que construir
-[ ] Tipo: Simple strategy (no Multi-TF)
+[ ] Tipo: Simple strategy
+[ ] Condiciones de entrada: Min 1, Max 3
 [ ] Stop Loss required: ACTIVADO — ATR-based
-[ ] Take Profit required: ACTIVADO — ATR-based ratio >= 2:1
+    Multiplicador: 1.5 a 3.0
+[ ] Take Profit required: ACTIVADO — ATR-based
+    Multiplicador: 3.0 a 6.0
+    Ratio minimo sobre SL: 200%
 [ ] Direcciones: Long y Short habilitados
 
+### Tab Bloques de construccion
+[ ] TODOS los indicadores de tendencia activados
+[ ] TODOS los indicadores de momentum activados
+[ ] TODOS los indicadores de volatilidad activados
+[ ] TODOS los indicadores de precio puro activados
+[ ] TODAS las señales predefinidas activadas
+[ ] TODOS los operators activados
+[ ] Ningun bloque desactivado manualmente
+[ ] Tipos de salida: solo SL y TP requeridos
+[ ] Tope dinamico: DESACTIVADO
+[ ] Trailing: DESACTIVADO
+[ ] Salida por barras: DESACTIVADO
+
+CRITICO: Si algun indicador o señal esta
+desactivado manualmente el build tiene sesgo
+humano. Activar TODO sin excepcion.
+
 ### Tab Opciones geneticas
-[ ] Max Generations: 20
-[ ] Population Size: 50 por isla
+[ ] Max Generations: 30
+[ ] Population Size: 100 por isla
 [ ] Islands: 4
-[ ] Start again when finished: DESACTIVADO
+[ ] Start again when finished: ACTIVADO
 [ ] Filter initial population: sin filtro
 
 ### Tab Opciones de negociacion
 [ ] Limitar intervalo de tiempo: ACTIVADO
-[ ] Rango: 08:00 a 20:00 (minimo 6 horas)
+[ ] Rango: 08:00 a 20:00
 [ ] Maximo trades por dia: 2
 [ ] Salida al final del dia: ACTIVADO
 [ ] No comercie fines de semana: ACTIVADO
@@ -88,31 +92,24 @@ revisar skill-sq-builder.md. Probablemente NO nativo.
 [ ] Capital inicial: 25.000$
 
 ### Tab Clasificacion
-[ ] Maximum strategies: 500
-[ ] Filtro Factor de beneficio: > 0.8
-[ ] Filtro Transacciones medias al mes: > 8
-[ ] Filtro Ratio Ret/DD: > 0.5
+[ ] Maximum strategies: 1000
+[ ] Stop generation: Never
+[ ] Factor de beneficio: > 1.3
+[ ] Transacciones medias al mes: > 6
+[ ] Ratio Ret/DD: > 0.8
 [ ] Ranking: Aptitud ponderada
     PF: Maximice Peso 3
     Max Drawdown: Minimizar Peso 2
     Trades: Maximice Peso 1
 
-### Tab Bloques de construccion
-[ ] Signals: solo los de la hipotesis
-[ ] Indicadores: solo los de la hipotesis
-[ ] Operators: activados si hay indicadores
-[ ] Tipos de salida: solo SL y TP requeridos
-[ ] Tope dinamico: DESACTIVADO
-[ ] Trailing: DESACTIVADO
-[ ] Salida por barras: DESACTIVADO
-
 ### Tab Comprobaciones cruzadas
 [ ] Mayor precision: ACTIVADO
+[ ] Monte Carlo gestion de operaciones: ACTIVADO
 [ ] Todo lo demas: DESACTIVADO
 
 ---
 
-## BLOQUE 4 — VERIFICACION FINAL ANTES DE INICIO
+## BLOQUE 3 — VERIFICACION FINAL ANTES DE INICIO
 
 [ ] Resumen en pestana Progreso muestra:
     - Simbolo correcto
@@ -121,61 +118,91 @@ revisar skill-sq-builder.md. Probablemente NO nativo.
     - Sesion 08:00-20:00
     - Risk 1% of account
     - Comisiones aplicadas
+    - Start again: ACTIVADO
+    - Stop generation: Never
+    - Monte Carlo: ACTIVADO
+    - Max strategies: 1000
 [ ] Commit de Git hecho antes de lanzar
-[ ] Databank de resultados vacio antes de lanzar
-[ ] Ordenador disponible durante el build
-[ ] Build nocturno si dura mas de 4 horas
+[ ] Ordenador disponible durante 24-48 horas
+[ ] Paleta COMPLETA de bloques verificada
 
 ---
 
-## BLOQUE 5 — MONITOREO DURANTE EL BUILD
+## BLOQUE 4 — MONITOREO DURANTE EL BUILD
 
-### Primera revision a los 30 minutos
+### Primera revision a los 60 minutos
 [ ] Estrategias generandose a ritmo normal
-[ ] Tiempo estimado coherente (6-12h para 18 anos H1)
-[ ] "En la base de datos" empieza a subir
+[ ] Candidatas empezando a aparecer en databank
+[ ] PF maximo del databank subiendo
 
-SEÑAL DE ALERTA:
-- 0 en databank con > 500 generadas → filtros estrictos
-- Build termina en menos de 2 horas → datos insuficientes
-- Error en pantalla → detener y revisar
+### Señales de que todo va bien
+- Candidatas con PF > 1.3 aparecen en el databank
+- El numero de candidatas crece cada hora
+- PF maximo sigue subiendo periodicamente
 
-### Si el build termina con malos resultados
-1. Cuantas estrategias se generaron en total?
-2. Cual es el PF maximo de las generadas?
-3. Cual es el numero maximo de trades?
+### Señales de problema
+- 0 candidatas en databank tras 4 horas
+  → Verificar comisiones (error mas comun)
+  → Verificar que los datos cubren el periodo
+  → NO restringir bloques como solucion
+- Build termina solo antes de 2 horas
+  → Datos insuficientes — verificar con data-manager
 
-PF maximo < 1.2 → hipotesis no funciona
-PF maximo 1.2-1.5 → filtros demasiado estrictos
-Trades maximo < 30 → problema de datos o sesion corta
+---
+
+## CUANDO PARAR EL BUILD
+
+Señales de que es momento de parar:
+1. PF maximo no mejora en 6+ horas consecutivas
+2. Se han completado mas de 5 ciclos completos
+3. Hay mas de 50 candidatas con PF > 1.5
+4. Han pasado 72 horas
+
+Señales de que hay que seguir:
+1. PF maximo sigue subiendo cada hora
+2. El databank se llena rapidamente
+3. Menos de 20 candidatas con PF > 1.5
+4. Menos de 24 horas de ejecucion
 
 ---
 
 ## TIEMPO ESTIMADO DE BUILD
 
-5 anos M1 en H1: 1-2 horas
-10 anos M1 en H1: 2-4 horas
-15 anos M1 en H1: 4-8 horas
-18 anos M1 en H1: 6-12 horas
+Modo continuo por ciclo (30 gen x 100 x 4 islas):
+- 1 ciclo: 6-12 horas segun activo
+- 24 horas: 2-4 ciclos completos
+- 48 horas: 4-8 ciclos completos
+- 72 horas: 6-12 ciclos completos
 
-Build termina mucho antes de lo estimado
-→ datos no cubren el periodo completo.
+Recomendacion minima: 48 horas.
+El Builder libre necesita mas tiempo que el
+Builder con hipotesis porque explora un espacio
+de busqueda mucho mayor.
 
 ---
 
-## APRENDIZAJES CRITICOS
+## DIFERENCIAS CON EL CHECKLIST ANTERIOR
 
-Build 1-2: logica asiatica no nativa en SQ
-→ Verificar siempre contra skill-sq-builder.md
+| Aspecto | Antes | Ahora |
+|---------|-------|-------|
+| Verificacion hipotesis | Obligatoria | NO EXISTE |
+| Bloques activados | Solo los de la hipotesis | TODOS |
+| Generaciones | 20 | 30 por ciclo |
+| Poblacion | 50 por isla | 100 por isla |
+| Modo | Se para solo | Continuo |
+| Max estrategias | 500 | 1000 |
+| PF filtro | > 0.8 | > 1.3 |
+| Monte Carlo | Desactivado | ACTIVADO |
+| Stop generation | Databank full | Never |
 
-Build 3: filtros estrictos y 100 generaciones
-→ Usar siempre 20 generaciones y 50 por isla
+---
 
-Build 4: sin comisiones reales
-→ Comisiones FTMO obligatorias desde el Builder
+## REGLA FUNDAMENTAL
 
-Build 5-6: M15 con comisiones reales
-→ H1 como temporalidad principal siempre
-
-Build 7: primer build correcto con H1 y comisiones
-→ Referencia para todos los builds futuros
+El checklist verifica configuracion tecnica
+y restricciones de riesgo.
+NO verifica logica de entrada — no hay logica
+predefinida. SQ decide libremente.
+Si alguien pide verificar la hipotesis antes
+del build → recordar que no hay hipotesis.
+Builder libre. Sin sesgo humano.

@@ -1,10 +1,11 @@
-# Skill: Comparacion de Prop Firms
+# Skill: Comparacion de Prop Firms — Multi-Activo
 
 ## Proposito
-Base de conocimiento para el agente propfirm-analyst.
-Permite comparar las principales prop firms del mercado
-y determinar cual es la mas compatible con cada activo
-y tipo de estrategia.
+Base de conocimiento para el propfirm-analyst
+y el market-selector. Permite comparar las
+principales prop firms del mercado y determinar
+cual es la mas compatible con cada activo.
+El scoring numerico decide — no la preferencia.
 
 ---
 
@@ -13,76 +14,58 @@ y tipo de estrategia.
 ### 1. FTMO
 Web: ftmo.com
 Modelo: Challenge 2-Step
-Mercados: Forex, Indices, Metales, Criptos, Acciones
+Mercados: Forex, Indices, Metales, Criptos
 Apalancamiento: hasta 1:100 Forex, 1:50 Indices
 
 Reglas clave:
-- Challenge: +10% objetivo, 5% daily loss, 10% max DD
-- Verification: +5% objetivo, mismos limites DD
-- Daily Loss: DINAMICO — recalculo medianoche Praga
-- Max DD: DINAMICO — solo sube
+- Challenge: +10% objetivo, 5% daily loss dinamico,
+  10% max DD dinamico
+- Verification: +5% objetivo, mismos limites
 - Dias minimos: 4 con posiciones iniciadas
 - Sin Regla del Mejor Dia en 2-Step
 - EAs: permitidos — no HFT, no martingala
-- Noticias: permitido operar en Challenge
 
 Profit split: 80% base, hasta 90% con scaling
-Precio challenge 10k: ~155 EUR
-Precio challenge 25k: ~250 EUR
-Precio challenge 50k: ~345 EUR
+Precios: 10k ~155€, 25k ~250€, 50k ~345€
 
-Mejor para:
-- Trend following H1 en EUR/USD y GBP/USD
-- Estrategias de baja frecuencia (2-4 trades/dia)
-- Traders que quieren escalar gradualmente
+Activos compatibles:
+- Forex Majors: TODOS ✓
+- Forex Crosses: TODOS ✓
+- XAU/USD: SI ✓
+- XAG/USD: SI ✓
+- US30, US500, NAS100: SI ✓
+- DE40, UK100, JP225: SI ✓
+- BTC/USD, ETH/USD: SI ✓
 
 ---
 
-### 2. MyFundedFutures (MFF)
-Web: myfundedfutures.com
-Modelo: 1-Step y 2-Step
-Mercados: Futuros CME (ES, NQ, CL, GC, 6E)
-Apalancamiento: segun margen de futuros CME
+### 2. E8 Funding
+Web: e8funding.com
+Modelo: 2-Step
+Mercados: Forex, Metales, Indices, Criptos
+Apalancamiento: hasta 1:100
 
 Reglas clave:
-- Objetivo: +8% (1-Step) / +6% (2-Step)
-- Daily Loss: fijo segun cuenta
-- Max DD: trailing drawdown (sube con ganancias)
-- Sin dias minimos en algunos modelos
-- EAs: totalmente permitidos
-- Operacion 24/5
+- Objetivo: +8% fase 1, +5% fase 2
+- Daily Loss: 5% fijo
+- Max DD: 8% fijo (menor que FTMO)
+- Dias minimos: 3 dias
+- EAs: permitidos
+- Sin restricciones de noticias
 
-Profit split: 80-90%
-Mejor para:
-- Estrategias en futuros (ES, NQ, GC)
-- Alta frecuencia de trades
-- EAs completamente automatizados
+Profit split: 80% base
 
----
-
-### 3. TopStep
-Web: topstep.com
-Modelo: Trading Combine (1 fase)
-Mercados: Futuros CME exclusivamente
-Apalancamiento: segun margen CME
-
-Reglas clave:
-- Objetivo: +6% en Trading Combine
-- Daily Loss: fijo 2% (muy estricto)
-- Max DD: trailing drawdown
-- Dias minimos: sin requisito
-- EAs: permitidos con restricciones
-- No operar durante noticias importantes
-
-Profit split: 90% primeros 10k, 80% resto
-Mejor para:
-- Futuros ES y NQ
-- Estrategias intraday
-- Traders con disciplina de riesgo estricta
+Activos compatibles:
+- Forex Majors: TODOS ✓
+- Forex Crosses: MAYORIA ✓
+- XAU/USD: SI ✓
+- XAG/USD: SI ✓
+- Indices: SI ✓
+- Cripto: SI ✓
 
 ---
 
-### 4. The Funded Trader (TFT)
+### 3. The Funded Trader (TFT)
 Web: thefundedtrader.com
 Modelo: Standard, Rapid, Royal
 Mercados: Forex, Metales, Indices, Criptos
@@ -97,10 +80,42 @@ Reglas clave:
 - Regla de consistencia: mejor dia < 50% total
 
 Profit split: 80% base, hasta 90%
-Mejor para:
-- Forex y metales
-- Estrategias con consistencia diaria
-- Traders que quieren mayor apalancamiento
+
+ALERTA: Max DD trailing es mas peligroso que
+el DD dinamico de FTMO para EAs con drawdown
+inicial antes de recuperarse.
+
+Activos compatibles:
+- Forex: TODOS ✓
+- Metales: SI ✓
+- Indices: SI ✓
+- Cripto: SI ✓
+
+---
+
+### 4. MyFundedFutures (MFF)
+Web: myfundedfutures.com
+Modelo: 1-Step y 2-Step
+Mercados: Futuros CME exclusivamente
+Apalancamiento: segun margen CME
+
+Reglas clave:
+- Objetivo: +8% (1-Step) / +6% (2-Step)
+- Daily Loss: fijo segun cuenta
+- Max DD: trailing drawdown
+- Sin dias minimos en algunos modelos
+- EAs: totalmente permitidos
+
+Profit split: 80-90%
+
+Activos compatibles:
+- Forex spot: NO ✗
+- Metales spot: NO ✗
+- ES (S&P futures): SI ✓
+- NQ (Nasdaq futures): SI ✓
+- GC (Gold futures): SI ✓
+- CL (Oil futures): SI ✓
+- 6E (Euro futures): SI ✓
 
 ---
 
@@ -116,138 +131,137 @@ Reglas clave:
 - Max DD: trailing
 - Sin dias minimos
 - EAs: totalmente permitidos
-- Una de las mas flexibles del mercado
+- Maxima flexibilidad del mercado
 
 Profit split: 100% primeros 25k luego 90%
-Mejor para:
-- Futuros con EAs completamente automatizados
-- Alta frecuencia
-- Maxima flexibilidad operativa
+
+Activos compatibles:
+- Forex spot: NO ✗
+- Metales spot: NO ✗
+- ES, NQ, GC, CL, 6E: SI ✓
 
 ---
 
-### 6. E8 Funding
-Web: e8funding.com
-Modelo: 2-Step
-Mercados: Forex, Metales, Indices, Criptos
-Apalancamiento: hasta 1:100
+### 6. TopStep
+Web: topstep.com
+Modelo: Trading Combine (1 fase)
+Mercados: Futuros CME exclusivamente
+Apalancamiento: segun margen CME
 
 Reglas clave:
-- Objetivo: +8% fase 1, +5% fase 2
-- Daily Loss: 5% fijo
-- Max DD: 8% fijo
-- Dias minimos: 3 dias
-- EAs: permitidos
-- Sin restricciones de noticias
+- Objetivo: +6% en Trading Combine
+- Daily Loss: 2% fijo (MUY estricto)
+- Max DD: trailing
+- Sin dias minimos
+- EAs: permitidos con restricciones
+- No operar durante noticias importantes
 
-Profit split: 80% base
-Mejor para:
-- Forex y metales con EAs
-- Estrategias con DD controlado
-- Traders que buscan menor DD maximo
+Profit split: 90% primeros 10k, 80% resto
+
+ALERTA: Daily Loss del 2% es extremadamente
+restrictivo para EAs. Considerar solo para
+estrategias con DD diario < 1%.
+
+Activos compatibles:
+- Solo futuros CME ✓
 
 ---
 
 ## TABLA COMPARATIVA RAPIDA
 
-| Prop Firm | Mercados      | Objetivo | Daily DD | Max DD | EAs  | Split |
-|-----------|---------------|----------|----------|--------|------|-------|
-| FTMO      | Forex+Indices | 10%+5%   | 5% din   | 10%din | SI   | 80-90%|
-| MFF       | Futuros CME   | 8%+6%    | Fijo     | Trail  | SI   | 80-90%|
-| TopStep   | Futuros CME   | 6%       | 2% fijo  | Trail  | SI*  | 90%   |
-| TFT       | Forex+Indices | 8%+5%    | 5% fijo  | 10%tr  | SI   | 80-90%|
-| Apex      | Futuros CME   | 6%       | Trail    | Trail  | SI   | 100%  |
-| E8        | Forex+Indices | 8%+5%    | 5% fijo  | 8%fijo | SI   | 80%   |
+| Prop Firm | Forex | Metales | Indices | Cripto | Futuros | DD tipo | Split |
+|-----------|-------|---------|---------|--------|---------|---------|-------|
+| FTMO | SI | SI | SI | SI | NO | Dinamico | 80-90% |
+| E8 | SI | SI | SI | SI | NO | Fijo 8% | 80% |
+| TFT | SI | SI | SI | SI | NO | Trail 10% | 80-90% |
+| MFF | NO | NO | NO | NO | SI | Trail | 80-90% |
+| Apex | NO | NO | NO | NO | SI | Trail | 100%/90% |
+| TopStep | NO | NO | NO | NO | SI | 2% fijo | 90%/80% |
 
 ---
 
 ## COMPATIBILIDAD POR ACTIVO
 
-### EUR/USD (Forex spot)
-Prop firms compatibles:
-- FTMO: excelente — mercado principal
-- TFT: muy bueno — alto apalancamiento
-- E8: bueno — sin restricciones noticias
-- MFF: NO — solo futuros CME
-- TopStep: NO — solo futuros CME
-- Apex: NO — solo futuros CME
+### Forex Majors (EUR/USD, GBP/USD, USD/JPY, etc)
+- FTMO: EXCELENTE — mercado principal
+- E8: MUY BUENO — DD fijo 8% es ventaja
+- TFT: BUENO — trailing DD es riesgo
+- MFF, Apex, TopStep: NO COMPATIBLE
 
-Mejor opcion: FTMO para empezar
-Segunda opcion: E8 o TFT
+Mejor opcion Forex: FTMO (DD dinamico favorable)
+Alternativa: E8 (DD fijo menor)
 
-### XAU/USD (Oro spot)
-Prop firms compatibles:
-- FTMO: bueno — permite metales
-- TFT: bueno
-- E8: bueno
-- MFF: SI pero como GC futuros — diferente instrumento
-- TopStep: SI pero como GC futuros
-- Apex: SI pero como GC futuros
+### Metales (XAU/USD, XAG/USD)
+- FTMO: BUENO — spreads mas altos
+- E8: BUENO — sin restricciones noticias
+- TFT: ACEPTABLE — trailing DD con oro es riesgo
+- MFF, Apex, TopStep: NO (solo futuros GC/SI)
 
-Mejor opcion: FTMO
-Nota: XAU/USD spot y GC futuros tienen spreads
-y comportamiento diferente — no son equivalentes
+Mejor opcion metales spot: FTMO
+Para futuros GC: Apex (100% profit split)
 
-### NQ (Nasdaq Futures)
-Prop firms compatibles:
-- MFF: excelente — mercado principal
-- TopStep: excelente
-- Apex: excelente — 100% profit split
-- FTMO: SI pero como indice spot (US100)
-- TFT: SI como indice
-- E8: SI como indice
+### Indices spot (US30, US500, NAS100, DE40)
+- FTMO: BUENO — indices como CFD
+- E8: BUENO
+- TFT: ACEPTABLE
+- MFF, Apex, TopStep: NO (solo futuros ES, NQ)
 
-Mejor opcion: Apex o MFF para futuros puros
-Segunda opcion: FTMO para indice spot
+Mejor opcion indices spot: FTMO
+Para futuros indices: Apex o MFF
 
-### GC (Gold Futures CME)
-Prop firms compatibles:
-- MFF: excelente
-- TopStep: bueno
-- Apex: excelente
-- FTMO: NO directamente — usa XAU/USD spot
-- TFT: NO directamente
+### Cripto (BTC/USD, ETH/USD)
+- FTMO: ACEPTABLE — spreads altos
+- E8: ACEPTABLE
+- TFT: ACEPTABLE
+- MFF, Apex, TopStep: NO
 
-Mejor opcion: Apex o MFF
+Mejor opcion cripto: E8 (sin restricciones noticias)
+ALERTA: Spreads cripto muy altos — verificar
+que el edge sobrevive a las comisiones.
 
 ---
 
-## CRITERIOS DE SELECCION DE PROP FIRM
+## SELECCION AUTOMATICA DE PROP FIRM POR ACTIVO
 
-### Para estrategias Forex (EUR/USD, GBP/USD)
-1. FTMO — mejor ecosistema y reputacion
-2. E8 — menor max DD (8% vs 10%)
-3. TFT — mayor apalancamiento disponible
+El propfirm-analyst aplica estos criterios
+automaticamente sin preferencia humana:
 
-### Para estrategias en Futuros (NQ, GC, ES)
-1. Apex — 100% profit split primeros 25k
-2. MFF — muy flexible con EAs
-3. TopStep — mayor reputacion en futuros
+### Paso 1: Filtrar prop firms compatibles
+Eliminar las que no permiten el activo.
 
-### Para automatizacion total con EAs
-1. Apex — maxima flexibilidad
-2. MFF — sin restricciones para EAs
-3. FTMO — bueno pero mas regulado
+### Paso 2: Comparar DD tipo
+- DD dinamico (FTMO): mejor para EAs con DD inicial
+- DD fijo (E8): predecible y seguro
+- DD trailing (TFT, Apex): peligroso para EAs
+  con drawdown antes de recuperarse
 
----
+### Paso 3: Comparar coste del challenge
+Menor coste = menor riesgo financiero para probar.
 
-## PROCESO DE SELECCION RECOMENDADO
+### Paso 4: Comparar profit split
+Mayor split = mayor beneficio a largo plazo.
 
-Paso 1: Identificar el activo principal de la estrategia
-Paso 2: Filtrar prop firms compatibles con ese activo
-Paso 3: Comparar Daily Loss Limit y Max DD
-Paso 4: Verificar compatibilidad con EAs
-Paso 5: Considerar precio del challenge y profit split
-Paso 6: Seleccionar la prop firm optima
+### Paso 5: Scoring automatico
+Calcular score por prop firm para ese activo:
+- Compatibilidad DD con la estrategia: peso 35%
+- Profit split: peso 25%
+- Coste del challenge: peso 20%
+- Reputacion y estabilidad: peso 20%
+
+La prop firm con mayor score se recomienda
+automaticamente. Sin preferencia humana.
 
 ---
 
 ## NOTAS IMPORTANTES
 
 - Las reglas de las prop firms cambian frecuentemente
-- Verificar siempre en la web oficial antes de comprar
+- El propfirm-analyst debe verificar reglas actuales
+  en la web oficial antes de recomendar
+- El trailing DD es significativamente mas peligroso
+  que el DD dinamico o fijo para EAs
+- Los spreads de cripto e indices pueden ser
+  mucho mayores que Forex — verificar siempre
 - Algunas prop firms tienen descuentos periodicos
-- El trailing drawdown es mas peligroso que el estatico
-  para EAs con drawdown inicial antes de recuperarse
-- FTMO es la mas establecida y regulada del mercado
+- FTMO es la mas establecida y regulada
 - Apex tiene la politica mas flexible para EAs

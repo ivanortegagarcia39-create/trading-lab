@@ -1,9 +1,11 @@
-# Skill: Analisis de Resultados de Builder
+# Skill: Analisis Automatico de Resultados
 
 ## Proposito
-Guia para el orchestrator y el sq-specialist.
+Guia para el evaluator-assistant y el orchestrator.
 Define como interpretar las metricas del Builder
-y tomar decisiones correctas en el Evaluation Gate.
+y aplicar decisiones automaticas en el Evaluation Gate.
+Todas las decisiones son por numeros.
+Sin firma humana. Sin REVISAR. Sin SIMPLIFICAR.
 
 ---
 
@@ -12,142 +14,174 @@ y tomar decisiones correctas en el Evaluation Gate.
 ### Profit Factor (PF)
 Formula: ganancias brutas / perdidas brutas
 
-Interpretacion:
-PF < 1.0 → pierde dinero. Descartar siempre.
-PF 1.0-1.3 → marginal. Solo revisar si logica es solida.
-PF 1.3-1.5 → aceptable para Retester con cautela.
-PF 1.5-2.0 → bueno. Avanzar al Retester.
-PF > 2.0 → muy bueno. Prioridad en Retester.
-PF > 3.0 → sospechoso de curve-fitting. Revisar.
-
-SEÑAL DE ALERTA:
-PF > 3 con trades < 100 = casi seguro curve-fitting.
+Umbrales automaticos:
+PF < 1.4 → DESCARTAR automatico
+PF 1.4-1.5 → zona de decision automatica
+  (ver skill-evaluation-auto.md para reglas)
+PF >= 1.5 → candidata para aprobacion
+PF > 3.0 → sospechoso de sobreajuste — verificar
+  con señales de curve-fitting
 
 ### Max Drawdown
-Interpretacion para FTMO (cuenta 25.000$):
-DD > 7% → zona de peligro. Revisar.
-DD > 10% → viola limite FTMO. Descartar siempre.
-DD 5-7% → aceptable con cautela.
-DD < 5% → muy bueno.
-
-SEÑAL DE ALERTA:
-DD bajo con PF alto puede indicar que el periodo
-no incluye momentos de crisis (2008, 2015, 2020).
+Umbrales automaticos para FTMO (cuenta 25.000$):
+DD > 7% → DESCARTAR automatico
+DD 6-7% → zona de decision automatica
+DD <= 6% → candidata para aprobacion
+DD < 3% → verificar que no es por falta de trades
 
 ### Numero de Trades
-< 50 trades → insuficiente. Descartar siempre.
-50-100 trades → marginal. Solo avanzar si PF > 1.8.
-100-200 trades → aceptable.
-> 200 trades → bueno.
-> 500 trades → muy bueno para estadistica.
+< 80 trades → DESCARTAR automatico
+80-120 trades → zona de decision automatica
+>= 120 trades → candidata para aprobacion
+> 500 trades → excelente para estadistica
 
 ### Trades por mes
-< 8 trades/mes → muy pocos para H1. Revisar sesion.
-8-20 trades/mes → aceptable.
-> 20 trades/mes → bueno para objetivo FTMO.
+< 8 trades/mes → DESCARTAR automatico
+8-10 trades/mes → zona de decision automatica
+>= 10 trades/mes → candidata para aprobacion
 
 ### Win Rate
+< 30% → DESCARTAR automatico
+30-38% → zona de decision automatica
+>= 38% → candidata para aprobacion
+
 Win Rate bajo (35-45%) con PF alto →
-estrategia de tendencia. Normal y valido en H1.
+estrategia de tendencia. Normal en H1.
 
 Win Rate alto (60-80%) con PF bajo →
-SL grande y TP pequeño. Peligrosa para FTMO.
+SL grande y TP pequeno. Peligrosa para FTMO.
 
-Combinacion ideal para FTMO:
-Win Rate 40-55% con PF > 1.5 y ratio TP/SL >= 2:1
+### Ratio TP/SL efectivo
+< 1.8:1 → DESCARTAR automatico
+>= 2:1 → candidata para aprobacion
 
 ### Ratio Rentabilidad / Reduccion
-RR < 1 → arriesga mas de lo que gana. Revisar.
-RR 1-2 → aceptable.
-RR > 2 → bueno.
-RR > 5 → muy bueno.
+RR < 0.8 → DESCARTAR automatico
+RR >= 1.5 → candidata para aprobacion
+
+### Max racha perdedora
+> 8 trades consecutivos → DESCARTAR automatico
+<= 6 trades consecutivos → candidata para aprobacion
 
 ---
 
-## SEÑALES DE CURVE-FITTING
+## SEÑALES DE SOBREAJUSTE (CURVE-FITTING)
 
-1. PF > 3 con trades < 100
-2. Todo el beneficio concentrado en un mes o trimestre
-3. Funciona perfectamente en un periodo y muy mal resto
-4. Parametros muy especificos (EMA de 47 en vez de 50)
-5. DD maximo en los ultimos meses — se esta deteriorando
-6. Resultado mejora drasticamente al ampliar el SL
+Cada señal detectada aumenta el riesgo.
+2 o mas señales activas → DESCARTAR automatico.
 
----
-
-## PROTOCOLO DE EVALUATION GATE
-
-### Paso 1: Filtro rapido
-Eliminar inmediatamente:
-- PF < 1.3 con comisiones reales
-- Trades < 80
-- DD > 8%
-
-### Paso 2: Revision de consistencia
-Para las que quedan verificar:
-- Tiene anos con PF negativo?
-  Si mas del 30% de anos negativos → DESCARTAR
-- El beneficio viene de un solo trimestre? → REVISAR
-- DD maximo en los ultimos 2 anos? → SEÑAL DE ALERTA
-
-### Paso 3: Verificacion FTMO
-- DD simulado < 7% → OK
-- Daily DD simulado < 3% → OK
-- Ratio TP/SL >= 2:1 → OK
-- SL y TP definidos → OK
-- Trades por mes >= 20 → OK
-
-### Paso 4: Decision final
-PASA → PF >= 1.5, DD < 7%, Trades >= 100,
-       consistencia por anos > 70%, ratio >= 2:1
-REVISAR → PF 1.3-1.5 con logica solida
-SIMPLIFICAR → PF bueno pero demasiadas condiciones
-DESCARTAR → cualquier otro caso
+1. PF > 3.0 con trades < 100
+2. Mas del 45% del beneficio en un solo mes
+3. Solo funciona en 2 anos o menos
+4. DD maximo en los ultimos 3 meses del IS
+5. Resultado mejora drasticamente al ampliar el SL
+6. Años con PF < 1.0 superan el 35%
+7. Monte Carlo muestra degradacion significativa
 
 ---
 
-## DIAGNOSTICO RAPIDO DE BUILDS FALLIDOS
+## ANALISIS DE CONSISTENCIA POR ANOS
 
-Build termina en menos de 2 horas con > 200 estrategias:
-→ Datos no cubren el periodo completo
-→ Verificar fechas en Gestor de datos
+Para cada estrategia candidata verificar:
 
-Build termina en tiempo normal pero 0 aceptadas:
-→ Filtros demasiado estrictos
-→ Relajar filtros en Clasificacion
+Años con PF >= 1.0: contar como positivos
+Años con PF < 1.0: contar como negativos
 
-Build genera estrategias pero PF maximo < 1.2:
-→ Hipotesis no funciona con comisiones reales
-→ SIMPLIFICAR o nueva hipotesis
+Porcentaje de anos positivos:
+< 65% → DESCARTAR automatico
+65-75% → zona de decision automatica
+  (ver skill-evaluation-auto.md)
+>= 75% → candidata para aprobacion
 
-PF maximo 1.2-1.5 pero 0 en databank:
-→ Filtros cortando candidatas validas
-→ Bajar umbral PF a 0.7 en Clasificacion
+Años negativos que coinciden con crisis conocidas
+(2008, 2015, 2020) son aceptables.
+Años negativos en periodos normales son señal
+de estrategia fragil.
 
 ---
 
-## APRENDIZAJES DE BUILDS ANTERIORES
+## PROTOCOLO DE EVALUATION GATE AUTOMATICO
 
-Build 1-2 (LARB M15):
-Logica de rango asiatico no nativa en SQ.
-PF maximo: no medido — descartado antes.
+### Paso 1: Filtro rapido automatico
+Eliminar inmediatamente todas las candidatas
+que cumplan CUALQUIER criterio de descarte
+de skill-evaluation-auto.md.
+Sin consultar al humano.
 
-Build 3 (EMACross-ADX M15):
-Filtros demasiado estrictos. 0 aceptadas.
-Solucion: relajar filtros y opciones geneticas.
+### Paso 2: Aprobacion automatica
+Aprobar inmediatamente todas las candidatas
+que cumplan TODOS los criterios de aprobacion
+de skill-evaluation-auto.md.
+Sin consultar al humano.
 
-Build 4 (EMACross-ADX M15 sin comisiones):
-6 candidatas con PF 1.53-1.70.
-Problema: sin comisiones reales — resultados irreales.
+### Paso 3: Zona de decision automatica
+Para candidatas entre descarte y aprobacion
+aplicar las reglas automaticas de la zona
+definidas en skill-evaluation-auto.md.
+Sin consultar al humano.
 
-Build 5 (EMACross-ADX M15 con comisiones):
-PF maximo 1.27. Edge insuficiente en M15.
-Decision: DESCARTAR hipotesis.
+### Resultado
+Generar resumen con:
+- Total candidatas evaluadas
+- Total descartadas (con criterio exacto por cada una)
+- Total aprobadas para Retester
+- Lista de aprobadas ordenadas por PF
 
-Build 6 (NBARBreakout-RSI M15 con comisiones):
-PF maximo 1.18. DD hasta 68% en algunos casos.
-Decision: REVISAR — cambiar a H1.
+---
 
-Build 7 (NBARBreakout-RSI H1 con comisiones):
-En curso en el momento de crear este archivo.
-Primer build con H1 y comisiones reales correctas.
+## DIAGNOSTICO DE BUILDS CON POCOS RESULTADOS
+
+### Build con 0 candidatas en databank tras 24h
+Causas posibles (en orden de probabilidad):
+1. Comisiones incorrectas → verificar
+2. Datos no cubren el periodo → verificar con data-manager
+3. Filtros de clasificacion demasiado estrictos
+   → verificar PF > 1.3 (no subir mas)
+4. Activo con muy poco edge en H1
+   → NO es culpa de la paleta de bloques
+   → considerar otro activo
+
+CRITICO: La solucion NUNCA es restringir
+los bloques de construccion. Si el Builder libre
+con paleta completa no encuentra nada es porque
+el activo no tiene edge suficiente con las
+restricciones de riesgo actuales.
+
+### Build con candidatas pero PF maximo < 1.4
+El activo puede no tener edge suficiente
+en H1 con comisiones reales.
+Accion: probar el siguiente activo en la lista
+de prioridad del market-selector.
+
+### Build con muchas candidatas PF > 2.0
+Puede ser buena señal o señal de sobreajuste.
+El pipeline de validacion (Retester, 12b, WFO)
+lo filtrara automaticamente.
+NO descartar por PF alto — dejar que el
+pipeline decida con datos OOS.
+
+---
+
+## TASAS DE DESCARTE ESPERADAS
+
+En el Evaluation Gate del Builder libre:
+- ~60-70% descartadas por criterios automaticos
+- ~20-30% aprobadas para Retester
+- ~5-10% en zona de decision automatica
+
+Estas tasas son NORMALES. Un Builder libre genera
+muchas estrategias mediocres junto con las buenas.
+El pipeline existe para separar unas de otras
+automaticamente.
+
+---
+
+## REGLA FUNDAMENTAL
+
+Todas las decisiones son automaticas por numeros.
+No hay REVISAR — la estrategia pasa o se descarta.
+No hay SIMPLIFICAR — SQ decidio la complejidad.
+No hay firma humana — los criterios de
+skill-evaluation-auto.md son definitivos.
+No hay segunda oportunidad — es mas eficiente
+generar 1000 nuevas que arreglar una dudosa.

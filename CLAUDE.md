@@ -1,192 +1,165 @@
 # CLAUDE.md — Constitucion del Proyecto TradingLab
 
 ## Proposito del proyecto
-Desarrollar un sistema 100% automatico de generacion,
-validacion y despliegue de estrategias de trading
+Sistema 100% automatico de generacion, validacion
+y despliegue de portfolios de estrategias de trading
 algoritmico para superar cuentas de fondeo (prop firms).
-Sin sesgo humano en la seleccion de estrategias.
-Sin intervencion humana en las decisiones del pipeline.
+Sin sesgo humano en ninguna decision del pipeline.
+Multi-activo. Multi-prop firm. Multi-estrategia.
 
 ## Filosofia del proyecto
-El mercado no sabe lo que el humano piensa que
-deberia funcionar. Los Builds 1-8 fallaron porque
-un humano decidia que indicadores usar y SQ solo
-podia buscar dentro de ese espacio limitado.
-
-Principios fundamentales:
+4 principios inquebrantables:
 1. SQ decide la logica de entrada — no el humano
 2. Los numeros deciden que avanza — no la intuicion
 3. El portfolio se construye por correlacion — no por preferencia
-4. La unica intervencion humana es el forward test en demo
+4. Los activos se priorizan por scoring — no por gusto
 
-## Definicion de robustez
-Una estrategia es robusta si cumple TODOS estos
-criterios numericos sin excepcion:
-- PF IS >= 1.5
-- PF OOS >= 1.3
-- Caida PF IS→OOS <= 20%
-- Max DD <= 6.5% en IS y OOS
-- WFE >= 50%
-- Trades >= 120 en IS
-- Años positivos >= 75%
-- Monte Carlo sin degradacion significativa
-- Correlacion < 0.5 con cada estrategia del portfolio
+La unica intervencion humana es el forward test
+en demo antes del challenge real.
 
-Si falla UN solo criterio → se descarta automaticamente.
+## Por que esta filosofia
+Builds 1-8: hipotesis humana + firma humana = 0 aprobadas
+Build 9+: Builder libre + evaluacion automatica + multi-activo
 
-## Rol de Claude en este proyecto
-Claude actua como orquestador automatico.
-Claude aplica criterios numericos sin subjetividad.
-Claude coordina agentes en el orden correcto.
-Claude NO toma decisiones basadas en intuicion.
-Claude NO da segunda oportunidad a estrategias descartadas.
-Claude NO genera hipotesis de logica de entrada.
+El sesgo humano fue el problema. No la herramienta.
+No el mercado. No la configuracion. El humano.
 
 ## Sistema de agentes (11 activos)
-
-### Agentes operativos
-1. market-selector — selecciona activo optimo
-2. market-analyst — configura parametros de busqueda
-   (NO genera hipotesis — rol rediseñado)
-3. propfirm-analyst — analiza y compara prop firms
+1. market-selector — prioriza activos por scoring numerico
+2. market-analyst — configura Builder libre (NO genera hipotesis)
+3. propfirm-analyst — compara prop firms automaticamente
 4. funding-specialist — evalua compatibilidad FTMO
-5. sq-specialist — configura SQ y genera informes
+5. sq-specialist — configura SQ y genera informes tecnicos
 6. evaluator-assistant — genera informes Evaluation Gate
 7. correlation-analyst — gestiona portfolio automatico
 8. export-specialist — exporta estrategias a MT5
 9. performance-monitor — monitorea EAs en produccion
-10. data-manager — gestiona datos historicos en SQ
-11. orchestrator — coordina y decide automaticamente
-
-### Agentes planificados
-- risk-manager — gestion de riesgo avanzada
-- news-researcher — contexto macro
-
-## Enfoque de generacion de estrategias
-Builder libre de SQ con paleta completa de
-+100 indicadores. Sin hipotesis humana.
-Sin restriccion de logica de entrada.
-
-Lo que el humano define: restricciones de riesgo
-Lo que SQ define: logica de entrada
-Lo que el pipeline filtra: sobreajuste
-
-Configuracion completa en:
-docs\skills\skill-builder-libre.md
-
-## Pipeline 100% automatico
-
-Fase 1 — Preparacion:
-data-manager → market-selector → market-analyst
-(configurar Builder libre)
-
-Fase 2 — Build:
-SQ Builder libre corriendo 24-48h en modo continuo
-1000+ candidatas en databank
-
-Fase 3 — Evaluacion automatica:
-evaluator-assistant → orchestrator aplica
-criterios de skill-evaluation-auto.md
-~200-300 pasan al Retester
-
-Fase 4 — Validacion automatica:
-Retester → paso 12b → WFO
-Criterios automaticos en cada puerta
-~5-15 estrategias aprobadas
-
-Fase 5 — Portfolio automatico:
-correlation-analyst selecciona combinaciones
-~3-10 incluidas en portfolio
-
-Fase 6 — Produccion:
-export-specialist → forward test demo
-(UNICA intervencion humana)
-→ challenge → performance-monitor
-
-Criterios numericos completos en:
-docs\skills\skill-evaluation-auto.md
+10. data-manager — gestiona datos de todos los activos
+11. orchestrator — coordina y decide 100% automatico
 
 ## Universo de mercados
-Mercados activos:
-- EUR/USD (Forex spot — datos en SQ)
-- XAU/USD (Oro spot — datos en SQ)
 
-Mercados pendientes:
-- GBP/USD, USD/JPY — Capa 1
-- GC, NQ (futuros CME) — Capa 2
+### Forex Majors (Dukascopy M1 desde 2003)
+EUR/USD, GBP/USD, USD/JPY, USD/CHF,
+AUD/USD, NZD/USD, USD/CAD
 
-Temporalidad: H1 unicamente
+### Forex Crosses (Dukascopy M1 desde 2003)
+EUR/GBP, EUR/JPY, GBP/JPY, EUR/AUD,
+EUR/CHF, AUD/JPY, GBP/AUD, CAD/JPY, NZD/JPY
 
-## Prop firm principal
-FTMO Challenge 2-Step — cuenta 25.000 USD
-Reglas completas en: docs\funding-rules.md
+### Metales (Dukascopy M1 desde 2003)
+XAU/USD (Oro), XAG/USD (Plata)
 
-Puntos criticos:
-- Daily Loss 5% DINAMICO
-- Max DD 10% DINAMICO solo sube
-- Min 4 dias con posiciones INICIADAS
-- Sin Regla del Mejor Dia en 2-Step
-- Margenes operativos: 3% daily, 7% max DD
+### Indices (Dukascopy M1 disponible)
+US30 (Dow), US500 (S&P), NAS100 (Nasdaq),
+DE40 (DAX), UK100 (FTSE), JP225 (Nikkei)
 
-## Objetivo de portfolio
-Portfolio minimo: 3 estrategias no correlacionadas
-Portfolio optimo: 5 estrategias no correlacionadas
-Correlacion maxima entre cualquier par: 0.5
-DD combinado maximo: 12%
+### Cripto (datos desde 2017-2018)
+BTC/USD, ETH/USD
 
-Criterios en: docs\skills\skill-portfolio-selection.md
+Total: 30+ activos disponibles.
+Priorizados automaticamente por scoring numerico.
+El market-selector decide el orden — no el humano.
 
-## Configuracion estandar FTMO
-Obligatoria en TODOS los builds y retests:
+## Temporalidad
+H1 unicamente para todos los activos.
 
-EUR/USD:
-- Spread: 0.5 pips
+## Comisiones por activo
+Cada activo tiene comisiones especificas que
+deben verificarse con la prop firm objetivo
+ANTES de cada build.
+
+### Forex Majors
+- Spread: 0.5-1.0 pips segun par
 - Comision: 7 USD por lote
 - Slippage: 0.5 pips
 
-XAU/USD:
-- Spread: 30 pips
+### Forex Crosses
+- Spread: 0.8-2.0 pips segun par
 - Comision: 7 USD por lote
-- Slippage: 2 pips
+- Slippage: 0.8 pips
 
-Periodo IS: 2003.05.05 a 2020.12.31
-Periodo OOS: 2021.01.01 a fecha actual
+### Metales
+XAU/USD: Spread 30 pips + 7 USD + 2 pip slippage
+XAG/USD: Spread 3 pips + 7 USD + 1 pip slippage
+
+### Indices
+- Spread y comision variable segun prop firm
+- Verificar SIEMPRE antes de configurar
+
+### Cripto
+- Spread alto y variable
+- Mercado 24/7 — ajustar opciones de negociacion
+- Verificar SIEMPRE antes de configurar
+
+## Enfoque de generacion
+Builder libre con paleta completa de +100 indicadores.
+Sin hipotesis humana. Sin restriccion de logica.
+Modo continuo 24-48 horas por activo.
+Configuracion en: docs\skills\skill-builder-libre.md
+
+## Pipeline 100% automatico
+Preparacion → Builder libre 24-48h →
+Evaluation Gate AUTO → Retester → Paso 12b AUTO →
+WFO → Dictamen AUTO → Portfolio AUTO →
+Export → Demo (unico humano) → Challenge → Monitor
+
+Criterios numericos en: docs\skills\skill-evaluation-auto.md
+
+## Objetivo de portfolio
+- Minimo: 3 estrategias no correlacionadas
+- Optimo: 5 estrategias en activos diferentes
+- Maximo: 8 estrategias activas
+- Correlacion maxima entre par: 0.5
+- DD combinado maximo: 12%
+- Diversificacion por activo, estilo y grupo
+
+Criterios en: docs\skills\skill-portfolio-selection.md
+
+## Prop firms objetivo
+- FTMO 2-Step: Forex + Metales + Indices
+- E8 Funding: Forex + Metales
+- TFT: Forex + Metales + Indices
+- Apex: Futuros CME (cuando haya datos)
+- MFF: Futuros CME (cuando haya datos)
+
+El propfirm-analyst decide automaticamente
+que prop firm es optima para cada estrategia
+y activo. Sin preferencia humana.
 
 ## Reglas inquebrantables
 1. SQ decide la logica — nunca el humano
 2. Los numeros deciden — nunca la intuicion
-3. Sin segunda oportunidad para estrategias descartadas
-4. Comisiones reales FTMO en todos los builds
-5. H1 como temporalidad principal
-6. Ratio TP/SL minimo 2:1
-7. Riesgo 1% por trade (ajustable por portfolio)
-8. Max 2 trades por dia
-9. Datos OOS nunca en el Builder
-10. Mismas comisiones en Builder y Retester
+3. Los activos se priorizan por score — no por gusto
+4. Sin segunda oportunidad para descartadas
+5. Comisiones reales verificadas antes de cada build
+6. H1 como temporalidad para todos los activos
+7. Ratio TP/SL minimo 2:1
+8. Riesgo ajustable por tamaño de portfolio
+9. Max 2 trades por dia por estrategia
+10. Datos OOS nunca en el Builder
 11. Forward test demo obligatorio antes de challenge
-12. Portfolio por correlacion no por preferencia
+12. Portfolio por correlacion y diversificacion
 13. CLAUDE.md no se modifica sin consenso
 
 ## Intervencion humana permitida
 SOLO en estos momentos:
-- Lanzar y parar el Builder en SQ
+- Pulsar Inicio/Parar en SQ
 - Lanzar Retester y Optimizer en SQ
 - Forward test en demo (2 semanas)
 - Comprar challenge en prop firm
-- Revision semanal del estado del sistema
-- Ajustar umbrales del sistema si es necesario
+- Revision semanal del estado
+- Ajustar umbrales del sistema si necesario
 
 En NINGUN otro momento el humano decide nada.
 
-## Historial de builds
-Builds 1-8: enfoque con hipotesis humana — TODOS FALLIDOS
-Build 9+: enfoque Builder libre sin sesgo humano
+## Historial
+Builds 1-8: enfoque hipotesis humana — TODOS FALLIDOS
+Build 9+: enfoque Builder libre multi-activo sin sesgo
 
 ## Roadmap
-Capa 0: pipeline automatico manual (estado actual)
-Capa 1: expansion mercados tras 3 estrategias
-Capa 2: N8N + Claude API — ciclos continuos
-Capa 3: automatizacion total con MT5
-Capa 4: escalado multi-prop firm
-
-Detalle en: docs\roadmap-v2.md
+Capa 0: pipeline automatico multi-activo (actual)
+Capa 1: expansion completa de mercados
+Capa 2: N8N + Claude API — ciclos autonomos
+Capa 3: MT5 operando solo multi-prop firm
+Capa 4: escalado y rebalanceo automatico

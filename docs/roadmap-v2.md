@@ -1,264 +1,256 @@
-# Roadmap V2 — Vision Completa TradingLab
+# Roadmap V2 — Sistema Automatico TradingLab
 
 ## Objetivo final
-Automatizacion total del pipeline de trading algoritmico:
-desde el analisis de mercados hasta la operacion autonoma
-en cuentas de fondeo de multiples prop firms.
+Sistema 100% automatico multi-activo multi-prop firm
+que genera, valida, despliega y monitorea portfolios
+de estrategias de trading algoritmico sin intervencion
+humana en las decisiones.
 
 ---
 
 ## ESTADO ACTUAL
-- 6 agentes operativos
-- 11 skills especializadas
-- Pipeline manual funcionando
-- Objetivo inmediato: 3 estrategias aprobadas
+- 11 agentes operativos
+- 22 skills especializadas
+- Builder libre sin sesgo humano
+- Evaluation Gate 100% automatico
+- correlation-analyst activo
+- 30+ activos disponibles
+- Pipeline de validacion completo
 
 ---
 
-## CAPA 0 — Ahora (pipeline manual)
+## CAPA 0 — Ahora (pipeline automatico multi-activo)
 
 ### Objetivo
-Conseguir las primeras estrategias aprobadas
-con el pipeline manual actual.
+Generar el primer portfolio de 3-5 estrategias
+no correlacionadas en activos diferentes.
 
 ### Proceso
-market-selector → market-analyst → propfirm-analyst
-→ funding-specialist → sq-specialist → Builder
-→ Evaluation Gate → Retester → Optimizer
-→ Aprobacion final
+market-selector prioriza activos por scoring →
+market-analyst configura Builder libre →
+SQ genera candidatas 24-48h →
+Evaluation Gate automatico →
+Retester → paso 12b automatico →
+WFO → dictamen automatico →
+correlation-analyst construye portfolio →
+export-specialist → forward test demo (unico humano)
 
-### Mercados activos
-- EUR/USD H1
-- XAU/USD H1
+### Mercados disponibles
+30+ activos priorizados por scoring numerico:
+Forex Majors, Forex Crosses, Metales, Indices, Cripto
+El market-selector decide el orden — no el humano.
 
 ### Prop firms objetivo
-- FTMO 2-Step como principal
-- E8 y TFT como alternativas Forex
+- FTMO: Forex + Metales + Indices + Cripto
+- E8: Forex + Metales + Indices
+- TFT: Forex + Metales + Indices
+- Apex: Futuros CME (cuando haya datos)
+- MFF: Futuros CME (cuando haya datos)
+
+El propfirm-analyst decide automaticamente
+cual es la optima para cada estrategia y activo.
 
 ### Criterio de salida de Capa 0
-3 estrategias aprobadas con PF >= 1.5 OOS
+Portfolio de 3 estrategias no correlacionadas
+operando en cuentas de prop firms.
 
 ---
 
-## CAPA 1 — Expansion (tras 3 estrategias aprobadas)
+## CAPA 1 — Expansion (tras portfolio de 3 estrategias)
 
 ### Nuevos agentes
 
-#### technical-analyst
-Analisis tecnico avanzado — patrones, soportes,
-resistencias, zonas de valor.
-Archivo: agents\technical-analyst.md
-
-#### correlation-analyst
-Correlaciones entre activos del portfolio.
-Evita estrategias correlacionadas.
-Archivo: agents\correlation-analyst.md
-
 #### risk-manager
-Gestion de riesgo de portfolio completo.
-Verifica exposicion total antes de aprobar.
+Gestion de riesgo de portfolio en tiempo real.
+Calcula exposicion total considerando todas
+las estrategias y cuentas activas.
 Archivo: agents\risk-manager.md
 
 #### news-researcher
-Contexto macro y noticias.
-Identifica periodos anomalos en datos historicos.
+Contexto macro automatico.
+Identifica periodos anomalos en los datos.
+Ajusta el riesgo del portfolio en eventos macro.
 Archivo: agents\news-researcher.md
 
 ### Expansion de mercados
-- GBP/USD (datos disponibles en Dukascopy)
-- USD/JPY (datos disponibles en Dukascopy)
-- NQ cuando tengamos datos de futuros CME
-- GC cuando tengamos datos de futuros CME
+Descargar datos de todos los activos pendientes
+priorizados por el market-selector.
+Lanzar ciclos de Builder libre para cada activo.
 
-### Expansion de prop firms
-Analizar y documentar en skill-propfirms-comparison.md:
-- MyFundedFutures para futuros NQ y GC
-- Apex Trader Funding para maxima flexibilidad EAs
-- TopStep para futuros CME
+### Expansion de portfolio
+- Ampliar de 3 a 5 estrategias activas
+- Maximizar diversificacion entre activos y estilos
+- Reducir riesgo por estrategia segun tamaño
 
 ### Skills nuevas Capa 1
-- skill-parallel-hypotheses.md
-- skill-portfolio-correlation.md
-- skill-pipeline-errors.md
-- skill-sq-export-mt5.md
+- skill-risk-realtime.md
+- skill-news-impact.md
+- skill-multi-account.md
 
 ---
 
-## CAPA 2 — Orquestador autonomo (tras 5+ estrategias)
+## CAPA 2 — Ciclos autonomos (tras 5+ estrategias)
 
 ### Objetivo
-El orquestador deja de ser reactivo y pasa a ser
-completamente autonomo — decide y ejecuta sin
-que el usuario tenga que escribir prompts.
+El sistema lanza ciclos de Builder, evalua y
+despliega estrategias sin que el humano tenga
+que iniciar cada paso manualmente.
 
 ### Tecnologia
-N8N como plataforma de automatizacion central:
-- Instalacion local en Windows
-- Interfaz visual para workflows
-- Conexion con API de Anthropic (requiere API Key)
+N8N como plataforma de automatizacion:
+- Instalacion local o servidor
+- Conexion con Claude API (requiere API Key)
 - Conexion con SQ Remote Control API
-- Conexion con Telegram/Discord para notificaciones
+- Conexion con Telegram/Discord para alertas
 - Conexion con Google Sheets para reporting
 
 ### Flujo automatizado Capa 2
 
-Usuario envia mensaje en Telegram:
-"Genera una hipotesis para GBP/USD"
+N8N detecta que el portfolio necesita mas estrategias
         ↓
-N8N recibe el mensaje
+N8N llama a Claude API → market-selector
         ↓
-N8N llama a Claude API con prompt de market-selector
+Prioriza siguiente activo por scoring
         ↓
-Claude analiza mercados y selecciona activo
+N8N llama a Claude API → market-analyst
         ↓
-N8N llama a Claude API con prompt de market-analyst
+Configura Builder libre para ese activo
         ↓
-Claude genera hipotesis
+N8N lanza SQ Builder via Remote Control
         ↓
-N8N llama a Claude API con prompt de propfirm-analyst
+Builder corre 48 horas automaticamente
         ↓
-Claude recomienda prop firm optima
+N8N para el Builder y lee resultados
         ↓
-N8N llama a Claude API con prompt de funding-specialist
+N8N llama a Claude API → orchestrator
         ↓
-Claude valida compatibilidad
+Evaluation Gate automatico
         ↓
-N8N llama a Claude API con prompt de sq-specialist
+N8N lanza Retester via Remote Control
         ↓
-Claude genera configuracion del Builder
+Paso 12b automatico
         ↓
-N8N notifica al usuario via Telegram:
-"Configuracion lista para GBP/USD — lanza el build"
+N8N lanza WFO via Remote Control
         ↓
-Usuario lanza el build en SQ manualmente
+Dictamen WFO automatico
         ↓
-Cuando termina el build, usuario notifica a N8N
+correlation-analyst decide inclusion en portfolio
         ↓
-N8N invoca orchestrator para Evaluation Gate
+Si incluida → N8N notifica por Telegram:
+"Nueva estrategia aprobada para [activo].
+Activar forward test en demo."
         ↓
-... continua el pipeline automaticamente
+Humano hace forward test (unica intervencion)
+        ↓
+Humano confirma → N8N despliega EA en MT5
 
-### Decisiones que SIEMPRE requieren humano
-- Evaluation Gate — decision final
-- Aprobacion final de estrategia
-- Lanzar builds en SQ (hasta tener SQ Remote Control)
-- Intentar un challenge en prop firm
+### Intervencion humana en Capa 2
+- Forward test en demo (2 semanas)
+- Comprar challenge en prop firm
+- Revision semanal del sistema
+- Ajustar umbrales si necesario
 
-### Requisitos tecnicos Capa 2
-- API Key de Anthropic (no plan Pro)
-- N8N instalado localmente o en servidor
+### Requisitos tecnicos
+- API Key de Anthropic
+- N8N instalado
 - SQ Remote Control activado
-- Cuenta de Telegram o Discord
-- Costo estimado por ciclo: 0.10-0.30$ en API
+- Telegram o Discord
+- Costo estimado: 0.10-0.50$ por ciclo completo
 
 ---
 
 ## CAPA 3 — Automatizacion total (sistema maduro)
 
 ### Objetivo
-Automatizacion completa de principio a fin:
-desde el analisis de mercados hasta la operacion
-autonoma en cuentas de fondeo.
+Todo automatico excepto la compra del challenge
+y el forward test en demo.
 
 ### Componentes
 
-#### SQ Remote Control
-- N8N controla SQ directamente via API REST
-- Lanza builds automaticamente
-- Lee resultados sin intervencion humana
-- Aplica Evaluation Gate automaticamente
+#### SQ Remote Control completo
+N8N controla SQ directamente:
+- Lanza builds para multiples activos en paralelo
+- Lee resultados automaticamente
+- Ejecuta Retester y WFO sin intervencion
+- Aplica pipeline completo sin humano
 
-#### MT5 EA Deployment
-- Estrategias aprobadas se exportan de SQ a MT5
-- EA opera autonomamente en cuenta de fondeo
-- N8N monitorea rendimiento en tiempo real
-- Alertas automaticas si DD se acerca a limites
+#### MT5 EA Deployment automatico
+- Estrategias aprobadas se exportan automaticamente
+- EA se activa en cuenta demo automaticamente
+- Tras 2 semanas exitosas notifica al humano
+- Humano solo compra challenge y confirma
 
 #### Multi-prop firm management
-- Sistema gestiona multiples cuentas en paralelo
-- EUR/USD en FTMO
-- NQ en Apex o MFF
-- GC en MFF
-- Reporting consolidado en Google Sheets
+- Portfolio distribuido en multiples prop firms
+- EUR/USD en FTMO + E8
+- XAU/USD en FTMO
+- NAS100 en FTMO + TFT
+- Futuros en Apex + MFF
+- Reporting consolidado automatico
 
-#### Decision autonoma de challenges
-- Sistema analiza cuando una estrategia esta lista
-- Recomienda prop firm y tamaño de cuenta
-- Notifica al usuario para decision final de compra
-- El usuario solo aprueba o rechaza el challenge
+#### Reemplazo automatico de estrategias
+- performance-monitor detecta deterioro
+- correlation-analyst busca reemplazo en cola
+- Si no hay reemplazo → lanza nuevo ciclo Builder
+- Todo sin intervencion humana
 
-### Flujo completamente automatizado Capa 3
-
-N8N detecta que hay slots disponibles para nuevas estrategias
-        ↓
-Lanza ciclo completo automaticamente:
-market-selector → hipotesis → validacion →
-configuracion → build en SQ → evaluation →
-retester → optimizer → aprobacion
-        ↓
-Si estrategia aprobada → exportar EA a MT5
-        ↓
-EA opera autonomamente en cuenta de fondeo
-        ↓
-N8N monitorea DD y rendimiento 24/5
-        ↓
-Si DD se acerca al limite → alerta a usuario
-        ↓
-Reporting diario automatico via Telegram
-
-### Decisiones que siempre requieren humano en Capa 3
+### Intervencion humana en Capa 3
 - Comprar challenge en prop firm
-- Aprobar estrategia para produccion
-- Responder alertas criticas de DD
-- Cambios en reglas de prop firms
+- Revision semanal del sistema
+- Ajustar umbrales si necesario
 
 ---
 
-## CAPA 4 — Escalado (vision a largo plazo)
+## CAPA 4 — Escalado (vision largo plazo)
 
 ### Objetivo
-Escalar el sistema a multiples prop firms,
-multiples activos y multiples traders.
+Escalar el sistema a maxima capacidad.
 
 ### Componentes
-- Portfolio de 10+ estrategias aprobadas
-- 3+ prop firms activas simultaneamente
+- Portfolio de 8+ estrategias activas
+- 3+ prop firms operando simultaneamente
 - Cuentas en multiples tamaños (10k, 25k, 50k, 100k)
-- Sistema de correlacion de portfolio automatico
-- Risk manager de portfolio en tiempo real
+- Rebalanceo automatico mensual
+- Expansion continua a nuevos activos
+- Risk manager en tiempo real
+- Reporting automatico diario por Telegram
 
 ---
 
-## ORDEN DE IMPLEMENTACION GLOBAL
+## ORDEN DE IMPLEMENTACION
 
 AHORA (Capa 0):
-→ Primer build H1 con comisiones reales
-→ Evaluation Gate y Retester
-→ 3 estrategias aprobadas
+→ Descargar datos de activos prioritarios
+→ Lanzar Builder libre multi-activo
+→ Pipeline automatico completo
+→ Primer portfolio de 3 estrategias
 
-CAPA 1 (tras 3 estrategias):
-→ 4 agentes nuevos
-→ GBP/USD y USD/JPY
-→ Skills adicionales
+CAPA 1 (tras portfolio de 3):
+→ risk-manager y news-researcher
+→ Expansion a 5 estrategias
+→ Todos los activos descargados
 
-CAPA 2 (tras 5+ estrategias):
-→ N8N instalado y configurado
-→ API Key de Anthropic activada
-→ Orquestador semi-autonomo
-
-CAPA 3 (tras sistema estable):
+CAPA 2 (tras 5 estrategias):
+→ N8N instalado
+→ API Key Anthropic
 → SQ Remote Control
-→ MT5 EA deployment
-→ Multi-prop firm management
+→ Ciclos autonomos
 
-CAPA 4 (vision largo plazo):
-→ Portfolio completo
-→ Escalado a multiples cuentas
+CAPA 3 (sistema estable):
+→ MT5 deployment automatico
+→ Multi-prop firm
+→ Reemplazo automatico
+
+CAPA 4 (escalado):
+→ 8+ estrategias
+→ 3+ prop firms
+→ Cuentas grandes
 
 ---
 
-## REGLA FUNDAMENTAL QUE NO CAMBIA
+## REGLA FUNDAMENTAL
 
-Nunca expandir antes de tener el proceso anterior estable.
-La automatizacion sin estrategias validadas = automatizar perdidas.
-Primero estrategias robustas, luego automatizacion.
+Nunca expandir antes de estabilizar la capa anterior.
+Automatizar sin estrategias validadas = automatizar perdidas.
+Pero ahora las estrategias las encuentra SQ libremente
+y los numeros deciden — no el humano.

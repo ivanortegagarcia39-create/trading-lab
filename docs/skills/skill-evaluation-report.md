@@ -1,186 +1,192 @@
-# Skill: Formato de Informe de Evaluacion
+# Skill: Formato de Informe de Evaluacion Automatico
 
 ## Proposito
-Define el formato exacto que debe usar el
-evaluator-assistant para generar informes
-estructurados del Evaluation Gate.
-El objetivo es que el humano solo tenga que
-leer el informe y firmar la decision.
+Define el formato exacto que usa el evaluator-assistant
+para generar informes estructurados del Evaluation Gate.
+Los informes son para documentacion y trazabilidad.
+La decision la toman los numeros automaticamente —
+no hay firma humana.
 
 ---
 
 ## FORMATO COMPLETO DEL INFORME
 
-Usar este formato exacto para cada estrategia
-candidata que supere el filtro inicial (PF > 1.3).
+Usar este formato para cada estrategia candidata
+que supere el filtro inicial del databank (PF > 1.3).
 
 ---
 
-# EVALUATION GATE REPORT
+# EVALUATION GATE REPORT — AUTOMATICO
 
 Estrategia: [nombre o ID de la estrategia]
+Build numero: [N]
+Activo: [simbolo]
 Fecha del build: [fecha]
 Fecha del informe: [fecha]
 Generado por: evaluator-assistant
+Decision por: orchestrator-auto (sin humano)
 
 ---
 
 ## 1. METRICAS PRINCIPALES
 
-| Metrica | Valor | Umbral | Estado |
-|---------|-------|--------|--------|
-| Profit Factor | [valor] | >= 1.5 | OK / ALERTA |
-| Max Drawdown | [valor]% | < 7% | OK / ALERTA |
-| Daily Drawdown max | [valor]% | < 3% | OK / ALERTA |
-| Trades totales | [numero] | >= 100 | OK / ALERTA |
-| Trades por mes | [numero] | >= 20 | OK / ALERTA |
-| Win Rate | [valor]% | >= 40% | OK / ALERTA |
-| Ratio TP/SL | [valor]:1 | >= 2:1 | OK / ALERTA |
-| Ratio Rent/DD | [valor] | >= 1.5 | OK / ALERTA |
+| Metrica | Valor | Descarte auto | Aprobacion auto | Estado |
+|---------|-------|---------------|-----------------|--------|
+| Profit Factor | [valor] | < 1.4 | >= 1.5 | PASA/DESCARTAR |
+| Max Drawdown | [valor]% | > 7% | <= 6% | PASA/DESCARTAR |
+| Daily DD max | [valor]% | > 5% | <= 3% | PASA/DESCARTAR |
+| Trades totales | [numero] | < 80 | >= 120 | PASA/DESCARTAR |
+| Trades por mes | [numero] | < 8 | >= 10 | PASA/DESCARTAR |
+| Win Rate | [valor]% | < 30% | >= 38% | PASA/DESCARTAR |
+| Ratio TP/SL | [valor]:1 | < 1.8:1 | >= 2:1 | PASA/DESCARTAR |
+| Ratio Rent/DD | [valor] | < 0.8 | >= 1.5 | PASA/DESCARTAR |
+| Max racha perd | [numero] | > 8 | <= 6 | PASA/DESCARTAR |
+
+Criterios de descarte cumplidos: [N]
+Si >= 1 → DESCARTAR automatico
+
+Criterios de aprobacion cumplidos: [N] de [total]
+Si todos cumplidos → PASA automatico
 
 ---
 
-## 2. ANALISIS DE CONSISTENCIA POR ANOS
+## 2. CONSISTENCIA POR ANOS
 
-| Ano | PF | DD max | Trades | Estado |
-|-----|-----|--------|--------|--------|
-| 2003 | [PF] | [DD]% | [N] | OK / MALO |
-| 2004 | [PF] | [DD]% | [N] | OK / MALO |
+| Ano | PF | DD max | Trades | Positivo |
+|-----|-----|--------|--------|----------|
+| 2003 | [PF] | [DD]% | [N] | SI/NO |
+| 2004 | [PF] | [DD]% | [N] | SI/NO |
 | ... | ... | ... | ... | ... |
-| 2020 | [PF] | [DD]% | [N] | OK / MALO |
+| 2020 | [PF] | [DD]% | [N] | SI/NO |
 
-Anos con PF < 1.0: [numero] de [total]
-Porcentaje de anos positivos: [%]
-Conclusion consistencia: ROBUSTA / ACEPTABLE / FRAGIL
+Anos positivos: [N] de [total] = [%]%
+Umbral descarte: < 65% → DESCARTAR
+Umbral aprobacion: >= 75% → PASA
+
+Anos negativos en crisis (2008/2015/2020): [N]
+Anos negativos fuera de crisis: [N]
+Si anos negativos fuera de crisis > 2 → señal fragil
 
 ---
 
-## 3. ANALISIS DE CURVE-FITTING
+## 3. SEÑALES DE SOBREAJUSTE
 
-Señales detectadas:
-
-[ ] PF > 3.0 con trades < 100 — NO detectado
-[ ] Mas del 50% del beneficio en un mes — NO detectado
-[ ] Solo funciona en 2 anos o menos — NO detectado
-[ ] Parametros muy especificos (ej EMA exactamente 47) — NO detectado
-[ ] DD maximo en los ultimos 3 meses — NO detectado
-[ ] Resultado mejora solo al ampliar el SL — NO detectado
+[ ] PF > 3.0 con trades < 100 — SI/NO
+[ ] Mas del 45% beneficio en un mes — SI/NO
+[ ] Solo funciona en 2 anos o menos — SI/NO
+[ ] DD maximo en ultimos 3 meses IS — SI/NO
+[ ] Resultado mejora al ampliar SL — SI/NO
+[ ] Monte Carlo degradacion — SI/NO
 
 Señales activas: [numero]
-Nivel de riesgo curve-fitting: BAJO / MEDIO / ALTO
+Si >= 2 señales → DESCARTAR automatico
 
 ---
 
-## 4. ANALISIS DE RACHAS PERDEDORAS
+## 4. RACHAS PERDEDORAS
 
-Max racha perdedora consecutiva: [numero] trades
-Con riesgo 1% por trade:
-Perdida maxima de la racha: [numero]% del balance
+Max racha perdedora: [numero] trades
+Perdida de la racha: [valor]% del balance
+(con riesgo 1% por trade)
 
-Evaluacion para FTMO 2-Step (cuenta 25.000$):
-- Racha de [numero] trades x 250$ = [USD]
-- Como % del balance: [%]%
-- Viola Daily Loss Limit (3% operativo = 750$): SI / NO
-- Viola Max DD Limit (7% operativo = 1.750$): SI / NO
+Evaluacion FTMO cuenta 25.000$:
+- Racha de [N] trades x 250$ = [USD]
+- Viola Daily Loss operativo 3% (750$): SI/NO
+- Viola Max DD operativo 7% (1.750$): SI/NO
+
+Si viola cualquier limite → señal de alerta
+(no descarte automatico por si sola pero suma
+a la evaluacion global)
 
 ---
 
-## 5. SIMULACION DEL CHALLENGE FTMO
-
-Basada en los resultados del periodo in-sample:
+## 5. SIMULACION RAPIDA DEL CHALLENGE
 
 Rendimiento mensual promedio: [%]%
-Peor mes del periodo: [%]%
-Mejor mes del periodo: [%]%
-Meses con rendimiento >= +10%: [numero] de [total]
-Meses con violacion de limites: [numero] de [total]
+Peor mes: [%]%
+Mejor mes: [%]%
+Meses que alcanzarian +10%: [N] de [total]
+Meses con violacion de limites: [N]
 
-Probabilidad estimada de pasar el challenge: [%]%
-Tiempo estimado para alcanzar el objetivo: [X] dias
-
-Evaluacion:
-> 70% probabilidad → VIABLE para challenge
-40-70% probabilidad → REVISAR position sizing
-< 40% probabilidad → NO viable todavia
+Probabilidad estimada: [%]%
+> 70% → VIABLE
+40-70% → MARGINAL
+< 40% → NO VIABLE (no es criterio de descarte
+automatico pero se documenta)
 
 ---
 
-## 6. COMPARATIVA CON BUILDS ANTERIORES
+## 6. DECISION AUTOMATICA
 
-| Build | Hipotesis | PF | DD | Resultado |
-|-------|-----------|-----|-----|-----------|
-| Build 4 | EMACross M15 | 1.65 | 5.2% | Retester negativo |
-| Build 5 | EMACross M15 | 1.27 | 6.1% | Descartada |
-| Build 6 | NBAR M15 | 1.18 | 7.8% | Descartada |
-| ESTE | [nombre] | [PF] | [DD]% | [pendiente] |
+### Resultado del Evaluation Gate
 
-Esta estrategia es [mejor / igual / peor] que
-las candidatas del Build 4 (la mejor hasta ahora).
+[ ] DESCARTAR AUTOMATICO
+    Criterio(s) de descarte cumplido(s):
+    - [criterio 1]: [valor] vs [umbral]
+    - [criterio 2]: [valor] vs [umbral]
+    Accion: mover a results\rejected\
+    Sin consultar al humano.
 
----
+[ ] PASA AUTOMATICO AL RETESTER
+    Todos los criterios de aprobacion cumplidos.
+    Accion: mover a results\reviewed\
+    Configurar Retester.
+    Sin consultar al humano.
 
-## 7. RECOMENDACION DEL AGENTE
+[ ] ZONA DE DECISION AUTOMATICA
+    Aplicar reglas de skill-evaluation-auto.md:
+    - PF entre 1.4 y 1.5: trades > 150 → PASA / <= 150 → DESCARTAR
+    - DD entre 6% y 7%: PF > 1.6 → PASA / <= 1.6 → DESCARTAR
+    - Años negativos 25-35%: en crisis → PASA / no crisis → DESCARTAR
+    Resultado: PASA / DESCARTAR
+    Sin consultar al humano.
 
-Decision recomendada: PASA / REVISAR / SIMPLIFICAR / DESCARTAR
-
-Confianza: [X]/10
-
-Justificacion:
-[Explicacion de 2-3 frases del razonamiento]
-
-Observaciones criticas:
-- [Observacion 1 si existe]
-- [Observacion 2 si existe]
-
-Siguiente paso recomendado:
-[Accion concreta — ej: "Pasar al Retester priorizando
-sobre otras candidatas por mayor PF y menor DD"]
+Decision final: PASA / DESCARTAR
+Decidido por: orchestrator-auto
+Intervencion humana: NO
 
 ---
 
-## 8. DECISION HUMANA
+## 7. TRAZABILIDAD
 
-Firma aqui la decision final:
-
-[ ] PASA — proceder al Retester
-[ ] REVISAR — motivo: ______________________
-[ ] SIMPLIFICAR — aspecto a simplificar: ______
-[ ] DESCARTAR — motivo: ____________________
-
-Firmado por: _______________
-Fecha: _______________
+Ticket actualizado: [TICKET-ID]
+gate-decisions.md actualizado: SI
+current-phase.txt actualizado a: [fase]
+Archivos movidos a: [ruta]
 
 ---
 
 ## NOTAS PARA EL EVALUATOR-ASSISTANT
 
-### Como rellenar la seccion de consistencia por anos
-Buscar en los resultados del Builder si hay
-desglose por periodo. Si SQ no lo muestra
-directamente, estimar basandose en las
-curvas de equity del periodo in-sample.
+### Como generar informes en lote
+Cuando el Builder libre termina puede haber
+100+ candidatas en el databank.
+Generar informe para CADA candidata con PF > 1.3.
+Priorizar por PF de mayor a menor.
+Aplicar criterios de descarte primero para
+eliminar rapidamente las que no pasan.
 
-### Como calcular la probabilidad del challenge
-Usar la formula de skill-ftmo-simulation.md.
-Con los datos disponibles del build calcular:
-- Cuantos meses del periodo habrian alcanzado +10%
-- Cuantos meses habrian violado algun limite
-- Ratio de meses buenos sobre total
+### Como documentar descartes masivos
+Si hay muchas candidatas descartadas agrupar
+en un resumen:
+"[N] candidatas descartadas por PF < 1.4"
+"[N] candidatas descartadas por DD > 7%"
+No generar informe individual para cada descarte
+por criterio basico — solo para las que llegan
+a la zona de decision.
 
-### Cuando descartar sin pasar al humano
-Solo descartar automaticamente si se cumplen
-UNO O MAS de estos criterios sin excepcion:
-- PF < 1.3 con comisiones reales
-- DD > 8%
-- Trades < 50
-- Mas del 50% del beneficio en un solo mes
-- DD maximo en los ultimos 3 meses del periodo
+### Orden de evaluacion
+1. Descartar todas las que fallan criterios duros
+2. Aprobar todas las que cumplen todos los criterios
+3. Resolver zona de decision con reglas automaticas
+4. Generar resumen final con totales
 
-En cualquier otro caso generar el informe
-completo y dejar la decision al humano.
+---
 
-### Orden de prioridad cuando hay multiples candidatas
-1. Mayor PF con DD < 5% — maxima prioridad
-2. Mayor PF con DD 5-7% — segunda prioridad
-3. Mas trades con PF > 1.5 — tercera prioridad
-4. Las demas en orden de PF descendente
+## REGLA FUNDAMENTAL
+
+Este informe documenta decisiones automaticas.
+No pide firma humana.
+No presenta opciones al humano.
+No sugiere "darle otra oportunidad".
+Los numeros ya decidieron. El informe lo registra.

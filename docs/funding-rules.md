@@ -149,4 +149,4 @@ Max racha perdedora segura: 6 trades consecutivos
 [ ] No usa martingala ni aumenta lotes
 [ ] Tipo de estrategia permitido por FTMO
 [ ] Walk-Forward Efficiency >= 50%
-[ ] Decision humana final: SI
+[ ] Forward test en demo completado: SI
