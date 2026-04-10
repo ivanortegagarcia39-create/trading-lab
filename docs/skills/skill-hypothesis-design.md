@@ -1,169 +1,171 @@
-# Skill: Diseño de Hipotesis para SQ Builder
+# Skill: Parametros de Busqueda para Builder Libre
 
-## Proposito
-Guia para el market-analyst y el sq-specialist.
-Define como estructurar hipotesis que sean directamente
-implementables en SQ Builder sin modificaciones.
+## Proposito anterior (OBSOLETO)
+Guia para diseñar hipotesis manuales de estrategias
+con indicadores especificos. Este enfoque causo
+los 8 builds fallidos por sesgo humano.
 
----
-
-## ANTES DE DISEÑAR UNA HIPOTESIS
-
-### Verificaciones obligatorias
-1. Leer skill-sq-builder.md completo
-2. Confirmar que el mercado tiene datos en SQ
-3. Confirmar que la temporalidad es H1
-4. Confirmar que la logica no depende de rango
-   de sesion asiatica ni elementos no nativos de SQ
-5. Confirmar ratio TP/SL minimo 2:1
+## Proposito actual
+Define los parametros de busqueda que el market-analyst
+(configurador) debe establecer antes de lanzar el
+Builder libre. NO define logica de entrada.
+NO restringe indicadores. Solo define el marco
+de riesgo dentro del cual SQ busca libremente.
 
 ---
 
-## ESTRUCTURA OBLIGATORIA DE HIPOTESIS
+## PARAMETROS QUE SE DEFINEN
 
-### Campo 1: Nombre
-Formato: [Estilo]-[Mercado]-[Timeframe]-[ElementoClave]
-Ejemplo: TrendFollowing-EURUSD-H1-EMA50-ADX
+### 1. Activo
+Confirmado por market-selector.
+Opciones actuales: EUR/USD o XAU/USD
+No se elige por preferencia — se elige por
+scoring de compatibilidad con prop firms.
 
-### Campo 2: Logica en una frase
-Debe poder explicarse en una sola frase simple.
+### 2. Temporalidad
+H1 unicamente.
+M15 descartado tras Builds 1-6 con comisiones reales.
 
-Ejemplo correcto:
-"Entrar largo cuando el precio rompe el maximo de
-las ultimas 20 velas y el RSI confirma momentum."
+### 3. Periodo in-sample
+2003.05.05 a 2020.12.31
+Nunca modificar sin consenso.
+Minimo 17 años de datos para robustez estadistica.
 
-Ejemplo incorrecto:
-"Entrar cuando el precio supera el maximo del rango
-asiatico calculado entre las 00:00 y las 07:45 UTC."
+### 4. Periodo out-of-sample
+2021.01.01 a fecha actual
+Reservado exclusivamente para el Retester.
+NUNCA incluir en el Builder.
 
-### Campo 3: Condiciones de entrada (maximo 2-3)
-Cada condicion debe ser implementable en SQ Builder.
-Verificar contra skill-sq-builder.md.
+### 5. Comisiones
+Segun el activo — definidas en CLAUDE.md:
+EUR/USD: 0.5 pips + 7 USD/lote + 0.5 pip slippage
+XAU/USD: 30 pips + 7 USD/lote + 2 pips slippage
 
-Formato:
-Condicion 1: [indicador] [operador] [nivel]
-Condicion 2: [indicador] [operador] [nivel]
-Condicion 3: (opcional)
+### 6. Restricciones de riesgo
+- Riesgo por trade: 1% del balance
+- Max trades por dia: 2
+- Sesion: 08:00 a 20:00
+- Capital: 25.000 USD
+- SL: ATR-based, rango 1.5x a 3.0x
+- TP: ATR-based, rango 3.0x a 6.0x
+- Ratio TP/SL minimo: 200% del SL
+- Salida al final del dia: ACTIVADO
+- No fines de semana: ACTIVADO
+- Salida viernes: ACTIVADO
 
-### Campo 4: Stop Loss
-Debe ser ATR-based:
-- ATR multiplicador minimo: 1.5x
-- Periodo ATR: 10-20
+### 7. Paleta de bloques
+COMPLETA — todos los indicadores y señales
+activados segun skill-builder-libre.md.
+Sin restriccion. Sin seleccion manual.
 
-### Campo 5: Take Profit
-Debe ser ATR-based con ratio minimo 2:1:
-- TP = minimo 2x el SL
-- Ejemplo: SL = 1.5 ATR → TP = 3.0 ATR minimo
+### 8. Opciones geneticas
+- Generaciones: 30 por ciclo
+- Poblacion: 100 por isla
+- Islas: 4
+- Modo continuo: ACTIVADO
+- Monte Carlo: ACTIVADO
 
-### Campo 6: Filtro de sesion
-Solo estos filtros son nativos en SQ:
-- Hora de inicio y fin (minimo 6 horas de ventana)
-- No operar fines de semana
-- Salida al final del dia
-- Salida el viernes
-
-### Campo 7: Compatibilidad FTMO
-- Tipo de estrategia permitido: SI/NO
-- SL definido: SI/NO
-- TP definido: SI/NO
-- Ratio TP/SL >= 2:1: SI/NO
-- Timeframe H1: SI/NO
-
----
-
-## HIPOTESIS TIPO RECOMENDADAS PARA H1
-
-### Tipo 1 — NBAR Breakout con RSI
-Nombre: NBARBreakout-EURUSD-H1-RSI
-Logica: entrar cuando el precio rompe el maximo
-o minimo de las ultimas N velas con confirmacion RSI.
-
-Condicion Long:
-1. Precio cierra por encima de Highest High (N velas)
-2. RSI > 50
-
-Condicion Short:
-1. Precio cierra por debajo de Lowest Low (N velas)
-2. RSI < 50
-
-SL: 1.5 x ATR(14)
-TP: 3.0 x ATR(14) — ratio 2:1
-Sesion: 08:00 a 20:00
-Max trades: 2 por dia
-Compatible SQ Builder: 100%
-Compatible FTMO: SI
-
-### Tipo 2 — Trend Following EMA y ADX
-Nombre: TrendFollowing-EURUSD-H1-EMA50-ADX
-Logica: entrar en la direccion de la tendencia
-cuando EMA confirma y ADX mide fuerza.
-
-Condicion Long:
-1. Precio > EMA(50) H1
-2. ADX(14) > 20
-
-Condicion Short:
-1. Precio < EMA(50) H1
-2. ADX(14) > 20
-
-SL: 1.5 x ATR(14)
-TP: 3.0 x ATR(14) — ratio 2:1
-Sesion: 08:00 a 20:00
-Max trades: 2 por dia
-Compatible SQ Builder: 100%
-Compatible FTMO: SI
-
-### Tipo 3 — Mean Reversion RSI extremos
-Nombre: MeanReversion-EURUSD-H1-RSI
-Logica: entrar contra la tendencia a corto plazo
-cuando RSI alcanza niveles extremos.
-
-Condicion Long:
-1. RSI(14) < 30
-2. Precio > EMA(200) H1
-
-Condicion Short:
-1. RSI(14) > 70
-2. Precio < EMA(200) H1
-
-SL: 1.5 x ATR(14)
-TP: 3.0 x ATR(14) — ratio 2:1
-Sesion: 08:00 a 20:00
-Max trades: 2 por dia
-Compatible SQ Builder: 100%
-Compatible FTMO: SI
+### 9. Clasificacion
+- Max estrategias: 1000
+- Stop generation: Never
+- PF minimo: 1.3
+- Trades/mes minimo: 6
+- Ratio Ret/DD minimo: 0.8
 
 ---
 
-## ERRORES COMUNES A EVITAR
+## PARAMETROS QUE NO SE DEFINEN
 
-1. HIPOTESIS DEMASIADO COMPLEJA
-   Mas de 3 condiciones = sobreajuste probable.
-   Simplificar siempre antes de añadir condiciones.
+El market-analyst NO define ni sugiere:
 
-2. LOGICA NO NATIVA EN SQ
-   Leer skill-sq-builder.md antes de proponer.
-   Si hay duda → asumir que NO es nativo.
+- Que indicadores usar
+- Que señales activar
+- Que condiciones de entrada configurar
+- Que tipo de estrategia buscar
+  (trend-following o mean-reversion)
+- Que patrones de mercado explorar
+- Que combinaciones de indicadores probar
 
-3. RATIO TP/SL INSUFICIENTE
-   TP menor de 2x el SL = edge insuficiente
-   para cubrir comisiones reales FTMO.
-   Minimo 2:1, recomendado 2.5:1 o 3:1.
-
-4. VENTANA DE SESION DEMASIADO CORTA
-   Menos de 6 horas = muy pocos trades en H1.
-   Minimo 08:00 a 14:00, recomendado 08:00 a 20:00.
-
-5. NO VERIFICAR CONTRA SKILL-SQ-BUILDER
-   Antes de entregar al sq-specialist confirmar:
-   "Verificado contra skill-sq-builder.md — compatible."
+TODO esto lo decide SQ libremente.
 
 ---
 
-## CONFIRMACION OBLIGATORIA AL FINAL
+## CUANDO MODIFICAR PARAMETROS DE BUSQUEDA
 
-Toda hipotesis debe terminar con esta linea:
-"Verificado contra skill-sq-builder.md — compatible."
+Los parametros solo se modifican en estos casos:
 
-Si no aparece esta confirmacion → devolver
-al market-analyst para verificacion.
+### Cambio de activo
+Si el market-selector recomienda un activo
+diferente → ajustar comisiones y simbolo.
+Paleta de bloques sigue completa.
+
+### Cambio de prop firm
+Si el propfirm-analyst recomienda una prop firm
+con reglas diferentes → ajustar restricciones
+de riesgo (DD, dias minimos, etc).
+Paleta de bloques sigue completa.
+
+### Resultados insuficientes tras 72 horas
+Si el Builder libre no genera suficientes
+candidatas con PF > 1.3 tras 72 horas:
+- Verificar datos con data-manager
+- Verificar comisiones (error comun)
+- Considerar ampliar rango de SL/TP
+- NO restringir indicadores como solucion
+
+### Expansion a nuevo activo
+Cuando se añada GBP/USD, USD/JPY o futuros:
+- Configurar comisiones especificas del activo
+- Verificar datos con data-manager
+- Paleta de bloques sigue completa
+- Lanzar ciclo de Builder independiente
+
+---
+
+## FORMATO DE ARCHIVO DE CONFIGURACION
+
+Cada ciclo de Builder genera un archivo en:
+strategyquant\builder\build-[N]-config.md
+
+El archivo contiene SOLO parametros de busqueda
+y restricciones de riesgo. NUNCA contiene
+indicadores sugeridos ni logica de entrada.
+
+Si el archivo contiene frases como:
+"Probar con EMA y ADX"
+"Usar RSI como filtro"
+"Hipotesis de trend following"
+→ el archivo esta MAL y debe corregirse.
+
+El archivo correcto dice:
+"Builder libre con paleta completa.
+Sin hipotesis. Sin restriccion de logica.
+SQ decide la estrategia."
+
+---
+
+## VERIFICACION ANTES DE LANZAR
+
+Antes de lanzar cada ciclo verificar:
+
+[ ] Activo confirmado por market-selector
+[ ] Datos verificados por data-manager
+[ ] Comisiones correctas segun activo
+[ ] Paleta COMPLETA de bloques activada
+[ ] Ningun indicador desactivado manualmente
+[ ] Modo continuo ACTIVADO
+[ ] Monte Carlo ACTIVADO
+[ ] Max estrategias: 1000
+[ ] Stop generation: Never
+[ ] Restricciones de riesgo correctas
+
+Si alguno falla → corregir antes de lanzar.
+
+---
+
+## REGLA FUNDAMENTAL
+
+Este archivo define el MARCO de busqueda.
+SQ encuentra las ESTRATEGIAS.
+El pipeline de validacion filtra el SOBREAJUSTE.
+Ningun humano decide la logica de entrada.

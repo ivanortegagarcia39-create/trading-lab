@@ -1,184 +1,135 @@
-# Skill: Evitar el Sobreajuste (Overfitting)
+# Skill: Control de Sobreajuste en Builder Libre
 
 ## Proposito
-Proporcionar criterios para que market-analyst y sq-specialist
-diseñen estrategias con menor riesgo de sobreajuste desde
-el propio diseño de la hipotesis.
-Una hipotesis bien diseñada desde el principio reduce
-drasticamente la necesidad de filtros posteriores y
-aumenta la tasa de exito en el pipeline.
+Define como el pipeline de validacion detecta y
+elimina automaticamente estrategias sobreajustadas
+generadas por el Builder libre.
+En el enfoque anterior el humano intentaba evitar
+el sobreajuste diseñando hipotesis simples.
+En el enfoque actual SQ genera libremente y el
+pipeline filtra automaticamente.
 
 ---
 
-## POR QUE ES CRITICO EVITAR EL SOBREAJUSTE
+## FILOSOFIA DEL CONTROL DE SOBREAJUSTE
 
-El sobreajuste ocurre cuando una estrategia aprende
-el ruido historico en lugar del edge real del mercado.
-Resultado: excelente en backtest, terrible en real.
+El Builder libre con paleta completa genera
+mas sobreajuste que un Builder restringido.
+Esto es ESPERADO y CORRECTO.
 
-Los Builds 1-6 de TradingLab mostraron este patron:
-- Build 4: PF 1.53-1.70 sin comisiones → Retester negativo
-- Build 5: PF 1.27 con comisiones → edge insuficiente
-El problema no era la configuracion sino el diseño
-de la hipotesis desde el origen.
+La solucion NO es restringir el Builder.
+La solucion es tener un pipeline de validacion
+mas exigente que descarte automaticamente
+todo lo que no sea robusto.
 
----
-
-## PRINCIPIOS FUNDAMENTALES
-
-### 1. Pocos grados de libertad
-Cada condicion de entrada añade un grado de libertad.
-Maximo recomendado: 3 condiciones logicas incluyendo filtros.
-Mas condiciones = mas posibilidades de ajustarse al ruido.
-
-### 2. Parametros con sentido economico
-Usar valores estandar justificados por la teoria:
-- RSI periodo 14 (estandar de Wilder)
-- ATR periodo 14 (estandar)
-- EMA 50 o 200 (niveles psicologicos del mercado)
-NO optimizar entre 10 y 20 sin justificacion economica.
-
-### 3. Evitar la optimizacion del ruido
-Si una hipotesis funciona solo con un conjunto muy
-estrecho de valores (ej. EMA exactamente 47 periodos)
-es casi seguro que esta capturando ruido historico.
-Señal de alerta: el optimo esta en el extremo del rango.
-
-### 4. Simetria logica
-La logica de entrada para largos y cortos debe ser
-simetrica salvo que haya una razon economica clara.
-Una estrategia que solo funciona en largo suele
-estar capturando un sesgo del periodo historico.
+Analogia: es mejor pescar con red grande y
+devolver al mar los peces pequeños que pescar
+con anzuelo pequeño y esperar que pique el
+pez correcto.
 
 ---
 
-## CHECKLIST PARA EL MARKET-ANALYST
-(completar antes de enviar hipotesis al sq-specialist)
+## SEÑALES DE SOBREAJUSTE QUE DETECTA EL PIPELINE
 
-[ ] El numero de indicadores distintos es <= 3
-[ ] Cada indicador tiene una razon de mercado clara:
-    tendencia (EMA, ADX), momentum (RSI), volatilidad (ATR)
-[ ] La mayoria de los parametros estan fijados a valores
-    estandar sin necesidad de optimizacion
-[ ] La logica de entrada es simetrica para largos y cortos
-    o la asimetria esta justificada por estructura del mercado
-[ ] Los costes de transaccion estan considerados en el diseño
-    (un TP muy ajustado puede ser anulado por spread)
-[ ] La hipotesis funciona en lenguaje natural sin ambiguedades
-[ ] El edge tiene una explicacion economica real:
-    ¿por que deberia funcionar este patron en el mercado?
+### En el Evaluation Gate (automatico)
+- PF > 3.0 con trades < 100 → DESCARTAR
+  Casi seguro curve-fitting
+- Mas del 45% del beneficio en un solo mes → DESCARTAR
+  Edge concentrado en periodo especifico
+- Años con PF < 1.0 superan el 35% → DESCARTAR
+  Inconsistencia entre periodos
+- DD maximo en ultimos 3 meses del IS → DESCARTAR
+  Estrategia deteriorandose
+- Max racha perdedora > 8 trades → DESCARTAR
+  Estructura de riesgo fragil
 
----
+### En el paso 12b (automatico)
+- Caida PF IS→OOS > 25% → DESCARTAR
+  El edge no se mantiene fuera de muestra
+- PF OOS < 1.2 → DESCARTAR
+  Edge insuficiente en datos no vistos
+- Frecuencia OOS cae > 50% respecto al IS → DESCARTAR
+  La estrategia depende de condiciones del IS
 
-## CHECKLIST PARA EL SQ-SPECIALIST
-(completar durante configuracion del Builder)
+### En el WFO (automatico)
+- WFE < 40% → DESCARTAR
+  La optimizacion no se traslada a datos nuevos
+- Parametros con desviacion > 35% entre ventanas → DESCARTAR
+  No hay parametros estables — el edge es ruido
+- 2 ventanas OOS negativas consecutivas → DESCARTAR
+  Deterioro sistematico no aislado
+- PF OOS < 1.0 en la ultima ventana → DESCARTAR
+  El edge ha desaparecido en datos recientes
 
-[ ] El rango de optimizacion de cada parametro es estrecho
-    Ejemplo correcto: multiplicador SL entre 1.8 y 2.2
-    Ejemplo incorrecto: multiplicador SL entre 1.0 y 5.0
-[ ] El numero maximo de condiciones en Builder es <= 3
-[ ] Los bloques de construccion activados corresponden
-    exactamente a la hipotesis — sin bloques extra
-[ ] Las opciones geneticas usan poblaciones moderadas:
-    20 generaciones y 50 por isla (ni mas ni menos)
-[ ] Se ha verificado contra skill-sq-builder.md que
-    cada condicion es nativa en SQ Builder
-
----
-
-## SEÑALES DE ALARMA DURANTE EVALUACION DE RESULTADOS
-
-### Alta sensibilidad a parametros
-Si un cambio de ±0.1 en un multiplicador hace que el PF
-caiga de 1.8 a 0.9 la estrategia es fragil.
-Accion: SIMPLIFICAR o DESCARTAR.
-
-### Rendimiento concentrado en un año atipico
-Excelente en 2008 (crisis) pero mediocre en el resto.
-Excelente en 2020 (COVID) pero sin edge en periodos normales.
-Accion: DESCARTAR — el edge es especifico del regimen.
-
-### Pocas operaciones con alta rentabilidad
-Menos de 100 operaciones en 10 años es insuficiente
-para validar un edge estadisticamente.
-Accion: DESCARTAR o ajustar para generar mas señales.
-
-### Parametro optimo en extremo del rango
-Si el Builder encuentra que el optimo es el valor
-maximo o minimo del rango configurado significa que
-la optimizacion no ha convergido — el edge podria
-estar fuera del rango o no existir.
-Accion: REVISAR el rango o SIMPLIFICAR la hipotesis.
-
-### Curva de equity con tramos muy largos sin operaciones
-Si la estrategia no opera durante meses el edge
-puede ser muy especifico de un regimen de mercado.
-Accion: Verificar consistencia por años en Evaluation Gate.
+### En Monte Carlo (automatico en Builder)
+- Si Monte Carlo muestra degradacion significativa
+  la estrategia depende del orden de las operaciones
+  → descartada automaticamente por SQ
 
 ---
 
-## REGLAS PARA REDUCIR SOBREAJUSTE EN EL BUILDER
+## POR QUE EL BUILDER LIBRE GENERA MAS CANDIDATAS VALIDAS
 
-### Regla 1 — Menos bloques es mejor
-Activar solo los bloques de construccion que
-corresponden exactamente a la hipotesis.
-No dejar bloques extra activados por si acaso.
-Cada bloque adicional es un grado de libertad extra.
+Con el enfoque anterior (Builds 1-8):
+- 2-3 indicadores activados
+- Espacio de busqueda: ~1.000 combinaciones
+- Resultado: 0 estrategias aprobadas en 8 builds
 
-### Regla 2 — Rangos de parametros estrechos
-El rango de cada parametro debe centrarse en el
-valor estandar con ±20% de variacion maxima.
-Ejemplo para multiplicador ATR:
-- Valor estandar: 2.0
-- Rango correcto: 1.6 a 2.4
-- Rango incorrecto: 1.0 a 5.0
+Con el Builder libre:
+- +100 indicadores activados
+- Espacio de busqueda: ~10.000.000 combinaciones
+- Resultado esperado: 5-15 aprobadas por ciclo de 48h
 
-### Regla 3 — Verificar consistencia por periodos
-Una estrategia robusta funciona en la mayoria de
-los años del periodo in-sample, no solo en algunos.
-Umbral minimo: 70% de los años con PF positivo.
-
-### Regla 4 — Comparar IS vs OOS como test de robustez
-Si el PF cae mas del 20% entre IS y OOS la estrategia
-probablemente esta sobreajustada al periodo IS.
-Este es el test mas importante de todos.
+La diferencia es que con un espacio de busqueda
+10.000x mayor SQ encuentra edges que un humano
+nunca habria considerado. Muchos seran sobreajuste
+pero el pipeline los descarta automaticamente.
 
 ---
 
-## HIPOTESIS CON BAJO RIESGO DE SOBREAJUSTE
+## TASAS DE DESCARTE ESPERADAS POR FASE
 
-Estas estructuras tienen menor riesgo por naturaleza:
+Estas tasas son NORMALES y ESPERADAS:
 
-### Trend Following simple (RECOMENDADA)
-- 1 indicador de tendencia (EMA o ADX)
-- 1 indicador de confirmacion (RSI o precio)
-- SL y TP basados en ATR
-- Logica simetrica para largos y cortos
-- Riesgo de sobreajuste: BAJO
+| Fase | Entrada | Descartadas | Pasan |
+|------|---------|-------------|-------|
+| Builder filtros | 4000+ | ~75% | ~1000 |
+| Evaluation Gate | ~1000 | ~70% | ~300 |
+| Retester + 12b | ~300 | ~60% | ~120 |
+| WFO | ~120 | ~70% | ~35 |
+| Aprobacion final | ~35 | ~60% | ~5-15 |
+| Portfolio | ~5-15 | ~30% | ~3-10 |
 
-### NBAR Breakout con filtro
-- Ruptura de maximo o minimo de N velas
-- 1 filtro de confirmacion (RSI o ADX)
-- SL en minimo o maximo de N velas
-- TP = ratio fijo sobre SL
-- Riesgo de sobreajuste: BAJO-MEDIO
-
-### Mean Reversion con RSI extremos
-- RSI en zona extrema (<30 o >70)
-- 1 filtro de tendencia (EMA larga)
-- SL y TP basados en ATR
-- Riesgo de sobreajuste: MEDIO
-  (depende del regimen de mercado)
+Un ratio del 0.1% de candidatas que llegan
+a produccion es estandar en la industria
+del trading algoritmico.
 
 ---
 
-## CONFIRMACION FINAL
+## REGLAS PARA EL SQ-SPECIALIST
 
-Al terminar de diseñar la hipotesis el market-analyst
-debe confirmar expresamente:
+### En el Retester
+Retestear TODAS las candidatas que pasan el
+Evaluation Gate en lote. No seleccionar manualmente.
+El paso 12b descarta automaticamente.
 
-"Verificado contra skill-avoiding-overfitting.md
-— riesgo de sobreajuste: BAJO / MEDIO / ALTO"
+### En el Optimizer
+Lanzar WFO para TODAS las que pasan el 12b.
+No seleccionar manualmente.
+El dictamen WFO descarta automaticamente.
 
-Si el riesgo es ALTO → rediseñar la hipotesis
-antes de pasarla al sq-specialist.
+### En la configuracion
+Maximo 3 parametros a optimizar en el WFO.
+Rangos estrechos centrados en valores del Builder.
+Si el Builder encontro ATR mult = 2.3 el rango
+del WFO seria 2.0 a 2.6 — no 1.0 a 5.0.
+
+---
+
+## REGLA FUNDAMENTAL
+
+El sobreajuste se combate con validacion exigente
+no con restriccion del espacio de busqueda.
+
+Builder libre + pipeline estricto = estrategias robustas.
+Builder restringido + pipeline flexible = 8 builds fallidos.
