@@ -15,16 +15,16 @@ con gestion de portfolio consolidada, reporting automatico y alertas en tiempo r
 
 **Stack de herramientas:**
 
-| Herramienta      | Rol                                              |
-|------------------|--------------------------------------------------|
-| StrategyQuant X  | Generar, testar y optimizar estrategias          |
-| Claude Code      | Agentes, orquestacion, organizacion y docs       |
-| Obsidian         | Base de conocimiento y journal de decisiones     |
-| Git              | Control de versiones del proyecto                |
-| N8N (futuro)     | Automatizacion del pipeline — Capa 2             |
-| Telegram/Discord | Notificaciones y control remoto — Capa 2         |
-| MT5              | Ejecucion de EAs en cuentas de fondeo — Capa 3   |
-| Google Sheets    | Reporting consolidado — Capa 2/3                 |
+| Herramienta      | Rol                                               |
+|------------------|---------------------------------------------------|
+| StrategyQuant X  | Generar, testar y optimizar estrategias           |
+| Claude Code      | Agentes, orquestacion, organizacion y docs        |
+| Obsidian         | Base de conocimiento y journal de decisiones      |
+| Git              | Control de versiones del proyecto                 |
+| N8N (futuro)     | Automatizacion del pipeline — Capa 2              |
+| Telegram/Discord | Notificaciones y control remoto — Capa 2          |
+| MT5              | Ejecucion de EAs en cuentas de fondeo — Capa 3    |
+| Google Sheets    | Reporting consolidado — Capa 2/3                  |
 
 **Prop firm principal:** FTMO 2-Step — cuenta objetivo 25.000$
 - Fase 1: +10% (2.500$) sin violar limites de riesgo
@@ -35,8 +35,10 @@ con gestion de portfolio consolidada, reporting automatico y alertas en tiempo r
 
 ## 2. ESTADO ACTUAL
 
-**Situacion:** Reconstruccion completa en nuevo dispositivo completada.
-El sistema de agentes y skills esta operativo y listo para el primer ciclo completo.
+**Situacion:** Reconstruccion completa en nuevo dispositivo finalizada.
+Sistema de agentes ampliado a 10 agentes y 18 skills.
+Pipeline completamente documentado y listo para ejecutar.
+Sistema de tickets activo y vacio — pendiente de primera hipotesis.
 
 **Documentacion base:**
 - CLAUDE.md — constitucion del proyecto
@@ -47,33 +49,25 @@ El sistema de agentes y skills esta operativo y listo para el primer ciclo compl
 - docs\roadmap-v2.md
 - docs\project-status.md (este archivo)
 
-**Agentes activos: 6**
-- market-selector
-- market-analyst
-- propfirm-analyst
-- funding-specialist
-- sq-specialist
-- orchestrator
+**Agentes activos:** 10
+**Skills operativas:** 18 en docs\skills\
+**Tickets activos:** 0 — sistema listo, pendiente de primera hipotesis
 
-**Skills operativas: 11** (en docs\skills\)
-
-**Pipeline:** Completamente documentado y listo para ejecutar.
-
-**Siguiente paso inmediato:** Verificar datos en SQ y lanzar
-el primer ciclo completo de agentes para primer build H1.
+**Siguiente paso inmediato:** Invocar data-manager para verificar datos en SQ,
+luego lanzar el primer ciclo completo de agentes.
 
 ---
 
 ## 3. HISTORIAL DE BUILDS (dispositivo anterior)
 
-| Build     | Config                              | Resultado                                              | Decision              |
-|-----------|-------------------------------------|--------------------------------------------------------|-----------------------|
-| Build 1-2 | LARB M15                            | Logica asiatica no nativa en SQ                        | DESCARTADO            |
-| Build 3   | EMACross-ADX M15                    | Filtros mal configurados                               | DESCARTADO            |
-| Build 4   | EMACross-ADX M15 sin comisiones     | 6 candidatas PF 1.53-1.70 — Retester negativo          | DESCARTADO            |
-| Build 5   | EMACross-ADX M15 con comisiones     | PF max 1.27 — edge insuficiente en M15                 | DESCARTADO            |
-| Build 6   | NBARBreakout-RSI M15 con comisiones | PF max 1.18 — M15 con comisiones inviable              | REVISAR — cambio a H1 |
-| Build 7   | NBARBreakout-RSI H1                 | Resultado desconocido — build en dispositivo anterior  | PENDIENTE             |
+| Build     | Config                              | Resultado                                             | Decision              |
+|-----------|-------------------------------------|-------------------------------------------------------|-----------------------|
+| Build 1-2 | LARB M15                            | Logica asiatica no nativa en SQ                       | DESCARTADO            |
+| Build 3   | EMACross-ADX M15                    | Filtros mal configurados                              | DESCARTADO            |
+| Build 4   | EMACross-ADX M15 sin comisiones     | 6 candidatas PF 1.53-1.70 — Retester negativo         | DESCARTADO            |
+| Build 5   | EMACross-ADX M15 con comisiones     | PF max 1.27 — edge insuficiente en M15                | DESCARTADO            |
+| Build 6   | NBARBreakout-RSI M15 con comisiones | PF max 1.18 — M15 con comisiones inviable             | REVISAR — cambio a H1 |
+| Build 7   | NBARBreakout-RSI H1                 | Resultado desconocido — build en dispositivo anterior | PENDIENTE             |
 
 **Aprendizaje clave:** M15 descartado como temporalidad principal.
 Las comisiones reales FTMO (0.5 pips + 7 USD/lote + 0.5 pip) eliminan
@@ -125,89 +119,7 @@ Si se prueba M15 en el futuro: minimo 15+ trades/mes como hipotesis.
 
 ---
 
-## 5. PROP FIRMS ANALIZADAS
-
-### Principal — Forex
-| Prop Firm  | Tipo     | Activos         | DD Limite  | Objetivo    | Split | Estado     |
-|------------|----------|-----------------|------------|-------------|-------|------------|
-| FTMO       | 2-Step   | Forex/Oro/Idx   | 10% din.   | 10%/5%      | 80%   | PRINCIPAL  |
-| E8         | 2-Step   | Forex/Oro       | 8% est.    | 8%          | 80%   | ALTERNATIVA|
-| TFT        | 1-Step   | Forex/Oro       | 6% din.    | 10%         | 75%   | ALTERNATIVA|
-
-### Futuras — Futuros CME (pendiente de datos)
-| Prop Firm  | Tipo     | Activos         | Estado              |
-|------------|----------|-----------------|---------------------|
-| Apex       | Mensual  | NQ, GC, ES      | Pendiente datos CME |
-| MFF        | Mensual  | NQ, GC, ES      | Pendiente datos CME |
-| TopStep    | Mensual  | NQ, ES          | Pendiente datos CME |
-
-**Compatibilidad de activos:**
-| Activo    | FTMO | E8 | TFT | MFF | TopStep | Apex |
-|-----------|------|----|-----|-----|---------|------|
-| EUR/USD   | SI   | SI | SI  | NO  | NO      | NO   |
-| XAU/USD   | SI   | SI | SI  | NO  | NO      | NO   |
-| GC        | NO   | NO | NO  | SI  | SI      | SI   |
-| NQ/US100  | SI*  | SI | SI  | SI  | SI      | SI   |
-
-*FTMO: NQ como indice spot (US100), no como futuro CME
-
----
-
-## 6. AGENTES Y SKILLS
-
-### 6 Agentes activos
-
-| Agente              | Rol                                                           |
-|---------------------|---------------------------------------------------------------|
-| market-selector     | Selecciona el activo optimo antes de cada hipotesis           |
-| market-analyst      | Investiga mercados y genera hipotesis de estrategias          |
-| propfirm-analyst    | Analiza y compara prop firms por activo y estrategia          |
-| funding-specialist  | Evalua compatibilidad con reglas de la prop firm elegida      |
-| sq-specialist       | Convierte hipotesis en configuraciones SQ (Builder/Retester)  |
-| orchestrator        | Coordina el pipeline, decide y mantiene el proyecto al dia    |
-
-### 4 Agentes planificados (Capa 1 — tras 3 estrategias aprobadas)
-
-| Agente              | Rol                                                           |
-|---------------------|---------------------------------------------------------------|
-| technical-analyst   | Analisis tecnico avanzado — patrones, soportes, resistencias  |
-| correlation-analyst | Correlaciones entre activos del portfolio                     |
-| risk-manager        | Gestion de riesgo del portfolio completo                      |
-| news-researcher     | Contexto macro y deteccion de periodos anomalos               |
-
-### 11 Skills en docs\skills\
-
-| Skill                         | Funcion                                          |
-|-------------------------------|--------------------------------------------------|
-| skill-claude-sessions.md      | Gestion de sesiones con Claude Code              |
-| skill-ftmo-rules.md           | Reglas FTMO resumidas para consulta rapida       |
-| skill-ftmo-simulation.md      | Simulacion de challenge FTMO                     |
-| skill-hypothesis-design.md    | Formato y proceso de diseno de hipotesis         |
-| skill-market-context.md       | Analisis de contexto de mercado                  |
-| skill-optimizer.md            | Configuracion del Optimizer y WFO                |
-| skill-precbuild-checklist.md  | Checklist obligatorio antes de lanzar Builder    |
-| skill-results-analysis.md     | Analisis de resultados del Builder               |
-| skill-retester.md             | Configuracion y uso del Retester                 |
-| skill-sq-builder.md           | Configuracion del Builder en SQ                  |
-| skill-propfirms-comparison.md | Comparativa detallada de prop firms              |
-
----
-
-## 7. REGLAS INQUEBRANTABLES
-
-1. **Nunca OOS en Builder** — los datos 2021-2026 son exclusivos del Retester
-2. **Decision humana** en Evaluation Gate y Aprobacion final — ningun agente aprueba solo
-3. **Riesgo 1% siempre** — sin excepciones por conviccion ni por racha positiva
-4. **Comisiones FTMO en todos los builds** — sin comisiones los resultados son irreales
-5. **H1 como temporalidad principal** — M15 descartado formalmente tras Builds 1-6
-6. **Ratio TP/SL minimo 2:1 siempre** — por debajo no supera el calculo de viabilidad FTMO
-7. **market-selector antes de cualquier hipotesis nueva** — sin excepcion
-8. **Ningun build sin hipotesis previa** documentada en research\strategy-hypotheses\
-9. **CLAUDE.md no se modifica sin consenso** — es la constitucion del proyecto
-
----
-
-## 8. REGLAS FTMO 2-STEP CRITICAS
+## 5. REGLAS FTMO 2-STEP CRITICAS
 
 | Regla                    | Valor oficial | Margen operativo recomendado |
 |--------------------------|---------------|------------------------------|
@@ -226,53 +138,188 @@ Si se prueba M15 en el futuro: minimo 15+ trades/mes como hipotesis.
 
 ---
 
-## 9. ROADMAP POR CAPAS
+## 6. PROP FIRMS ANALIZADAS
 
-| Capa | Estado     | Criterio de entrada              | Descripcion                            |
-|------|------------|----------------------------------|----------------------------------------|
-| 0    | EN CURSO   | —                                | Pipeline manual, primer build H1       |
-| 1    | PENDIENTE  | 3 estrategias aprobadas          | 4 nuevos agentes, GBP/USD y USD/JPY   |
-| 2    | PENDIENTE  | 5+ estrategias aprobadas         | N8N + API Anthropic + semi-autonomo   |
-| 3    | PENDIENTE  | Sistema estable                  | SQ Remote Control + MT5 + multi-firm  |
-| 4    | PENDIENTE  | Sistema maduro                   | Portfolio 10+ estrategias, escalado   |
+### Principal y alternativas Forex
+| Prop Firm | Tipo   | Activos         | DD Limite  | Objetivo  | Split | Estado      |
+|-----------|--------|-----------------|------------|-----------|-------|-------------|
+| FTMO      | 2-Step | Forex/Oro/Idx   | 10% din.   | 10% / 5%  | 80%   | PRINCIPAL   |
+| E8        | 2-Step | Forex/Oro       | 8% est.    | 8%        | 80%   | ALTERNATIVA |
+| TFT       | 1-Step | Forex/Oro       | 6% din.    | 10%       | 75%   | ALTERNATIVA |
+
+### Futuros CME — pendiente de datos
+| Prop Firm | Activos    | Estado              |
+|-----------|------------|---------------------|
+| Apex      | NQ, GC, ES | Pendiente datos CME |
+| MFF       | NQ, GC, ES | Pendiente datos CME |
+| TopStep   | NQ, ES     | Pendiente datos CME |
+
+### Compatibilidad de activos por prop firm
+| Activo    | FTMO | E8 | TFT | MFF | TopStep | Apex |
+|-----------|------|----|-----|-----|---------|------|
+| EUR/USD   | SI   | SI | SI  | NO  | NO      | NO   |
+| XAU/USD   | SI   | SI | SI  | NO  | NO      | NO   |
+| GC        | NO   | NO | NO  | SI  | SI      | SI   |
+| NQ/US100  | SI*  | SI | SI  | SI  | SI      | SI   |
+
+*FTMO: NQ como indice spot (US100), no como futuro CME
+
+---
+
+## 7. AGENTES Y SKILLS
+
+### 10 Agentes activos
+
+| Agente              | Rol                                                              |
+|---------------------|------------------------------------------------------------------|
+| market-selector     | Selecciona el activo optimo antes de cada hipotesis             |
+| market-analyst      | Investiga mercados y genera hipotesis de estrategias            |
+| propfirm-analyst    | Analiza y compara prop firms por activo y estrategia            |
+| funding-specialist  | Evalua compatibilidad con reglas de la prop firm elegida        |
+| sq-specialist       | Configura SQ Builder, Retester y Optimizer                      |
+| evaluator-assistant | Genera informes estructurados para el Evaluation Gate humano    |
+| data-manager        | Verifica y gestiona datos historicos en SQ                      |
+| export-specialist   | Exporta estrategias aprobadas de SQ a MQL5/MT5                  |
+| performance-monitor | Monitorea EAs en produccion y alerta sobre riesgo               |
+| orchestrator        | Coordina el pipeline, decide y mantiene el proyecto al dia      |
+
+### 4 Agentes planificados (Capa 1 — tras 3 estrategias aprobadas)
+
+| Agente              | Rol                                                              |
+|---------------------|------------------------------------------------------------------|
+| technical-analyst   | Analisis tecnico avanzado — patrones, soportes, resistencias    |
+| correlation-analyst | Correlaciones entre activos del portfolio                        |
+| risk-manager        | Gestion de riesgo del portfolio completo                         |
+| news-researcher     | Contexto macro y deteccion de periodos anomalos                  |
+
+### 18 Skills en docs\skills\
+
+| Skill                              | Proposito                                              |
+|------------------------------------|--------------------------------------------------------|
+| skill-claude-sessions.md           | Gestion de sesiones con Claude Code                   |
+| skill-ftmo-rules.md                | Reglas FTMO resumidas para consulta rapida            |
+| skill-ftmo-simulation.md           | Simulacion de challenge FTMO                           |
+| skill-hypothesis-design.md         | Formato y proceso de diseno de hipotesis              |
+| skill-results-analysis.md          | Analisis de resultados del Builder                    |
+| skill-precbuild-checklist.md       | Checklist obligatorio antes de lanzar Builder         |
+| skill-market-context.md            | Analisis de contexto de mercado                       |
+| skill-retester.md                  | Configuracion y uso del Retester                      |
+| skill-optimizer.md                 | Configuracion del Optimizer y WFO                     |
+| skill-sq-builder.md                | Configuracion del Builder en SQ                       |
+| skill-propfirms-comparison.md      | Comparativa detallada de prop firms                   |
+| skill-sq-export-mt5.md             | Exportacion de estrategias de SQ a MT5/MQL5           |
+| skill-pipeline-errors.md           | Diagnostico y resolucion de errores del pipeline      |
+| skill-portfolio-correlation.md     | Correlaciones entre activos del portfolio             |
+| skill-data-management.md           | Gestion de datos historicos en SQ                     |
+| skill-propfirm-challenge-execution.md | Proceso de ejecucion de challenges en prop firms   |
+| skill-evaluation-report.md         | Formato estandar de informes de evaluacion            |
+| skill-ticket-system.md             | Sistema de tickets de seguimiento por hipotesis       |
+
+---
+
+## 8. SISTEMA DE TICKETS
+
+**Estado actual:** Activo y vacio.
+El sistema esta completamente definido en `docs\skills\skill-ticket-system.md`
+pero no hay tickets abiertos porque todavia no se ha generado la primera hipotesis.
+
+**Ubicacion de tickets:** `research\active-tickets\[TICKET-ID]-[nombre]\`
+
+**Estructura de cada ticket:**
+- `hypothesis.md` — hipotesis original (no se modifica)
+- `evaluation-log.md` — log cronologico de observaciones de agentes
+- `gate-decisions.md` — registro de decisiones del Evaluation Gate
+- `current-phase.txt` — fase actual (preparacion / build-running / approved / etc.)
+
+**Protocolo de inicio de sesion:**
+Al inicio de cada sesion el orchestrator escanea `research\active-tickets\`
+y clasifica los tickets en: ACTIVO (< 48h), STALE (> 48h sin actividad), BLOQUEADO.
+
+**Nomenclatura:** `TICKET-001-NBARBreakout-H1-EURUSD`
+
+---
+
+## 9. REGLAS INQUEBRANTABLES
+
+1. **Nunca OOS en Builder** — los datos 2021-2026 son exclusivos del Retester
+2. **Decision humana** en Evaluation Gate y Aprobacion final — ningun agente aprueba solo
+3. **Riesgo 1% siempre** — sin excepciones por conviccion ni por racha positiva
+4. **Comisiones FTMO en todos los builds** — sin comisiones los resultados son irreales
+5. **H1 como temporalidad principal** — M15 descartado formalmente tras Builds 1-6
+6. **Ratio TP/SL minimo 2:1 siempre** — por debajo no supera el calculo de viabilidad FTMO
+7. **market-selector antes de cualquier hipotesis nueva** — sin excepcion
+8. **data-manager verifica datos antes de cada build** — sin datos verificados no hay build
+9. **Ningun build sin hipotesis previa** documentada en research\strategy-hypotheses\
+10. **CLAUDE.md no se modifica sin consenso** — es la constitucion del proyecto
+
+---
+
+## 10. ROADMAP POR CAPAS
+
+| Capa | Estado     | Criterio de entrada              | Descripcion                              |
+|------|------------|----------------------------------|------------------------------------------|
+| 0    | EN CURSO   | —                                | Pipeline manual, primer build H1         |
+| 1    | PENDIENTE  | 3 estrategias aprobadas          | 4 nuevos agentes, GBP/USD y USD/JPY     |
+| 2    | PENDIENTE  | 5+ estrategias aprobadas         | N8N + API Anthropic + semi-autonomo     |
+| 3    | PENDIENTE  | Sistema estable                  | SQ Remote Control + MT5 + multi-firm    |
+| 4    | PENDIENTE  | Sistema maduro                   | Portfolio 10+ estrategias, escalado     |
+
+**Capa 0 — Ahora:**
+market-selector → market-analyst → propfirm-analyst → funding-specialist
+→ sq-specialist → Builder → evaluator-assistant → Evaluation Gate (humano)
+→ Retester → Optimizer → Aprobacion (humano) → export-specialist → Challenge
+
+**Capa 2 — Futuro (N8N):**
+Usuario envia mensaje en Telegram → N8N orquesta agentes via API Anthropic
+→ Claude ejecuta el pipeline → Notifica al usuario → Usuario lanza builds en SQ
+→ Sistema evalua y recomienda → Usuario aprueba challenges
 
 **Regla fundamental:** Nunca expandir antes de tener el proceso anterior estable.
 La automatizacion sin estrategias validadas = automatizar perdidas.
 
 ---
 
-## 10. SIGUIENTE ACCION CONCRETA
+## 11. SIGUIENTE ACCION CONCRETA
 
 En orden estricto de ejecucion:
 
-1. **Verificar datos EUR/USD en SQ — Gestor de datos**
-   - Confirmar datos historicos importados: EUR/USD M1 desde 2003
-   - Confirmar que el periodo 2003-2020 esta completo y sin huecos
-   - Confirmar que el periodo 2021-2026 esta disponible para OOS
+1. **Invocar data-manager para verificar datos en SQ**
+   - Confirmar EUR/USD M1: simbolo EURUSD_M1_dukas, desde 2003, ~8.6M registros
+   - Confirmar XAU/USD M1: simbolo XAUUSD_M1_dukas, desde 2003, ~8.6M registros
+   - Verificar que no hay gaps significativos
+   - Verificar que los datos estan actualizados (< 30 dias)
 
-2. **Invocar market-selector para analisis inicial**
-   - Confirmar EUR/USD como activo principal
-   - Confirmar XAU/USD como activo secundario
-   - Actualizar scoring si hay cambios en datos o reglas de prop firms
+2. **Invocar market-selector para confirmar activo principal**
+   - Scoring EUR/USD vs XAU/USD
+   - Confirmar EUR/USD como activo principal del primer build
+   - Guardar informe en research\market-notes\
 
 3. **Invocar market-analyst para primera hipotesis H1**
    - Mercado: EUR/USD
    - Temporalidad: H1
    - Estilos a explorar: Trend-following o Mean Reversion
 
-4. **Invocar propfirm-analyst para prop firm optima**
+4. **Orchestrator crea TICKET-001**
+   - Crear carpeta: research\active-tickets\TICKET-001-[nombre-hipotesis]\
+   - Copiar hypothesis.md, crear evaluation-log.md y gate-decisions.md vacios
+   - Escribir "preparacion" en current-phase.txt
+
+5. **Invocar propfirm-analyst para prop firm optima**
    - Evaluar hipotesis vs FTMO, E8 y TFT
    - Confirmar prop firm principal para este build
 
-5. **Invocar funding-specialist para validacion**
+6. **Invocar funding-specialist para validacion**
    - Verificar compatibilidad teorica con FTMO 2-Step
    - Confirmar que el estilo no esta en lista de prohibidos
 
-6. **Invocar sq-specialist para configuracion del Builder**
+7. **Invocar sq-specialist para configuracion del Builder**
    - Usar skill-precbuild-checklist.md obligatoriamente
    - Comisiones EUR/USD: 0.5 pips + 7 USD/lote + 0.5 pip
    - In-sample: 2003-2020 exclusivamente
+   - Actualizar current-phase.txt a "build-pending"
 
-7. **Lanzar primer build H1 con comisiones reales**
+8. **Lanzar primer build H1 con comisiones reales**
+   - Actualizar current-phase.txt a "build-running"
    - Guardar resultados en results\raw\build-results\
-   - Aplicar Evaluation Gate antes de pasar al Retester
+   - Invocar evaluator-assistant cuando termine el build
+   - Aplicar Evaluation Gate (decision humana) antes de pasar al Retester

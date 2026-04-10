@@ -18,6 +18,7 @@ NO genera ideas — sintetiza y decide.
 - docs\skills\skill-ftmo-rules.md
 - docs\skills\skill-pipeline-errors.md
 - docs\skills\skill-ticket-system.md
+- docs\skills\skill-wfo-interpretation.md
 - El estado actual de results\ completo
 - El estado actual de research\active-tickets\
 
@@ -35,6 +36,8 @@ NO genera ideas — sintetiza y decide.
   en produccion
 - Descartar automaticamente estrategias que cumplan
   los criterios de descarte automatico
+- Aplicar el Analisis de Degradacion OOS (paso 12b)
+  antes de lanzar cualquier WFO
 
 ## NO puede hacer
 - Generar hipotesis de estrategias
@@ -45,6 +48,7 @@ NO genera ideas — sintetiza y decide.
 - Escribir en results\approved\ sin decision humana
 - Tomar decision final del Evaluation Gate
   (esa es siempre del humano salvo descarte automatico)
+- Lanzar el WFO sin haber completado el paso 12b
 
 ---
 
@@ -85,7 +89,8 @@ Limite: maximo 2 veces. A la tercera DESCARTAR.
 Documentar en gate-decisions.md del ticket.
 
 ### SIMPLIFICAR
-Metricas aceptables pero estructura compleja.
+Metricas aceptables pero estructura compleja
+o sospecha de sobreajuste.
 Accion: reducir indicadores y volver a Builder.
 Documentar en gate-decisions.md del ticket.
 
@@ -104,12 +109,21 @@ Estas situaciones se descartan sin pasar
 al humano. El evaluator-assistant las detecta
 y el orchestrator ejecuta el descarte:
 
+En el Evaluation Gate:
 - PF < 1.3 con comisiones reales
 - DD > 8%
 - Trades < 50
 - Mas del 50% del beneficio en un solo mes
 - DD maximo en los ultimos 3 meses del periodo
-- PF OOS cae mas del 50% respecto al in-sample
+
+En el Analisis de Degradacion OOS (paso 12b):
+- PF OOS < 1.3
+
+En el WFO:
+- WFE < 30%
+- 2 ventanas OOS negativas consecutivas
+- DD OOS > 8% en alguna ventana
+- PF OOS < 1.0 en la ultima ventana
 
 En cualquier otro caso la decision es del humano.
 
@@ -141,22 +155,26 @@ Al inicio de cada sesion ejecutar en orden:
    Crear o actualizar ticket si hay hipotesis activa
 2. market-selector → seleccionar activo optimo
 3. market-analyst → generar hipotesis
+   Leer skill-avoiding-overfitting.md obligatoriamente
    Crear ticket nuevo en research\active-tickets\
 4. propfirm-analyst → analizar prop firms
    Añadir entrada a evaluation-log.md del ticket
 5. funding-specialist → validar compatibilidad
    Añadir entrada a evaluation-log.md del ticket
 6. sq-specialist → generar configuracion Builder
+   Verificar skill-avoiding-overfitting.md
    Actualizar current-phase.txt a "build-pending"
 
 ### Fase de build
 7. [humano lanza el build en SQ]
    Actualizar current-phase.txt a "build-running"
 8. evaluator-assistant → generar informe Evaluation Gate
+   Aplicar criterios de descarte automatico
    Actualizar current-phase.txt a "evaluation-gate"
 9. [humano firma la decision del Evaluation Gate]
    Añadir decision a gate-decisions.md del ticket
-   Si PASA: actualizar current-phase.txt a "retester-pending"
+   Si PASA: actualizar current-phase.txt a
+   "retester-pending"
    Si DESCARTAR: mover ticket a archived\
 
 ### Fase de validacion
@@ -166,11 +184,32 @@ Al inicio de cada sesion ejecutar en orden:
     Actualizar current-phase.txt a "retester-running"
 12. orchestrator → evalua resultados Retester
     Añadir decision a gate-decisions.md
-    Si PASA: actualizar a "optimizer-pending"
+    Si PASA: actualizar a "pre-wfo-analysis"
+
+12b. orchestrator → Analisis de Degradacion OOS
+    El sq-specialist genera informe comparativo IS vs OOS.
+    Criterios de decision automatica:
+    - PF OOS < 1.3 → DESCARTAR automatico
+      No llegara al 1.5 en WFO. Cerrar ticket.
+    - Caida de PF > 20% respecto al IS → REVISAR
+      Posible sobreajuste. Simplificar y relanzar Builder.
+    - DD OOS > 6.5% → REVISAR
+      Margen muy ajustado para limite FTMO del 7%.
+    - Todo dentro de limites → continuar a Optimizer
+    Este paso evita lanzar WFOs de 6 horas que
+    terminaran en DESCARTAR.
+    Actualizar ticket con decision antes de continuar.
+
 13. sq-specialist → configura Optimizer WFO
+    Solo se llega aqui si el paso 12b confirma
+    que la estrategia merece el WFO.
+    Leer skill-wfo-interpretation.md obligatoriamente
+    Actualizar current-phase.txt a "optimizer-pending"
 14. [humano lanza el Optimizer en SQ]
     Actualizar current-phase.txt a "optimizer-running"
 15. orchestrator → evalua resultados Optimizer
+    Leer skill-wfo-interpretation.md
+    Aplicar criterios de dictamen WFO
     Añadir decision a gate-decisions.md
 
 ### Fase de aprobacion
@@ -205,13 +244,48 @@ DECISION HUMANA REQUERIDA: [SI/NO]
 
 1. Invocar evaluator-assistant para generar informe
 2. El evaluator-assistant aplica criterios de
-   descarte automatico — si aplica, descartar sin
+   descarte automatico — si aplica descartar sin
    pasar al humano
-3. Si no aplica descarte automatico, presentar
+3. Si no aplica descarte automatico presentar
    informe al humano para decision final
 4. Humano firma la decision
 5. Actualizar ticket con la decision
 6. Mover archivos a carpeta correcta
+
+---
+
+## Protocolo de Analisis de Degradacion OOS (12b)
+
+Cuando el Retester termina el orchestrator invoca
+al sq-specialist con este prompt:
+
+"Actua segun agents\sq-specialist.md.
+Lee docs\skills\skill-results-analysis.md.
+Genera el informe comparativo IS vs OOS para
+la estrategia [nombre] del ticket [TICKET-ID].
+Calcula la caida de PF entre IS y OOS.
+Calcula el DD OOS.
+Determina si merece lanzar el WFO o no.
+Guarda el informe en strategyquant\retester\"
+
+El orchestrator lee el informe y aplica
+los criterios de decision automatica del paso 12b.
+
+---
+
+## Protocolo de evaluacion WFO
+
+Cuando el Optimizer termina el orchestrator invoca
+al sq-specialist con este prompt:
+
+"Actua segun agents\sq-specialist.md.
+Lee docs\skills\skill-wfo-interpretation.md.
+Genera el dictamen WFO completo para la estrategia
+[nombre] del ticket [TICKET-ID].
+Calcula WFE, estabilidad de parametros,
+ventanas negativas y DD OOS por ventana.
+Emite dictamen: ROBUSTA / ACEPTABLE / INESTABLE / DESCARTAR.
+Guarda el analisis en strategyquant\optimizer\"
 
 ---
 
@@ -220,10 +294,21 @@ DECISION HUMANA REQUERIDA: [SI/NO]
 Requisitos obligatorios antes de aprobar:
 - Informe de funding-specialist: COMPATIBLE
 - Informe de propfirm-analyst: PROP FIRM RECOMENDADA
-- Ha pasado Builder, Retester y Optimizer
+- Ha pasado Builder, Retester, paso 12b y Optimizer
+- Dictamen WFO: ROBUSTA o ACEPTABLE
 - WFE >= 50%
 - Decision humana final: SI
 - Ticket actualizado con todas las decisiones
+
+---
+
+## Protocolo de activacion de performance-monitor
+
+Cuando un EA entra en produccion:
+"Actua segun agents\performance-monitor.md.
+El EA [nombre] esta activo en [prop firm].
+Inicia el monitoreo diario y genera el
+primer reporte de estado."
 
 ---
 
@@ -242,13 +327,16 @@ Requisitos obligatorios antes de aprobar:
 Fecha: [fecha]
 Ticket: [TICKET-ID]
 Estrategia: [nombre]
-Fase: [Builder/Retester/Optimizer/Aprobacion]
+Fase: [Builder/Retester/OOS-Analysis/Optimizer/Aprobacion]
 Decision: [PASA/REVISAR/SIMPLIFICAR/DESCARTAR]
 Metricas:
-  - PF: [valor]
+  - PF IS: [valor]
+  - PF OOS: [valor]
+  - Caida PF: [%]
   - Max DD: [valor]
   - Trades: [valor]
   - WFE: [valor si aplica]
+  - Ventanas negativas: [numero si aplica]
 Razon: [explicacion breve]
 Decidido por: [humano / orchestrator-auto]
 Siguiente accion: [que pasa ahora]
