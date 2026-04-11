@@ -1,5 +1,5 @@
 # Project Status — TradingLab
-Ultima actualizacion: 2026-04-10
+Ultima actualizacion: 2026-04-11
 
 ---
 
@@ -15,16 +15,8 @@ Con el enfoque actual SQ decide la logica. Los numeros deciden que avanza.
 |---|-----------|----------------------|
 | 1 | SQ decide la logica de entrada | Paleta completa +100 indicadores — sin hipotesis humana |
 | 2 | Los numeros deciden que avanza | Criterios automaticos en cada puerta del pipeline |
-| 3 | Portfolio por correlacion | No por preferencia ni intuicion del humano |
+| 3 | Portfolio por correlacion automatica | No por preferencia ni intuicion del humano |
 | 4 | Unica intervencion humana: forward test demo | En ningun otro momento el humano decide nada |
-
-### Lo que el humano define (restricciones de riesgo)
-- Activo y temporalidad
-- Comisiones reales FTMO
-- Ratio TP/SL minimo 2:1
-- Riesgo 1% por trade
-- Max 2 trades por dia
-- Sesion 08:00 a 20:00
 
 ### Lo que SQ decide (logica de entrada)
 - Que indicadores usar de la paleta completa
@@ -33,17 +25,26 @@ Con el enfoque actual SQ decide la logica. Los numeros deciden que avanza.
 - Que parametros dentro de los rangos
 - Direccion de operaciones (long, short o ambas)
 
-### Lo que el pipeline filtra
+### Lo que el humano define UNICAMENTE (restricciones de riesgo)
+- Comisiones reales de la prop firm objetivo
+- Ratio TP/SL minimo 2:1
+- Riesgo 1% por trade
+- Max 2 trades por dia
+- Sesion 08:00 a 20:00
+
+### Lo que el pipeline filtra (todo automatico)
 - Sobreajuste — via Retester, paso 12b y WFO
 - Redundancia — via correlation-analyst
-- Todo automaticamente. Sin subjetividad.
+- Incompatibilidad de portfolio — via DD combinado y correlacion
 
 ---
 
 ## 2. ESTADO ACTUAL
 
-**Fecha:** 2026-04-10
-**Situacion:** Pipeline rediseñado. Build 8 corriendo con enfoque anterior (ultimo build con hipotesis humana). Build 9 sera el primero con Builder libre sin sesgo humano.
+**Fecha:** 2026-04-11
+**Situacion:** Proyecto rediseñado completamente. Todo sesgo humano eliminado del pipeline.
+Build 8 corriendo en dispositivo alber (ultimo build con hipotesis humana — referencia).
+Build 9 pendiente: primer Builder libre sin sesgo humano, primer build multi-activo.
 
 ### Documentacion base
 
@@ -58,7 +59,7 @@ Con el enfoque actual SQ decide la logica. Los numeros deciden que avanza.
 
 **Agentes activos:** 11
 **Skills operativas:** 22 en docs\skills\
-**Tickets activos:** 1 — TICKET-001 en fase build-running (Build 8)
+**Tickets activos:** 1 — TICKET-001 en fase build-running (Build 8, enfoque anterior)
 
 ---
 
@@ -66,22 +67,23 @@ Con el enfoque actual SQ decide la logica. Los numeros deciden que avanza.
 
 | # | Agente | Rol actual |
 |---|--------|------------|
-| 1 | market-selector | Selecciona el activo optimo antes de cada ciclo de busqueda |
+| 1 | market-selector | Prioriza activos por scoring numerico automatico — 30+ activos disponibles |
 | 2 | market-analyst | Configura parametros del Builder libre — NO genera hipotesis (ROL REDISEÑADO) |
-| 3 | propfirm-analyst | Analiza y compara prop firms por activo y estrategia |
+| 3 | propfirm-analyst | Analiza y compara prop firms por activo y estrategia automaticamente |
 | 4 | funding-specialist | Evalua compatibilidad con reglas de la prop firm elegida |
 | 5 | sq-specialist | Configura SQ Builder, Retester y Optimizer |
 | 6 | evaluator-assistant | Genera informes estructurados del Evaluation Gate |
 | 7 | correlation-analyst | Gestiona automaticamente la composicion del portfolio (ACTIVADO) |
 | 8 | export-specialist | Exporta estrategias aprobadas de SQ a MQL5/MT5 |
 | 9 | performance-monitor | Monitorea EAs en produccion y alerta sobre riesgo |
-| 10 | data-manager | Verifica y gestiona datos historicos en SQ |
-| 11 | orchestrator | Coordina el pipeline y aplica criterios automaticos |
+| 10 | data-manager | Verifica y gestiona datos historicos en SQ para todos los activos |
+| 11 | orchestrator | Coordina el pipeline y aplica criterios automaticos — nunca intuicion |
 
-### Cambios respecto al estado anterior
+### Cambios del rediseño 2026-04-11
 
-- **market-analyst rediseñado:** antes generaba hipotesis manuales (causa de los 8 builds fallidos). Ahora solo configura el terrain de busqueda. NUNCA propone logicas de entrada.
+- **market-analyst rediseñado:** antes generaba hipotesis manuales (causa de los 8 builds fallidos). Ahora solo configura el terreno de busqueda. NUNCA propone logicas de entrada.
 - **correlation-analyst activado:** antes era un agente planificado. Ahora es operativo y gestiona el portfolio automaticamente.
+- **market-selector expandido:** ahora cubre 30+ activos con scoring numerico. El humano no elige el activo.
 - **11 agentes activos** (antes 10).
 
 ### Agentes planificados (post Capa 1)
@@ -130,24 +132,100 @@ Con el enfoque actual SQ decide la logica. Los numeros deciden que avanza.
 | Build 5 | Hipotesis humana | EMACross-ADX M15 con comisiones | PF max 1.27 — edge insuficiente en M15 | DESCARTADO |
 | Build 6 | Hipotesis humana | NBARBreakout-RSI M15 | PF max 1.18 — M15 con comisiones inviable | DESCARTADO |
 | Build 7 | Hipotesis humana | NBARBreakout-RSI H1 | Resultado desconocido — dispositivo anterior | PENDIENTE |
-| Build 8 | Hipotesis humana | TrendFollowing EURUSD H1 EMA50+ADX | EN EJECUCION — ultimo build con sesgo humano | EN CURSO |
-| Build 9+ | Builder libre | Paleta completa +100 indicadores | PENDIENTE — primer build sin sesgo humano | PENDIENTE |
+| Build 8 | Hipotesis humana | TrendFollowing EURUSD H1 EMA50+ADX | EN EJECUCION en dispositivo alber — ultimo build con sesgo humano | EN CURSO |
+| Build 9+ | Builder libre | Paleta completa +100 indicadores | PENDIENTE — primer build sin sesgo humano — multi-activo | PENDIENTE |
 
 ### Aprendizajes acumulados
 
 - **M15 descartado formalmente:** comisiones reales FTMO eliminan el edge en M15
 - **Hipotesis humana descartada:** 8 builds fallidos por restriccion del espacio de busqueda
-- **H1 adoptado** como temporalidad principal
+- **H1 adoptado** como temporalidad principal para todos los activos
 - **Builder libre es el camino:** SQ explora lo que el humano nunca consideraria
+- **Multi-activo desde Build 9:** market-selector decide el activo por scoring, no el humano
 
 ---
 
-## 6. CONFIGURACION BUILDER LIBRE (Build 9+)
+## 6. UNIVERSO DE MERCADOS (30+ activos)
+
+El market-selector prioriza todos los activos por scoring numerico.
+El humano no elige el activo — los numeros deciden.
+
+### Forex Majors (Dukascopy M1 desde 2003)
+
+| Activo | Spread FTMO | Comision | Slippage | Estado |
+|--------|-------------|----------|----------|--------|
+| EUR/USD | 0.5 pips | 7 USD/lote | 0.5 pips | ACTIVO |
+| GBP/USD | 0.8 pips | 7 USD/lote | 0.5 pips | PENDIENTE |
+| USD/JPY | 0.5 pips | 7 USD/lote | 0.5 pips | PENDIENTE |
+| USD/CHF | 0.8 pips | 7 USD/lote | 0.5 pips | PENDIENTE |
+| AUD/USD | 0.6 pips | 7 USD/lote | 0.5 pips | PENDIENTE |
+| NZD/USD | 1.0 pips | 7 USD/lote | 0.5 pips | PENDIENTE |
+| USD/CAD | 0.8 pips | 7 USD/lote | 0.5 pips | PENDIENTE |
+
+### Forex Crosses (Dukascopy M1 desde 2003)
+
+| Activo | Spread FTMO | Comision | Slippage | Estado |
+|--------|-------------|----------|----------|--------|
+| EUR/GBP | 0.8 pips | 7 USD/lote | 0.8 pips | PENDIENTE |
+| EUR/JPY | 1.0 pips | 7 USD/lote | 0.8 pips | PENDIENTE |
+| GBP/JPY | 1.5 pips | 7 USD/lote | 0.8 pips | PENDIENTE |
+| EUR/AUD | 1.5 pips | 7 USD/lote | 0.8 pips | PENDIENTE |
+| EUR/CHF | 1.0 pips | 7 USD/lote | 0.8 pips | PENDIENTE |
+| AUD/JPY | 1.0 pips | 7 USD/lote | 0.8 pips | PENDIENTE |
+| GBP/AUD | 2.0 pips | 7 USD/lote | 0.8 pips | PENDIENTE |
+| CAD/JPY | 1.2 pips | 7 USD/lote | 0.8 pips | PENDIENTE |
+| NZD/JPY | 1.5 pips | 7 USD/lote | 0.8 pips | PENDIENTE |
+
+### Metales (Dukascopy M1 desde 2003)
+
+| Activo | Spread FTMO | Comision | Slippage | Estado |
+|--------|-------------|----------|----------|--------|
+| XAU/USD | 30 pips | 7 USD/lote | 2 pips | ACTIVO |
+| XAG/USD | 3 pips | 7 USD/lote | 1 pip | PENDIENTE |
+
+### Indices (Dukascopy M1 disponible)
+
+| Activo | Spread FTMO | Estado |
+|--------|-------------|--------|
+| US30 (Dow) | 2.0 pts | PENDIENTE — verificar comisiones |
+| US500 (S&P) | 0.5 pts | PENDIENTE — verificar comisiones |
+| NAS100 (Nasdaq) | 1.5 pts | PENDIENTE — verificar comisiones |
+| DE40 (DAX) | 1.5 pts | PENDIENTE — verificar comisiones |
+| UK100 (FTSE) | 1.5 pts | PENDIENTE — verificar comisiones |
+| JP225 (Nikkei) | 10 pts | PENDIENTE — verificar comisiones |
+
+### Cripto (datos desde 2017-2018)
+
+| Activo | Spread FTMO | Estado |
+|--------|-------------|--------|
+| BTC/USD | ~20 USD | PENDIENTE — mercado 24/7 |
+| ETH/USD | ~2 USD | PENDIENTE — mercado 24/7 |
+
+**CRITICO:** Para indices y cripto verificar comisiones exactas con propfirm-analyst antes de cada build.
+
+### Scoring del market-selector (5 criterios)
+
+| Criterio | Peso | Descripcion |
+|----------|------|-------------|
+| Compatibilidad prop firms | 25% | Cuantas prop firms permiten el activo |
+| Calidad de datos en SQ | 20% | Periodo y completitud de los datos M1 |
+| Coste de transaccion | 20% | Spread + comision + slippage vs ATR H1 |
+| Volatilidad y oportunidad | 15% | ATR H1 suficiente para ratio 2:1 |
+| Diversificacion del portfolio | 20% | Correlacion con activos ya activos |
+
+Prioridad alta: score >= 70 — lanzar Builder inmediatamente
+Prioridad media: score 50-69 — lanzar cuando alta prioridad este en pipeline
+Prioridad baja: score < 50 — posponer
+
+---
+
+## 7. BUILDER LIBRE (Build 9+)
 
 ### Filosofia
 SQ tiene libertad total para explorar millones de combinaciones.
-El humano solo define las restricciones de riesgo.
+El humano solo define restricciones de riesgo.
 El pipeline filtra el sobreajuste automaticamente.
+SQ decide la logica. El humano no.
 
 ### Parametros geneticos
 
@@ -156,38 +234,41 @@ El pipeline filtra el sobreajuste automaticamente.
 | Generaciones | 20 | 30 por ciclo continuo |
 | Poblacion por isla | 50 | 100 |
 | Islas | 4 | 4 |
-| Modo | Se paraba solo | Corre indefinido |
+| Modo | Se paraba solo | Corre indefinido (Start again when finished) |
 | Max estrategias | 500 | 1000 |
 | Stop generation | Auto | Never |
 
-### Paleta de bloques — COMPLETA
+### Paleta de bloques — COMPLETA SIN RESTRICCIONES
+
 - Todos los grupos activados: tendencia, momentum, volatilidad, precio puro
 - Todos los operadores activados
-- Señales predefinidas: cruces, niveles, rupturas, tendencia
 - Indicadores: EMA, SMA, DEMA, HMA, ADX, Aroon, SAR, RSI, Stochastic,
   CCI, MACD, Williams %R, Momentum, ROC, DeMarker, ATR, Bollinger,
   Keltner, Donchian, Standard Deviation, High, Low, Close, Open, HL2, HLC3,
   Highest, Lowest, Range — mas de 100 combinaciones posibles
+- Señales predefinidas: cruces, niveles, rupturas, tendencia
 - Sin restriccion de indicadores: NINGUNA
 - Sin hipotesis previa: NINGUNA
 
-### Filtros del Builder (mejorados)
+### Filtros del Builder (clasificacion)
 
-| Filtro | Antes | Ahora |
-|--------|-------|-------|
-| PF minimo | 0.8 | 1.3 |
-| Trades/mes minimo | cualquier | 6 |
-| Ratio Ret/DD minimo | 0.5 | 0.8 |
-| Monte Carlo | Desactivado | Activado |
+| Filtro | Valor |
+|--------|-------|
+| PF minimo | 1.3 |
+| Trades/mes minimo | 6 |
+| Ratio Ret/DD minimo | 0.8 |
+| Monte Carlo | ACTIVADO |
 
 ### Restricciones de riesgo (invariables)
-- Comisiones reales FTMO obligatorias
+
+- Comisiones reales de la prop firm objetivo — verificadas antes de cada build
 - Riesgo: 1% por trade, capital 25.000 USD
 - Max 2 trades por dia, sesion 08:00-20:00
 - SL: ATR-based 1.5x a 3.0x
 - TP: ATR-based 3.0x a 6.0x, ratio minimo 2:1 sobre SL
 
-### Tiempo de build recomendado
+### Tiempo de build
+
 - Minimo: 24 horas
 - Optimo: 48 horas
 - Parar cuando: PF maximo no sube en 6+ horas consecutivas
@@ -196,7 +277,7 @@ Configuracion completa en: docs\skills\skill-builder-libre.md
 
 ---
 
-## 7. CRITERIOS AUTOMATICOS DEL PIPELINE
+## 8. CRITERIOS AUTOMATICOS DEL PIPELINE
 
 Todo el pipeline opera sin intervencion humana.
 Los criterios son numericos y no negociables.
@@ -266,7 +347,7 @@ Criterios completos en: docs\skills\skill-evaluation-auto.md
 
 ---
 
-## 8. OBJETIVO DE PORTFOLIO
+## 9. OBJETIVO DE PORTFOLIO
 
 ### Estructura objetivo
 
@@ -293,7 +374,7 @@ Criterios completos en: docs\skills\skill-evaluation-auto.md
 | 6+ | 0.6% | 3.6% |
 | 8 | 0.5% | 4% |
 
-### Proceso de seleccion (automatico)
+### Proceso de seleccion (automatico — correlation-analyst)
 1. Scoring individual de cada candidata (formula en skill-portfolio-selection.md)
 2. Score minimo para considerar: 55/100
 3. Algoritmo greedy por score descendente
@@ -304,35 +385,17 @@ Criterios completos en: docs\skills\skill-portfolio-selection.md
 
 ---
 
-## 9. CONFIGURACION TECNICA ESTANDAR
+## 10. PROP FIRMS OBJETIVO
 
-### Comisiones obligatorias en TODOS los builds y retests
+| Prop Firm | Tipo | Activos | Estado |
+|-----------|------|---------|--------|
+| FTMO 2-Step | Forex + Metales + Indices | DD 10% din. | PRINCIPAL |
+| E8 Funding | Forex + Metales | DD 8% est. | ALTERNATIVA |
+| TFT | Forex + Metales + Indices | DD 6% din. | ALTERNATIVA |
+| Apex | Futuros CME | Variable | PENDIENTE datos CME |
+| MFF | Futuros CME | Variable | PENDIENTE datos CME |
 
-| Activo | Spread | Comision | Slippage |
-|--------|--------|----------|---------|
-| EUR/USD | 0.5 pips | 7 USD/lote | 0.5 pips |
-| XAU/USD | 30 pips | 7 USD/lote | 2 pips |
-
-### Periodos de datos
-
-| Periodo | Fechas | Uso |
-|---------|--------|-----|
-| In-Sample (IS) | 2003.05.05 a 2020.12.31 | Builder y Evaluation Gate |
-| Out-of-Sample (OOS) | 2021.01.01 a fecha actual | Retester, paso 12b, WFO |
-
-CRITICO: Los datos OOS son intocables hasta el Retester.
-Nunca usar datos OOS en el Builder.
-
-### Reglas de riesgo invariables
-- Riesgo por trade: 1% (ajustable por portfolio)
-- Max trades por dia: 2
-- Sesion: 08:00 a 20:00
-- Ratio TP/SL minimo: 2:1
-- Capital: 25.000 USD
-
----
-
-## 10. PROP FIRM PRINCIPAL Y ALTERNATIVAS
+El propfirm-analyst decide automaticamente que prop firm es optima para cada estrategia y activo. Sin preferencia humana.
 
 ### FTMO 2-Step (principal)
 
@@ -348,51 +411,49 @@ Puntos criticos:
 - Daily Loss DINAMICO — recalculo medianoche hora Praga
 - Max DD DINAMICO y SOLO SUBE (nunca baja)
 - Sin Regla del Mejor Dia en 2-Step
-- Dias de trading: posicion de 3 dias = 1 dia contado
-
-### Alternativas
-
-| Prop Firm | Tipo | DD | Split | Estado |
-|-----------|------|----|-------|--------|
-| E8 | 2-Step | 8% est. | 80% | Alternativa Forex |
-| TFT | 1-Step | 6% din. | 75% | Alternativa Forex |
-| Apex | Futuros | Variable | Variable | Pendiente datos CME |
-| MFF | Futuros | Variable | Variable | Pendiente datos CME |
 
 ---
 
 ## 11. PIPELINE COMPLETO SIN INTERVENCION HUMANA
 
 ```
-Fase 1 — Preparacion:
-data-manager (verifica datos)
-→ market-selector (selecciona activo)
-→ market-analyst (configura Builder libre)
+Fase 1 — Preparacion (automatica):
+data-manager (verifica datos de todos los activos)
+→ market-selector (scoring numerico — decide activo)
+→ market-analyst (configura Builder libre — sin hipotesis)
 
-Fase 2 — Build (24-48 horas):
+Fase 2 — Build (humano lanza y para en SQ):
 SQ Builder libre — paleta completa +100 indicadores
+24-48 horas modo continuo
 → 1000+ candidatas en databank
 
-Fase 3 — Evaluation Gate automatico:
+Fase 3 — Evaluation Gate (automatico):
 evaluator-assistant + orchestrator
+Criterios numericos — descarte y aprobacion automaticos
 → ~200-300 candidatas pasan
 
-Fase 4 — Validacion automatica:
-sq-specialist (Retester)
-→ orchestrator (paso 12b)
-→ sq-specialist (WFO)
-→ orchestrator (dictamen WFO)
+Fase 4 — Validacion (humano lanza en SQ):
+sq-specialist (Retester) — humano pulsa inicio
+→ orchestrator (paso 12b automatico)
+→ sq-specialist (WFO) — humano pulsa inicio
+→ orchestrator (dictamen WFO automatico)
 → ~5-15 estrategias aprobadas
 
-Fase 5 — Portfolio automatico:
+Fase 5 — Portfolio (automatico):
 correlation-analyst
-→ ~3-10 incluidas en portfolio
+→ ~3-10 incluidas en portfolio activo
 
 Fase 6 — Produccion:
 export-specialist (exporta a MT5)
 → FORWARD TEST EN DEMO (UNICA INTERVENCION HUMANA — 2 semanas)
 → Challenge en prop firm
 → performance-monitor (monitoreo continuo)
+
+Mantenimiento (automatico):
+performance-monitor → reportes semanales
+correlation-analyst → rebalanceo mensual
+Si deterioro → reemplazo automatico
+Si portfolio incompleto → nuevo ciclo Builder
 ```
 
 ---
@@ -401,16 +462,16 @@ export-specialist (exporta a MT5)
 
 1. SQ decide la logica de entrada — nunca el humano
 2. Los numeros deciden — nunca la intuicion
-3. Sin segunda oportunidad para estrategias descartadas
-4. Comisiones reales FTMO en todos los builds y retests
-5. H1 como temporalidad principal — M15 descartado formalmente
-6. Ratio TP/SL minimo 2:1 en todos los builds
-7. Riesgo 1% por trade (ajustable por portfolio)
-8. Max 2 trades por dia
-9. Datos OOS nunca en el Builder
-10. Mismas comisiones en Builder y Retester
+3. Los activos se priorizan por score — no por gusto
+4. Sin segunda oportunidad para estrategias descartadas
+5. Comisiones reales verificadas antes de cada build
+6. H1 como temporalidad para todos los activos — M15 descartado
+7. Ratio TP/SL minimo 2:1 en todos los builds
+8. Riesgo 1% por trade (ajustable por portfolio)
+9. Max 2 trades por dia por estrategia
+10. Datos OOS nunca en el Builder
 11. Forward test demo obligatorio antes de challenge
-12. Portfolio por correlacion no por preferencia
+12. Portfolio por correlacion y diversificacion — no por preferencia
 13. CLAUDE.md no se modifica sin consenso
 
 ---
@@ -419,8 +480,8 @@ export-specialist (exporta a MT5)
 
 | Capa | Estado | Criterio de entrada | Descripcion |
 |------|--------|---------------------|-------------|
-| 0 | EN CURSO | — | Pipeline manual, Builder libre, primer build H1 |
-| 1 | PENDIENTE | 3 estrategias aprobadas | 2 agentes nuevos, GBP/USD y USD/JPY |
+| 0 | EN CURSO | — | Pipeline automatico multi-activo, Builder libre, primer build H1 |
+| 1 | PENDIENTE | 3 estrategias aprobadas | 2 agentes nuevos, expansion mercados |
 | 2 | PENDIENTE | 5+ estrategias aprobadas | N8N + API Anthropic + semi-autonomo |
 | 3 | PENDIENTE | Sistema estable | SQ Remote Control + MT5 + multi-firm |
 | 4 | PENDIENTE | Sistema maduro | Portfolio 10+ estrategias, escalado |
@@ -431,33 +492,33 @@ Detalle en: docs\roadmap-v2.md
 
 ## 14. SIGUIENTE ACCION CONCRETA
 
-**Estado:** Build 8 corriendo (enfoque anterior — referencia comparativa).
-**Proximo hito:** Lanzar Build 9 con Builder libre.
+**Estado:** Build 8 corriendo en dispositivo alber (enfoque anterior — referencia comparativa).
+**Proximo hito:** Lanzar Build 9 con Builder libre multi-activo.
 
-### Paso 1 — Cuando Build 8 termine
-1. Anotar en TICKET-001 evaluation-log.md:
-   - Numero de candidatas generadas
-   - PF maximo del databank
-   - DD maximo del databank
-   - Trades promedio por candidata
-2. Invocar evaluator-assistant con los resultados
-3. orchestrator aplica criterios de skill-evaluation-auto.md
-4. Documentar resultado como referencia del enfoque anterior
+### Paso 1 — Verificar datos disponibles en SQ
+1. data-manager verifica que activos tienen datos M1 disponibles en SQ
+2. Confirmar periodo: 2003-2020 para IS, 2021-actual para OOS
+3. Actualizar inventario de datos por activo
 
-### Paso 2 — Lanzar Build 9 (Builder libre)
-1. data-manager verifica datos actualizados
-2. market-selector confirma activo (EUR/USD esperado)
-3. market-analyst configura Builder libre segun skill-builder-libre.md
+### Paso 2 — market-selector prioriza activos por scoring
+1. Aplicar los 5 criterios a todos los activos disponibles
+2. Ordenar de mayor a menor score
+3. El activo con mayor score recibe el primer ciclo de Builder libre
+4. Generar plan de ciclos para los siguientes activos
+
+### Paso 3 — market-analyst configura Builder libre
+1. Confirmar activo elegido por market-selector
+2. Verificar comisiones exactas con propfirm-analyst
+3. Configurar Builder segun skill-builder-libre.md
 4. Verificar paleta completa activada, Monte Carlo activado
-5. Lanzar en modo continuo: Start again when finished ACTIVADO
-6. Dejar correr minimo 48 horas
+5. Crear archivo strategyquant\builder\build-9-config.md
 
-### Paso 3 — Evaluation Gate automatico (tras Build 9)
-1. orchestrator aplica criterios de skill-evaluation-auto.md
-2. Sin intervencion humana en el filtrado
-3. Las candidatas que pasan van al Retester
-4. Los numeros deciden — no el humano
+### Paso 4 — Lanzar Build 9 en modo continuo
+1. Lanzar en SQ con Start again when finished ACTIVADO
+2. Dejar correr minimo 48 horas
+3. Parar cuando PF maximo no sube en 6+ horas consecutivas
+4. orchestrator aplica Evaluation Gate automatico
 
-**Objetivo de Build 9:** generar las primeras candidatas
-del nuevo enfoque. El portfolio minimo requiere 3 estrategias
-no correlacionadas aprobadas por el WFO.
+**Objetivo de Build 9:** generar las primeras candidatas del nuevo enfoque sin sesgo humano.
+El portfolio minimo requiere 3 estrategias no correlacionadas aprobadas por el WFO.
+El market-selector decide el activo — no el humano.
