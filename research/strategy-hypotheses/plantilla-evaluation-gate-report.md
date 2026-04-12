@@ -1,170 +1,121 @@
-# EVALUATION GATE REPORT
+# EVALUATION GATE REPORT — AUTOMATICO
 
 ## Metadatos
-Estrategia: [nombre o ID]
+Estrategia: [ID generado por SQ]
+Build numero: [N]
+Activo: [simbolo]
 Ticket: [TICKET-ID]
 Fecha del build: [fecha]
 Fecha del informe: [fecha]
 Generado por: evaluator-assistant
-Build numero: [numero]
+Decision por: orchestrator-auto (sin humano)
 
 ---
 
 ## 1. METRICAS PRINCIPALES
 
-| Metrica | Valor | Umbral | Estado |
-|---------|-------|--------|--------|
-| Profit Factor | [valor] | >= 1.5 | OK / ALERTA |
-| Max Drawdown | [valor]% | < 7% | OK / ALERTA |
-| Daily Drawdown max | [valor]% | < 3% | OK / ALERTA |
-| Trades totales | [numero] | >= 100 | OK / ALERTA |
-| Trades por mes | [numero] | >= 20 | OK / ALERTA |
-| Win Rate | [valor]% | >= 40% | OK / ALERTA |
-| Ratio TP/SL efectivo | [valor]:1 | >= 2:1 | OK / ALERTA |
-| Ratio Rent/DD | [valor] | >= 1.5 | OK / ALERTA |
+| Metrica | Valor | Descarte auto | Aprobacion auto | Estado |
+|---------|-------|---------------|-----------------|--------|
+| Profit Factor | [valor] | < 1.4 | >= 1.5 | PASA/DESCARTAR |
+| Max Drawdown | [valor]% | > 7% | <= 6% | PASA/DESCARTAR |
+| Daily DD max | [valor]% | > 5% | <= 3% | PASA/DESCARTAR |
+| Trades totales | [numero] | < 80 | >= 120 | PASA/DESCARTAR |
+| Trades por mes | [numero] | < 8 | >= 10 | PASA/DESCARTAR |
+| Win Rate | [valor]% | < 30% | >= 38% | PASA/DESCARTAR |
+| Ratio TP/SL | [valor]:1 | < 1.8:1 | >= 2:1 | PASA/DESCARTAR |
+| Ratio Rent/DD | [valor] | < 0.8 | >= 1.5 | PASA/DESCARTAR |
+| Max racha perd | [numero] | > 8 | <= 6 | PASA/DESCARTAR |
+
+Criterios de descarte cumplidos: [N]
+Si >= 1 → DESCARTAR automatico
+
+Criterios de aprobacion cumplidos: [N] de [total]
+Si todos → PASA automatico
 
 ---
 
 ## 2. CONSISTENCIA POR ANOS
 
-| Ano | PF | DD max | Trades | Estado |
-|-----|-----|--------|--------|--------|
-| 2003 | | | | OK / MALO |
-| 2004 | | | | OK / MALO |
-| 2005 | | | | OK / MALO |
-| 2006 | | | | OK / MALO |
-| 2007 | | | | OK / MALO |
-| 2008 | | | | OK / MALO |
-| 2009 | | | | OK / MALO |
-| 2010 | | | | OK / MALO |
-| 2011 | | | | OK / MALO |
-| 2012 | | | | OK / MALO |
-| 2013 | | | | OK / MALO |
-| 2014 | | | | OK / MALO |
-| 2015 | | | | OK / MALO |
-| 2016 | | | | OK / MALO |
-| 2017 | | | | OK / MALO |
-| 2018 | | | | OK / MALO |
-| 2019 | | | | OK / MALO |
-| 2020 | | | | OK / MALO |
+| Ano | PF | DD max | Trades | Positivo |
+|-----|-----|--------|--------|----------|
+| 2003 | [PF] | [DD]% | [N] | SI/NO |
+| 2004 | [PF] | [DD]% | [N] | SI/NO |
+| ... | ... | ... | ... | ... |
+| 2020 | [PF] | [DD]% | [N] | SI/NO |
 
-Anos con PF < 1.0: [numero] de 18
-Porcentaje de anos positivos: [%]%
-Conclusion consistencia: ROBUSTA / ACEPTABLE / FRAGIL
+Anos positivos: [N] de [total] = [%]%
+Umbral descarte: < 65% → DESCARTAR
+Umbral aprobacion: >= 75% → PASA
 
-Umbral minimo aceptable: 70% de anos positivos
-Si menos del 70% → DESCARTAR automaticamente
+Anos negativos en crisis (2008/2015/2020): [N]
+Anos negativos fuera de crisis: [N]
 
 ---
 
 ## 3. SEÑALES DE SOBREAJUSTE
-(basado en skill-avoiding-overfitting.md)
 
-[ ] PF > 3.0 con trades < 100 — NO detectado
-[ ] Mas del 50% del beneficio en un mes — NO detectado
-[ ] Solo funciona en 2 anos o menos — NO detectado
-[ ] Parametros en extremo del rango — NO detectado
-[ ] DD maximo en los ultimos 3 meses — NO detectado
-[ ] Resultado mejora solo al ampliar el SL — NO detectado
+[ ] PF > 3.0 con trades < 100 — SI/NO
+[ ] Mas del 45% beneficio en un mes — SI/NO
+[ ] Solo funciona en 2 anos o menos — SI/NO
+[ ] DD maximo en ultimos 3 meses IS — SI/NO
+[ ] Resultado mejora al ampliar SL — SI/NO
+[ ] Monte Carlo degradacion — SI/NO
 
 Señales activas: [numero]
-Nivel de riesgo sobreajuste: BAJO / MEDIO / ALTO
-
-Si ALTO → DESCARTAR automaticamente
+Si >= 2 → DESCARTAR automatico
 
 ---
 
-## 4. ANALISIS DE RACHAS PERDEDORAS
+## 4. RACHAS PERDEDORAS
 
-Max racha perdedora consecutiva: [numero] trades
-Perdida de la racha: [numero]% del balance
-(con riesgo 1% por trade)
+Max racha perdedora: [numero] trades
+Perdida de la racha: [valor]% del balance
 
 Evaluacion FTMO cuenta 25.000$:
-- Racha de [N] trades x 250$ = [USD]
-- Como % del balance: [%]%
-- Viola Daily Loss operativo 3% (750$): SI / NO
-- Viola Max DD operativo 7% (1.750$): SI / NO
+- Racha x 250$ = [USD]
+- Viola Daily Loss operativo 3%: SI/NO
+- Viola Max DD operativo 7%: SI/NO
 
 ---
 
-## 5. SIMULACION DEL CHALLENGE
+## 5. SIMULACION RAPIDA DEL CHALLENGE
 
 Rendimiento mensual promedio: [%]%
-Peor mes del periodo: [%]%
-Mejor mes del periodo: [%]%
-Meses con rendimiento >= +10%: [N] de [total]
-Meses con violacion de limites: [N] de [total]
+Peor mes: [%]%
+Mejor mes: [%]%
+Meses que alcanzarian +10%: [N] de [total]
+Meses con violacion de limites: [N]
 
-Probabilidad estimada de pasar el challenge: [%]%
-
+Probabilidad estimada: [%]%
 > 70% → VIABLE
-40-70% → REVISAR position sizing
-< 40% → NO viable todavia
+40-70% → MARGINAL
+< 40% → NO VIABLE
 
 ---
 
-## 6. COMPARATIVA CON BUILDS ANTERIORES
+## 6. DECISION AUTOMATICA
 
-| Build | Hipotesis | PF | DD | Resultado |
-|-------|-----------|-----|-----|-----------|
-| Build 4 | EMACross M15 | 1.65 | 5.2% | Retester negativo |
-| Build 5 | EMACross M15 | 1.27 | 6.1% | Descartada |
-| Build 6 | NBAR M15 | 1.18 | 7.8% | Descartada |
-| Build 7 | NBAR H1 | ? | ? | Desconocido |
-| ESTE | [nombre] | [PF] | [DD]% | Pendiente |
+[ ] DESCARTAR AUTOMATICO
+    Criterio(s): [criterio exacto con valor vs umbral]
+    Accion: mover a results\rejected\
 
-Esta estrategia es [mejor/igual/peor] que
-las candidatas del Build 4.
+[ ] PASA AUTOMATICO AL RETESTER
+    Todos los criterios cumplidos.
+    Accion: mover a results\reviewed\
 
----
+[ ] ZONA DE DECISION AUTOMATICA
+    Regla aplicada de skill-evaluation-auto.md:
+    [regla concreta y resultado]
 
-## 7. CRITERIOS DE DESCARTE AUTOMATICO
-
-Si alguno de estos se cumple descartar sin
-pasar al humano:
-
-[ ] PF < 1.3 con comisiones reales → NO
-[ ] DD > 8% → NO
-[ ] Trades < 50 → NO
-[ ] Mas del 50% beneficio en un mes → NO
-[ ] DD maximo en ultimos 3 meses → NO
-[ ] Menos del 70% de anos positivos → NO
-
-Descarte automatico aplicado: SI / NO
-Si SI → razon: [explicar]
-Si NO → continuar con recomendacion del agente
+Decision final: PASA / DESCARTAR
+Decidido por: orchestrator-auto
+Intervencion humana: NO
 
 ---
 
-## 8. RECOMENDACION DEL AGENTE
+## 7. TRAZABILIDAD
 
-Decision recomendada: PASA / REVISAR / SIMPLIFICAR / DESCARTAR
-
-Confianza: [X]/10
-
-Justificacion:
-[2-3 frases del razonamiento]
-
-Observaciones criticas:
-- [Observacion 1 si existe]
-- [Observacion 2 si existe]
-
-Siguiente paso recomendado:
-[Accion concreta]
-
----
-
-## 9. DECISION HUMANA
-
-[ ] PASA — proceder al Retester
-[ ] REVISAR — motivo: ______________________
-[ ] SIMPLIFICAR — aspecto: _________________
-[ ] DESCARTAR — motivo: ____________________
-
-Firmado por: _______________
-Fecha: _______________
-
-Actualizar ticket [TICKET-ID]:
-- gate-decisions.md con esta decision
-- current-phase.txt a "retester-pending" si PASA
+Ticket actualizado: [TICKET-ID]
+gate-decisions.md actualizado: SI
+current-phase.txt: [nueva fase]
+Archivos movidos a: [ruta]

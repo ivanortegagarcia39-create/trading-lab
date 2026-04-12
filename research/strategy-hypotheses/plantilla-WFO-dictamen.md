@@ -1,12 +1,14 @@
 # DICTAMEN WFO — Walk-Forward Optimization
 
 ## Metadatos
-Estrategia: [nombre]
+Estrategia: [ID generado por SQ]
+Activo: [simbolo]
+Build numero: [N]
 Ticket: [TICKET-ID]
 Fecha del WFO: [fecha]
 Fecha del dictamen: [fecha]
 Generado por: sq-specialist
-Leido por: orchestrator
+Decision por: orchestrator-auto (sin humano)
 
 ---
 
@@ -15,21 +17,22 @@ Leido por: orchestrator
 Metodo: Walk-Forward Optimization
 Tipo de ventana: Rolling (deslizante)
 Numero de ventanas: [numero] (minimo 5)
-Periodo IS por ventana: [X] años
-Periodo OOS por ventana: [X] año
-Porcentaje OOS: [%]%
+Porcentaje OOS por ventana: [%]%
 
 Parametros optimizados (maximo 3):
-- Parametro 1: [nombre] — rango [min] a [max]
-- Parametro 2: [nombre] — rango [min] a [max]
-- Parametro 3: [nombre] — rango [min] a [max] (opcional)
+- Parametro 1: [nombre] — rango [min-max], paso [x]
+  Valor del Builder: [valor original]
+- Parametro 2: [nombre] — rango [min-max], paso [x]
+  Valor del Builder: [valor original]
+- Parametro 3: [nombre] — rango [min-max], paso [x]
+  Valor del Builder: [valor original]
 
 Metrica de optimizacion: Profit Factor
 Metrica secundaria: Max Drawdown
 
 ---
 
-## 2. TABLA DE RESULTADOS POR VENTANA
+## 2. RESULTADOS POR VENTANA
 
 | Ventana | IS PF | IS DD% | OOS PF | OOS DD% | Param1 | Param2 | OOS OK |
 |---------|-------|--------|--------|---------|--------|--------|--------|
@@ -39,7 +42,9 @@ Metrica secundaria: Max Drawdown
 | 4 | | | | | | | SI/NO |
 | 5 | | | | | | | SI/NO |
 | 6 | | | | | | | SI/NO |
-| MEDIA | | | | | - | - | - |
+| 7 | | | | | | | SI/NO |
+| 8 | | | | | | | SI/NO |
+| MEDIA | | | | | — | — | — |
 
 OOS OK = PF OOS >= 1.0 Y DD OOS <= 7%
 
@@ -51,159 +56,126 @@ PF IS promedio: [valor]
 PF OOS promedio: [valor]
 
 WFE = (PF OOS promedio / PF IS promedio) x 100
-WFE = ([OOS] / [IS]) x 100 = [%]%
+WFE = [%]%
 
-Interpretacion:
-[ ] WFE >= 70% → Excelente
-[ ] WFE 50-70% → Buena — aceptable para avanzar
-[ ] WFE 40-50% → Regular — considerar simplificar
-[ ] WFE < 40% → Pobre — DESCARTAR o SIMPLIFICAR
+Umbral descarte: < 40%
+Umbral aprobacion: >= 50%
 
 ---
 
 ## 4. ESTABILIDAD DE PARAMETROS
 
 ### Parametro 1: [nombre]
-Valores por ventana: [v1], [v2], [v3], [v4], [v5]
+Valores por ventana: [v1], [v2], [v3], [v4], [v5], ...
 Media: [valor]
 Desviacion estandar: [valor]
 Desviacion como % de la media: [%]%
-
-[ ] Desviacion < 20% de la media → ESTABLE
-[ ] Desviacion 20-35% de la media → PRECAUCION
-[ ] Desviacion > 35% de la media → INESTABLE
+Resultado: ESTABLE (<25%) / PRECAUCION (25-35%) / INESTABLE (>35%)
 
 ### Parametro 2: [nombre]
-Valores por ventana: [v1], [v2], [v3], [v4], [v5]
+Valores por ventana: [v1], [v2], [v3], [v4], [v5], ...
 Media: [valor]
 Desviacion estandar: [valor]
 Desviacion como % de la media: [%]%
-
-[ ] Desviacion < 20% de la media → ESTABLE
-[ ] Desviacion 20-35% de la media → PRECAUCION
-[ ] Desviacion > 35% de la media → INESTABLE
+Resultado: ESTABLE / PRECAUCION / INESTABLE
 
 Conclusion estabilidad: ESTABLE / PRECAUCION / INESTABLE
+Umbral descarte: desviacion > 35% en cualquier parametro
 
 ---
 
-## 5. ANALISIS DE VENTANAS NEGATIVAS
+## 5. VENTANAS NEGATIVAS
 
 Ventanas con PF OOS < 1.0: [numero]
 Son consecutivas: SI / NO
-Ventanas con DD OOS > 7%: [numero]
 
-Interpretacion:
-[ ] 0 ventanas negativas → OK
-[ ] 1 ventana negativa aislada → Precaucion
-[ ] 2 ventanas negativas consecutivas → DESCARTAR
-[ ] Alguna ventana con DD > 7% → REVISAR o DESCARTAR
+Umbral descarte: 2 consecutivas
+Umbral aprobacion: max 1 aislada
+
+Ventanas con DD OOS > 7%: [numero]
+Umbral descarte: > 7.5% en cualquier ventana
 
 ---
 
-## 6. ANALISIS DE LA ULTIMA VENTANA
+## 6. ULTIMA VENTANA
 
-Ventana mas reciente (ultima):
 PF OOS ultima ventana: [valor]
 PF OOS promedio: [valor]
 Ratio ultima/promedio: [%]%
 
-[ ] Ratio >= 80% → Normal — edge se mantiene
-[ ] Ratio 60-80% → Precaucion — edge debilitandose
-[ ] Ratio < 60% → ALERTA — edge posiblemente desapareciendo
+Umbral descarte: PF OOS ultima < 1.0
+Umbral aprobacion: PF OOS ultima >= 1.1
 
 DD OOS ultima ventana: [valor]%
-[ ] DD OOS ultima <= 7% → OK
-[ ] DD OOS ultima > 7% → REVISAR
+Umbral: <= 7%
 
 ---
 
-## 7. CRITERIOS DE DESCARTE AUTOMATICO
+## 7. CRITERIOS AUTOMATICOS APLICADOS
 
-Aplicar descarte sin pasar al humano si:
+| Criterio | Valor | Descarte | Aprobacion | Resultado |
+|----------|-------|----------|------------|-----------|
+| WFE | [%]% | < 40% | >= 50% | PASA/DESCARTAR |
+| Ventanas negativas | [N] | 2 consec | Max 1 aisl | PASA/DESCARTAR |
+| DD OOS max ventana | [%]% | > 7.5% | <= 7% | PASA/DESCARTAR |
+| PF OOS ultima | [valor] | < 1.0 | >= 1.1 | PASA/DESCARTAR |
+| Desv parametros | [%]% | > 35% | < 25% | PASA/DESCARTAR |
+| PF OOS promedio | [valor] | < 1.1 | >= 1.25 | PASA/DESCARTAR |
 
-[ ] WFE < 30% → NO
-[ ] 2 ventanas OOS negativas consecutivas → NO
-[ ] DD OOS > 8% en alguna ventana → NO
-[ ] PF OOS < 1.0 en la ultima ventana → NO
+Criterios de descarte cumplidos: [N]
+Si >= 1 → DESCARTAR automatico
 
-Descarte automatico aplicado: SI / NO
-Si SI → razon: [explicar]
+Criterios de aprobacion cumplidos: [N] de [total]
+Si todos → APROBADA automatico
 
 ---
 
 ## 8. DICTAMEN FINAL
 
-### Resumen de indicadores
-
-| Indicador | Valor | Umbral | Estado |
-|-----------|-------|--------|--------|
-| WFE | [%]% | >= 50% | OK/ALERTA |
-| Ventanas negativas | [N] | 0-1 | OK/ALERTA |
-| DD OOS maximo | [%]% | <= 7% | OK/ALERTA |
-| Estabilidad params | [nivel] | ESTABLE | OK/ALERTA |
-| Ultima ventana | [%]% ratio | >= 80% | OK/ALERTA |
-
-### Dictamen
-
-[ ] ROBUSTA → PASA a aprobacion final
-    WFE >= 50%, sin ventanas negativas,
-    DD controlado, parametros estables.
-
-[ ] ACEPTABLE CON RESERVAS → REVISAR
-    WFE 40-50% o 1 ventana negativa aislada.
-    Accion: reducir parametros optimizados
-    y repetir WFO con rango mas estrecho.
-
-[ ] INESTABLE → SIMPLIFICAR
-    WFE < 40% o parametros erraticos.
-    Accion: volver al Builder con hipotesis
-    simplificada — menos condiciones.
+[ ] APROBADA
+    Todos los criterios de aprobacion cumplidos.
+    Accion: pasa al correlation-analyst para
+    evaluacion de inclusion en portfolio.
 
 [ ] DESCARTAR
-    Criterios de descarte automatico cumplidos.
-    Decision definitiva — cerrar ticket.
+    Criterio(s) de descarte cumplido(s):
+    - [criterio]: [valor] vs [umbral]
+    Accion: mover a results\rejected\
+    Cerrar ticket.
 
-Dictamen seleccionado: [ROBUSTA/ACEPTABLE/INESTABLE/DESCARTAR]
-
-Confianza: [X]/10
-
-Justificacion:
-[2-3 frases explicando el razonamiento]
-
----
-
-## 9. ACCION SIGUIENTE
-
-Si ROBUSTA o ACEPTABLE:
-- Actualizar ticket current-phase.txt a
-  "approval-pending"
-- Invocar propfirm-analyst para recomendacion final
-- Invocar funding-specialist para evaluacion final
-
-Si INESTABLE o DESCARTAR:
-- Documentar razon en gate-decisions.md del ticket
-- Si INESTABLE: actualizar a "build-pending"
-  y simplificar hipotesis con market-analyst
-- Si DESCARTAR: mover ticket a archived\
-  y estrategia a results\rejected\
+Dictamen: APROBADA / DESCARTAR
+Decidido por: orchestrator-auto
+Intervencion humana: NO
 
 ---
 
-## 10. PARAMETROS FINALES RECOMENDADOS
+## 9. PARAMETROS FINALES (solo si APROBADA)
 
-Si el dictamen es ROBUSTA o ACEPTABLE
-documentar aqui los parametros optimos
-para usar en produccion:
+Parametros optimizados para produccion:
+- Parametro 1: [nombre] = [valor optimo]
+- Parametro 2: [nombre] = [valor optimo]
+- Parametro 3: [nombre] = [valor optimo]
 
-Parametro 1: [nombre] = [valor optimo]
-Parametro 2: [nombre] = [valor optimo]
-Parametro 3: [nombre] = [valor optimo] (si aplica)
+Estos parametros se usaran en la exportacion
+a MT5 por el export-specialist.
 
-Estos son los parametros que se exportaran
-al EA de MT5 cuando se apruebe la estrategia.
+---
+
+## 10. ACCION SIGUIENTE
+
+Si APROBADA:
+- Actualizar ticket a "portfolio-evaluation"
+- correlation-analyst evalua inclusion automatica
+- propfirm-analyst recomienda prop firm por scoring
+- funding-specialist simula challenge dia a dia
+
+Si DESCARTAR:
+- Mover a results\rejected\ con sufijo -wfo-fail
+- Documentar en gate-decisions.md del ticket
+- Actualizar ticket a "rejected"
+- NO intentar con otros parametros
 
 ---
 
 Informe guardado en:
-strategyquant\optimizer\[nombre]-WFO-dictamen.md
+strategyquant\optimizer\[ID]-WFO-dictamen.md

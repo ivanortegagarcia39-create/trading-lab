@@ -1,31 +1,39 @@
 # Skill: Configuracion del Retester
 
 ## Proposito
-Guia para el sq-specialist y el orchestrator.
+Guia para el sq-specialist.
 Define como configurar y ejecutar el Retester en SQ
 para validar estrategias fuera de muestra (OOS).
+El Retester se ejecuta en lote para TODAS las
+candidatas que pasaron el Evaluation Gate.
+Las decisiones post-Retester son automaticas
+segun el paso 12b de skill-evaluation-auto.md.
 
 ---
 
 ## QUE ES EL RETESTER Y PARA QUE SIRVE
 
-El Retester prueba una estrategia ya generada por el
-Builder usando datos que NO se usaron en la construccion.
-Es la prueba mas importante del pipeline.
+El Retester prueba estrategias generadas por el
+Builder libre usando datos que NO se usaron
+en la construccion (2021 a fecha actual).
 
 Regla fundamental:
-Los datos 2021-2026 estan reservados exclusivamente
+Los datos 2021-actual estan reservados exclusivamente
 para el Retester. NUNCA usarlos en el Builder.
 
 ---
 
 ## CUANDO USAR EL RETESTER
 
-Solo despues de que una estrategia pase el Evaluation Gate.
-Nunca retestear estrategias que no han pasado el Gate.
+Solo despues de que el orchestrator apruebe
+automaticamente candidatas en el Evaluation Gate.
+Retestear TODAS las aprobadas en lote.
+No seleccionar manualmente — no hay sesgo.
 
 Orden correcto:
-Builder → Evaluation Gate → Retester → Optimizer → Aprobacion
+Builder libre → Evaluation Gate AUTO →
+Retester (todas en lote) → Paso 12b AUTO →
+WFO → Dictamen AUTO → Portfolio AUTO
 
 ---
 
@@ -34,10 +42,11 @@ Builder → Evaluation Gate → Retester → Optimizer → Aprobacion
 ### Paso 1: Abrir el Retester
 SQ → clic en Retester en el menu lateral.
 
-### Paso 2: Cargar la estrategia
-Cargar desde results\reviewed\ usando el boton
-de carga — NO desde el databank por defecto
-que puede tener estrategias de otras sesiones.
+### Paso 2: Cargar las estrategias
+Cargar TODAS las candidatas aprobadas desde
+results\reviewed\ usando el boton de carga.
+NO desde el databank por defecto.
+NO seleccionar individualmente — cargar todas.
 
 ### Paso 3: Configurar Tab Datos
 Motor: MetaTrader5 (netted)
@@ -48,15 +57,17 @@ Fecha fin: fecha actual
 Precision: 1 minute data tick simulation
 Sin division de intervalo — periodo OOS completo
 
-Comisiones EUR/USD:
-- Spread: 0.5 pips
-- Comision: 7 USD por lote
-- Slippage: 0.5 pips
+Comisiones: IDENTICAS al Builder.
+Verificar en CLAUDE.md las comisiones exactas
+del activo seleccionado.
 
-Comisiones XAU/USD:
-- Spread: 30 pips
-- Comision: 7 USD por lote
-- Slippage: 2 pips
+CRITICO: Las comisiones del Retester deben ser
+exactamente iguales a las del Builder.
+Si son diferentes los resultados no son comparables.
+Verificar SIEMPRE antes de lanzar.
+
+Ver tambien:
+strategyquant\retester\configuracion-estandar-retester.md
 
 ### Paso 4: Configurar Tab Opciones de negociacion
 Mismos ajustes que en el Builder:
@@ -82,87 +93,100 @@ Mismos ajustes que en el Builder:
 
 ### Paso 8: Ejecutar
 Clic en Inicio y esperar.
-El Retester es mas rapido que el Builder —
-5-30 minutos por estrategia.
+El Retester procesa todas las candidatas en lote.
+Tiempo: 5-30 minutos por estrategia.
+Para 300 candidatas: 1-4 horas aproximadamente.
 
 ---
 
 ## INTERPRETACION DE RESULTADOS
 
-### Comparacion in-sample vs out-of-sample
+La interpretacion la hace el paso 12b
+automaticamente segun skill-evaluation-auto.md.
 
-PASA el Retester si:
-- PF out-of-sample >= 1.3
-- PF no cae mas del 30% respecto al in-sample
-- DD out-of-sample <= 7%
-- Trades proporcionales al periodo
-- Consistencia por trimestres
+### Criterios automaticos del paso 12b
 
-Calculo de caida maxima permitida:
-PF in-sample: 1.8
-Caida maxima: 30% de 1.8 = 0.54
-PF minimo OOS: 1.8 - 0.54 = 1.26
-Si PF OOS = 1.35 → PASA
-Si PF OOS = 1.15 → NO PASA (cayo mas del 30%)
+Descarte automatico (sin consultar humano):
+- PF OOS < 1.2
+- Caida PF IS→OOS > 25%
+- DD OOS > 7%
+- Trades/mes OOS < 5
+- Caida frecuencia > 50%
 
-REVISAR si:
-- PF cae entre 20% y 30%
-- Un trimestre muy malo pero el resto consistente
+Aprobacion automatica para WFO:
+- PF OOS >= 1.3
+- Caida PF <= 20%
+- DD OOS <= 6.5%
+- Trades/mes OOS >= 6
+- Caida frecuencia <= 40%
 
-DESCARTAR si:
-- PF OOS cae mas del 30%
-- DD OOS supera el 7%
-- Comportamiento completamente distinto al in-sample
-- Muy pocos trades en el periodo OOS
+En el paso 12b NO hay zona intermedia.
+O cumple → WFO. O no cumple → DESCARTAR.
+No hay REVISAR. No hay segunda oportunidad.
 
-### Señales de curve-fitting en Retester
-- PF in-sample muy alto (>2.5) pero OOS muy bajo (<1.2)
-- Muchos trades in-sample pero muy pocos OOS
-- DD OOS mucho mayor que in-sample
+### Señales de sobreajuste en OOS
+- PF IS muy alto (>2.5) pero OOS muy bajo (<1.2)
+- Muchos trades IS pero muy pocos OOS
+- DD OOS mucho mayor que IS (>50% mas)
+- Comportamiento completamente distinto IS vs OOS
 
 ---
 
-## PROTOCOLO POST-RETESTER
+## PROTOCOLO POST-RETESTER (automatico)
 
-### Si PASA
-1. Mover archivo a results\reviewed\ con sufijo -retested
-2. Documentar en log del orchestrator
-3. Notificar al orchestrator para avanzar al Optimizer
+### Las que PASAN el paso 12b
+1. Mover a results\reviewed\ con sufijo -retested
+2. Documentar en gate-decisions.md del ticket
+3. El orchestrator configura WFO automaticamente
+4. Sin consultar al humano
 
-### Si NO PASA
+### Las que NO PASAN el paso 12b
 1. Mover a results\rejected\ con sufijo -retester-fail
-2. Documentar razon exacta del descarte
-3. Actualizar log del orchestrator
+2. Documentar criterio exacto de descarte
+3. Sin consultar al humano
+4. Sin segunda oportunidad
 
 ---
 
 ## ORDEN DE RETESTEO
 
-Cuando hay varios candidatos retestear en orden:
-1. Primero: mayor PF in-sample
-2. Segundo: menor drawdown
-3. Tercero: mas trades
+Retestear TODAS las candidatas aprobadas en lote.
+No seleccionar manualmente.
+No retestear "una por una para ver".
+El paso 12b descarta automaticamente las que
+no cumplen — no hay necesidad de elegir.
 
-No retestear todos a la vez — retestear uno,
-revisar y decidir si continuar con los siguientes.
+Prioridad de procesamiento post-Retester:
+1. Mayor PF OOS — procesadas primero en el WFO
+2. Menor DD OOS
+3. Mayor numero de trades
 
 ---
 
 ## ARCHIVO DE CONFIGURACION
 
-Guardar cada Retester ejecutado en:
-strategyquant\retester\[nombre]-retester-config.md
+Guardar en:
+strategyquant\retester\build-[N]-retester-config.md
 
 Formato:
-Estrategia: [nombre]
+Build numero: [N]
+Activo: [simbolo]
 Fecha: [fecha]
 Periodo OOS: 2021.01.01 a [fecha actual]
-Simbolo: [simbolo]
 Temporalidad: H1
-PF in-sample: [valor del Builder]
-PF out-of-sample: [valor del Retester]
-Caida del PF: [porcentaje]
-DD out-of-sample: [valor]
-Trades OOS: [numero]
-Decision: PASA / NO PASA
-Razon: [explicacion]
+Comisiones: [segun activo — verificadas]
+Candidatas retestadas: [numero]
+Aprobadas paso 12b: [numero]
+Descartadas paso 12b: [numero]
+Decidido por: orchestrator-auto
+Intervencion humana: NO
+
+---
+
+## REGLA FUNDAMENTAL
+
+El Retester verifica. El paso 12b decide.
+Todo automatico. Sin firma humana.
+Sin seleccion manual de candidatas.
+Sin REVISAR. Sin segunda oportunidad.
+Los numeros deciden que pasa al WFO.
