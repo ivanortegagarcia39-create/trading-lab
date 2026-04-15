@@ -79,7 +79,7 @@ Fecha fin: 2020.12.31
 Precision: 1 minute data tick simulation
 
 Comisiones (clic en engranaje):
-- Spread: 30 pips
+- Spread: 3 pips (pip size confirmado = 0.1)
 - Comision: 7 USD por lote
 - Slippage: 2 pips
 
@@ -229,6 +229,21 @@ Islands: 4
 Start again when finished: ACTIVADO
 Filter initial population: sin filtro
 
+Opciones geneticas avanzadas:
+Crossover Probability: 93%
+Mutation Probability: 30%
+
+Islands options:
+Migrate every Xth generation: 10
+Population migration rate: 6%
+
+NOTA: Migrate every 10 generaciones permite
+que las 4 islas intercambien material genetico
+3 veces por ciclo de 30 generaciones.
+Valores por debajo de 5 aceleran convergencia
+prematura. Valores por encima de 15 reducen
+diversidad entre islas.
+
 CRITICO: Start again when finished ACTIVADO.
 El Builder corre indefinidamente en ciclos.
 Cada ciclo nuevo explora combinaciones diferentes.
@@ -369,6 +384,6 @@ Señales de que hay que seguir:
 ## REGLA FUNDAMENTAL
 
 El humano define las restricciones de riesgo.
-SQ define la logica de entrada.
+SQ decide la logica de entrada.
 El pipeline de validacion filtra el sobreajuste.
 Nadie interviene en la seleccion de estrategias.
