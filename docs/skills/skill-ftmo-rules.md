@@ -7,6 +7,75 @@ cumplimiento e incumplimiento de cada regla.
 
 ---
 
+## REGLAS ACTUALIZADAS FTMO 2026
+
+Fuente: FTMO Terms & Conditions vigentes en 2026.
+Verificar en ftmo.com antes de cada challenge — las reglas
+pueden cambiar. propfirm-compliance-officer hace hash
+check diario para detectar cambios.
+
+### Reglas de drawdown (sin cambios respecto a 2024)
+- DD diario: 5% dinamico — calculado desde 00:00 CET/CEST hora Praga
+- DD total: 10% dinamico trailing — solo sube, nunca baja
+- Dias minimos: 4 dias de trading
+- Sin limite de tiempo maximo para el challenge
+
+### Scaling plan FTMO 2026
++25% de capital cada 4 meses si profit >= 5% en ese periodo.
+Sin limite superior — cuenta puede crecer indefinidamente.
+El sistema de performance-monitor trackea automaticamente
+el progreso hacia el siguiente scaling.
+
+### Prohibiciones 2026 — actualizadas
+- HFT: definido como multiples trades en segundos
+  (FTMO tiene un algoritmo de deteccion automatica)
+- Tick scalping: trades con holding < 2 minutos
+- Copy trading detectable: patron de ejecucion identico
+  a otras cuentas (group trading detection)
+- Latency arbitrage: cualquier forma de arbitraje de latencia
+- Martingala o position sizing creciente tras perdida
+- Copiar señales de otras cuentas FTMO
+
+NUEVO 2026: FTMO ha reforzado la deteccion de group trading.
+Ver seccion "Delay Aleatorio Anti-Sincronizacion" en
+agents/export-specialist.md — implementacion obligatoria.
+
+---
+
+## MIDNIGHT RESET BUG — CRITICO
+
+### El problema
+El DD diario de FTMO se recalcula a las 00:00 hora de Praga
+(Europe/Prague — CEST en verano UTC+2, CET en invierno UTC+1).
+Si el VPS o el broker usan otra zona horaria, el EA puede
+calcular incorrectamente cuando "empieza el nuevo dia".
+
+### Consecuencia del bug
+Si el EA cree que el dia empieza a medianoche UTC pero
+FTMO usa medianoche Praga (UTC+1 en invierno):
+  → El EA acumula perdidas en la ultima hora antes de medianoche Praga
+  → FTMO ya cuenta esa hora como "nuevo dia"
+  → El EA no sabe que ha empezado un nuevo periodo de computo
+  → Puede violar el Daily Loss Limit sin saberlo
+
+### Solucion obligatoria
+Usar siempre la zona horaria Europe/Prague para calcular
+el limite del dia en el EA.
+No usar hora del broker ni hora del servidor VPS directamente.
+
+Implementacion en MQL5:
+  // Convertir hora del servidor al timezone de Praga
+  // Europe/Prague = UTC+2 CEST (verano) o UTC+1 CET (invierno)
+  // El cambio horario es el ultimo domingo de marzo y octubre
+  // Ver scripts/ftmo-midnight-sync.mq5 para implementacion completa
+
+Verificar en el forward test:
+  [ ] El EA registra el inicio del nuevo dia a las 00:00 Praga
+  [ ] No a las 00:00 UTC
+  [ ] No a la hora del servidor MT5
+
+---
+
 ## POR QUE EL 2-STEP Y NO EL 1-STEP
 
 El 1-Step tiene Daily Loss Limit del 3% — demasiado

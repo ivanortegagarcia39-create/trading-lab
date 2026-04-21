@@ -133,6 +133,100 @@ ALERTAS ACTIVAS: [N]
 
 ---
 
+## Meta-Monitor de Tasa de Aprobacion
+
+El sistema registra cuantas estrategias pasan
+cada puerta del pipeline por semana y detecta
+cuando el pipeline se esta atascando.
+
+### Calculo semanal
+Al final de cada semana el orchestrator registra:
+  estrategias_aprobadas_semana = total que llegan a Portfolio filter
+  tasa_semanal = estrategias_aprobadas_semana / semana_numero
+
+### Umbral de alerta
+Si tasa_semanal < 0.5 estrategias/semana durante
+2 semanas consecutivas:
+
+Accion:
+  1. Registrar en docs/lessons-learned.md automaticamente:
+     "Tasa de aprobacion critica: [X] semanas con < 0.5/semana"
+  2. Generar alerta para el humano (CASO 2 del orchestrator):
+     "Tasa de aprobacion critica.
+      Tasa actual: [X] estrategias/semana (minimo: 0.5)
+      Semanas consecutivas por debajo del umbral: [N]
+      Considerar recalibracion de umbrales.
+      Ver Bucle de Recalibracion Estacional en skill-system-metrics.md"
+
+La alerta es informativa — no paraliza el pipeline.
+El humano decide si ajustar umbrales o continuar esperando.
+
+---
+
+## Bucle de Recalibracion Estacional
+
+Si el meta-monitor detecta tasa critica, revisar estos
+umbrales en orden de menor a mayor impacto.
+NUNCA relajar los umbrales marcados como INTOCABLE.
+
+### Umbrales ajustables (en este orden)
+
+1. Triple swap miercoles: 15% → 20%
+   Justificacion: periodo de altos swaps por tipos de interes altos
+   Impacto en riesgo: bajo — el edge sigue siendo real
+
+2. PF post-swaps ratio: 80% → 75%
+   Justificacion: mercado con alta volatilidad de spreads
+   Impacto en riesgo: medio — aceptable con spread documentado
+
+3. Multimarket PF minimo: 1.0 → 0.9
+   Justificacion: activos muy especificos con baja correlacion externa
+   Impacto en riesgo: medio — puede aumentar riesgo de activo-especificidad
+
+### Umbrales INTOCABLE — no relajar nunca
+
+- PF minimo (1.4 EvalGate, 1.3 OOS, 1.25 WFO promedio)
+- DD maximo (7% EvalGate, 7.5% WFO, 10% Catastrophic Veto)
+- WFE minimo (50% aprobacion, 40% descarte)
+- Sharpe OOS minimo (0.5)
+- Catastrophic Veto WFO (PF < 0.8 o DD > 10% en cualquier ventana)
+
+Razon: relajar estos umbrales aumenta directamente el riesgo
+de poner capital real en estrategias sobreajustadas.
+Es mejor esperar mas ciclos que bajar la barra de calidad.
+
+### Procedimiento de ajuste
+1. Documentar el ajuste en docs/lessons-learned.md con fecha
+2. Aplicar solo al proximo ciclo — reevaluar despues
+3. Si la tasa mejora → mantener o revertir al original
+4. Si la tasa no mejora → investigar causa raiz del pipeline
+
+---
+
+## Cadena de Aprobacion Completa — Ratios Esperados
+
+Documento de referencia para detectar cuellos de botella.
+
+| Puerta | Input | Output esperado | Ratio esperado |
+|--------|-------|-----------------|---------------|
+| Builder | — | 1000 candidatas | — |
+| EvalGate | 1000 | ~200 pasan | ~20% |
+| SPP Validation | 200 | ~100 pasan | ~50% |
+| WFO | 100 | ~40 pasan | ~40% |
+| Multimarket | 40 | ~20 pasan | ~50% |
+| Portfolio filter | 20 | ~10 pasan | ~50% |
+| Forward Test | 10 | ~5 aprobadas | ~50% |
+
+Ratio global esperado: ~0.5% de candidatas iniciales llegan a produccion.
+Si una puerta tiene un ratio muy por debajo del esperado durante
+2+ ciclos consecutivos → esa puerta es el cuello de botella.
+
+La respuesta al cuello de botella NO es relajar el criterio.
+Es investigar si los datos, la configuracion del Builder,
+o el activo elegido son los responsables.
+
+---
+
 ## Lo que esta skill NUNCA hace
 
 NUNCA ajusta criterios de aprobacion para
@@ -140,6 +234,7 @@ mejorar las metricas artificialmente.
 NUNCA ignora una tendencia negativa sostenida.
 NUNCA compara tasas entre activos distintos
 sin controlar el periodo de datos.
+NUNCA relaja umbrales INTOCABLE bajo ninguna circunstancia.
 
 Las metricas describen la realidad.
 No se manipulan para que parezca mejor.
