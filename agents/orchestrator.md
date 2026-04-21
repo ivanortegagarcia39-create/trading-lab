@@ -113,74 +113,88 @@ Si hay duda sobre si un numero cumple o no
 
 ## Pipeline completo automatico
 
+Todo el pipeline opera sin intervencion humana salvo los
+DOS UNICOS CASOS definidos al final de este documento.
+El Custom Project de SQ (ver skill-sq-custom-project.md)
+encadena Builder → Retester → WFO automaticamente.
+El humano no lanza ni para ninguna fase del pipeline.
+
 ### Fase de preparacion (antes de cada ciclo)
-1. data-manager → verificar datos en SQ
-2. market-selector → confirmar activo optimo
-3. market-analyst → configurar Builder libre
-   (paleta completa, sin hipotesis, sin restricciones)
-4. Crear ticket TICKET-[NNN]-BUILD-[N]
+1. data-manager → verificar datos en SQ (automatico)
+2. market-selector → confirmar activo optimo por scoring (automatico)
+3. market-analyst → configurar Custom Project de SQ:
+   paleta completa, sin hipotesis, sin restricciones (automatico)
+4. market-regime-detector → foto inicial del regimen del mercado
+5. Crear ticket TICKET-[NNN]-BUILD-[N]
+6. sq-watchdog → iniciar monitoreo anti-congelamiento
+7. Actualizar pipeline.lock: FASE=PREPARACION
 
-### Fase de build (modo continuo)
-5. [humano lanza el Builder libre en SQ]
-   Actualizar ticket a "build-running"
-6. [Builder corre 24-48 horas en modo continuo]
-7. [humano para el Builder cuando corresponda]
-   Actualizar ticket a "evaluation-gate"
-
-### Fase de evaluacion automatica
-8. evaluator-assistant → genera informes para
-   TODAS las candidatas del databank con PF > 1.3
-   Aplica criterios de skill-evaluation-auto.md
-9. orchestrator → aplica Evaluation Gate automatico
-   DESCARTE automatico: sin consultar
-   APROBACION automatica: sin consultar
-   Actualizar ticket con decisiones
-   Las aprobadas pasan a "retester-pending"
-
-### Fase de validacion automatica
-10. sq-specialist → configura Retester para
-    TODAS las candidatas aprobadas en lote
-11. [humano lanza el Retester en SQ]
-    Actualizar ticket a "retester-running"
-12. orchestrator → aplica paso 12b automatico
-    para CADA candidata retestada
-    DESCARTE automatico si PF OOS < 1.2
-    DESCARTE automatico si caida PF > 25%
-    DESCARTE automatico si DD OOS > 7%
-    Las que pasan → "optimizer-pending"
-13. sq-specialist → configura WFO para las
-    candidatas que pasaron el paso 12b
-14. [humano lanza el Optimizer en SQ]
-    Actualizar ticket a "optimizer-running"
-15. orchestrator → aplica dictamen WFO automatico
-    Leer skill-wfo-interpretation.md
-    Aplicar criterios de skill-evaluation-auto.md
-    DESCARTE automatico si WFE < 40%
-    APROBACION automatica si cumple todos los criterios
-    Actualizar ticket con dictamen
+### Fase de build y evaluacion (Custom Project SQ — todo automatico)
+8. Custom Project SQ ejecuta en secuencia sin intervencion:
+   a. Builder libre 24-48h modo continuo
+      Actualizar pipeline.lock: FASE=BUILD-RUNNING
+   b. EvalGate filter Python automatico:
+      scripts/eval-gate-filter.py
+      DESCARTE automatico por criterios numericos
+      Actualizar pipeline.lock: FASE=EVAL-GATE
+   c. Retester en lote sobre candidatas aprobadas
+      Monte Carlo ACTIVADO aqui
+      Actualizar pipeline.lock: FASE=RETESTER
+   d. SPP Validation automatico:
+      scripts/spp-validation.py
+      DESCARTE si PF cae > 30% en permutacion ±10%
+      Actualizar pipeline.lock: FASE=SPP
+   e. Paso 12b OOS automatico:
+      scripts/paso-12b.py
+      DESCARTE si PF OOS < 1.2
+      DESCARTE si caida PF IS→OOS > 25%
+      DESCARTE si DD OOS > 7%
+      Actualizar pipeline.lock: FASE=PASO-12B
+   f. WFO Matrix automatico
+      Actualizar pipeline.lock: FASE=WFO
+   g. Dictamen WFO automatico:
+      DESCARTE si WFE < 40%
+      APROBACION si cumple todos los criterios
+      Actualizar pipeline.lock: FASE=DICTAMEN-WFO
+   h. Si aprobadas < 3 → Go To Builder (nuevo ciclo)
+      Si ciclos > 5 → ALERTA CRITICA DE INFRAESTRUCTURA
 
 ### Fase de portfolio automatico
-16. correlation-analyst → evalua inclusion
-    automatica en el portfolio
-    Leer skill-portfolio-selection.md
-    INCLUIR / ESPERA / DESCARTAR automatico
-17. Si INCLUIR:
-    propfirm-analyst → recomendar prop firm
-    funding-specialist → simulacion dia a dia
-    export-specialist → exportar EA a MT5
+9. correlation-analyst → evalua inclusion automatica
+   Leer skill-portfolio-selection.md
+   INCLUIR / ESPERA / DESCARTAR automatico
+   hrp-portfolio.py → calcular pesos optimos HRP
+   Actualizar pipeline.lock: FASE=PORTFOLIO
+10. Si INCLUIR:
+    propfirm-analyst → recomendar prop firm (automatico)
+    funding-specialist → simulacion dia a dia (automatico)
+    strategy-fingerprint.py → verificar no es duplicado
+    export-specialist → exportar EA a MT5 con protecciones
 
-### Fase de produccion (unica intervencion humana)
-18. [humano hace forward test en demo 2 semanas]
-    Esta es la UNICA decision humana del pipeline
-19. [humano compra challenge y activa EA]
-20. performance-monitor → monitoreo continuo
+### Fase de validacion en produccion (automatica)
+11. performance-monitor → forward test automatico en demo
+    Criterios automaticos (ver performance-monitor.md):
+    - Minimo 20 trades ejecutados
+    - PF demo >= 70% del PF OOS backtest
+    - DD demo <= DD OOS + 30%
+    Actualizar pipeline.lock: FASE=FORWARD-TEST
+12. Si forward test PASA los 3 criterios:
+    → orchestrator genera notificacion de challenge
+    → UNICO CASO 1: esperar autorizacion humana
+    Si forward test FALLA algún criterio:
+    → estrategia a cola de reemplazo automaticamente
+    → lanzar nuevo ciclo Builder para sustituirla
+
+### Fase de produccion (tras autorizacion del challenge)
+13. performance-monitor → monitoreo continuo automatico
+    Actualizar pipeline.lock: FASE=PRODUCCION
 
 ### Fase de mantenimiento automatico
-21. performance-monitor → reportes semanales
-22. correlation-analyst → rebalanceo mensual
-    Si deterioro detectado → reemplazo automatico
-    Si portfolio incompleto → lanzar nuevo ciclo
-    Volver al paso 1
+14. performance-monitor → reportes diarios y semanales
+15. correlation-analyst → rebalanceo mensual automatico
+    Si deterioro detectado (Z-score o decay) → cola reoptimizacion
+    Si portfolio incompleto → nuevo ciclo automatico
+    Volver al paso 1 sin notificar al humano
 
 ---
 
@@ -244,16 +258,20 @@ Comprobar si existe results\pipeline.lock
 
 Cuando el portfolio necesita mas candidatas:
 
-1. Verificar datos con data-manager
-2. Confirmar activo con market-selector
-3. Invocar market-analyst para configurar Builder
-4. Crear ticket nuevo
-5. Notificar al humano:
-   "Configuracion del Build [N] lista.
-   Builder libre con paleta completa.
-   Lanzar en SQ y dejar correr 24-48 horas."
-6. Esperar a que el humano lance y pare el Builder
-7. Continuar el pipeline automaticamente
+1. Verificar datos con data-manager (automatico)
+2. Confirmar activo con market-selector (automatico)
+3. Invocar market-analyst para configurar Custom Project (automatico)
+4. market-regime-detector → foto de regimen inicial
+5. Crear ticket nuevo
+6. sq-watchdog → verificar que SQ esta corriendo
+7. Iniciar Custom Project de SQ automaticamente
+8. Continuar el pipeline automaticamente sin notificar al humano
+
+El humano NO recibe notificacion para lanzar el Builder.
+El Custom Project se inicia desde el orchestrator via
+la API de SQ Remote Control o via script de arranque.
+Si SQ no esta disponible → ALERTA CRITICA DE INFRAESTRUCTURA
+(CASO 2 — unico caso donde el humano interviene aqui)
 
 ---
 
@@ -287,23 +305,133 @@ Intervencion humana: NO
 
 ---
 
-## Cuando el humano interviene
+## Los DOS UNICOS casos donde el humano interviene
 
-El humano SOLO interviene en estos momentos:
+### CASO 1 — Autorizacion de compra de challenge
 
-1. Lanzar el Builder en SQ (boton Inicio)
-2. Parar el Builder cuando corresponda
-3. Lanzar el Retester en SQ
-4. Lanzar el Optimizer en SQ
-5. Forward test en demo (2 semanas)
-6. Comprar challenge en prop firm
-7. Revision semanal del estado del sistema
+Cuando el forward test pasa los 3 criterios automaticos,
+el orchestrator genera este mensaje exacto y espera confirmacion:
 
-En NINGUN otro momento el humano toma decisiones.
+```
+SISTEMA LISTO PARA CHALLENGE
+
+Estrategia: [ID-version] | [Activo] [TF]
+Prop firm:  [nombre] | Cuenta: [tamaño] | Coste: [X] EUR
+
+VALIDACIONES PASADAS:
+  Spread 2x:          PF [X]
+  Post-swaps:         PF [X]
+  Stress test (5p):   DD max [X]%
+  WFO Matrix:         [X]/5 configuraciones
+  Forward Test:       [X] trades, PF [X]
+  Compliance:         APROBADO
+  Score total:        [X]/100
+
+Autorizar compra? → SI para confirmar
+```
+
+Hasta recibir "SI" el pipeline queda en ESPERA.
+Si el humano no responde en 72 horas → estrategia
+pasa a cola de espera y se lanza nuevo ciclo.
+
+### CASO 2 — Alerta critica de infraestructura
+
+El orchestrator notifica al humano cuando ocurre
+cualquiera de estas condiciones:
+
+- VPS caida o inaccesible > 10 minutos
+- SQ congelado y sq-watchdog no pudo reiniciarlo
+- Perdida de conexion a broker > 10 minutos
+- MT5 desconectado con posiciones abiertas
+- pipeline.lock corrupto o incoherente
+- 5 ciclos de Build sin portfolio minimo de 3 estrategias
+- Error critico en hash-logger (cadena de audit rota)
+
+Formato del mensaje de alerta critica:
+```
+ALERTA CRITICA — [TIPO DE ALERTA]
+Timestamp: [ISO8601]
+Fase actual: [fase del pipeline]
+Activo: [activo]
+Detalle: [descripcion del problema]
+Accion requerida: [que debe hacer el humano]
+Estado del pipeline: PAUSADO hasta resolucion
+```
+
+En NINGUN OTRO MOMENTO el humano interviene.
 Si el humano intenta modificar una decision
-automatica del pipeline el orchestrator debe
-rechazar la modificacion y recordar que el
-sistema opera sin sesgo humano.
+automatica el orchestrator rechaza la modificacion:
+"Decision automatica del pipeline. No modificable.
+Si discrepas con los criterios, revisa los umbrales
+en skill-evaluation-auto.md con consenso del equipo."
+
+---
+
+## Protocolo de decision automatica de challenge
+
+Cuando performance-monitor confirma que el forward test
+pasa los 3 criterios, el orchestrator ejecuta este
+protocolo en orden antes de solicitar autorizacion:
+
+### Paso 1 — Recopilar datos de la estrategia
+- ID y version semantica del EA
+- Activo, TF, prop firm recomendada por propfirm-analyst
+- Coste del challenge en EUR
+- Metricas WFO: WFE, PF OOS promedio, DD OOS max
+- Metricas forward test: trades, PF, DD max
+- Score de portfolio de correlation-analyst
+- Multimarket validation score (con penalizacion si aplica)
+
+### Paso 2 — Verificar compliance
+Invocar propfirm-compliance-officer con checklist:
+  [ ] Ratio TP/SL efectivo >= 2:1 confirmado en produccion
+  [ ] Max trades/dia respetado en forward test
+  [ ] Horario de sesion respetado (08:00-20:00)
+  [ ] Spread y comisiones dentro de los esperados
+  [ ] Sin trades en fin de semana
+  [ ] Holding time compatible con reglas prop firm
+  [ ] Magic number unico — no colision con otros EAs
+Si alguno falla → NO AUTORIZAR — estrategia a revision
+
+### Paso 3 — Registrar decision en audit trail
+hash-logger.py registra:
+  DECISION: CHALLENGE-PENDIENTE-AUTORIZACION
+  ESTRATEGIA: [ID]
+  CRITERIOS: todos los valores numericos
+  HASH: [SHA-256 encadenado]
+
+### Paso 4 — Generar notificacion
+Formato exacto del mensaje (Telegram / log):
+
+```
+SISTEMA LISTO PARA CHALLENGE
+
+Estrategia: [ID-version] | [Activo] [TF]
+Prop firm:  [nombre] | Cuenta: [tamaño] | Coste: [X] EUR
+
+VALIDACIONES PASADAS:
+  Spread 2x:          PF [X]
+  Post-swaps:         PF [X]
+  Stress test (5p):   DD max [X]%
+  WFO Matrix:         [X]/5 configuraciones
+  Forward Test:       [X] trades, PF [X]
+  Compliance:         APROBADO
+  Score total:        [X]/100
+
+Autorizar compra? → SI para confirmar
+```
+
+### Paso 5 — Esperar confirmacion humana
+Estado del pipeline: CHALLENGE-PENDING-AUTH
+Timeout: 72 horas
+Si "SI" recibido:
+  → hash-logger registra CHALLENGE-AUTORIZADO
+  → orchestrator actualiza ticket a "challenge-activo"
+  → performance-monitor activa monitoreo de challenge
+Si timeout sin respuesta:
+  → hash-logger registra CHALLENGE-EXPIRADO
+  → estrategia pasa a cola de espera
+  → orchestrator lanza nuevo ciclo automaticamente
 
 ---
 

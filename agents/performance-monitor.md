@@ -143,16 +143,181 @@ COMPARATIVA REAL VS BACKTEST:
 SEÑALES DE DETERIORO DETECTADAS: [lista o ninguna]
 RECOMENDACION: [continuar / vigilar / revisar / pausar]
 
+## Protocolo de Forward Test Automatico
+
+El forward test ya no requiere decision humana.
+performance-monitor evalua los criterios numericos
+y el orchestrator actua automaticamente segun el resultado.
+
+### Criterios de evaluacion (los 3 deben cumplirse)
+
+| Criterio | Umbral | Como se mide |
+|----------|--------|-------------|
+| Trades minimos | >= 20 ejecutados en demo | Conteo directo del log del EA |
+| PF en produccion | >= 70% del PF OOS del backtest | PF_demo / PF_OOS >= 0.70 |
+| DD maximo | <= DD_OOS_backtest + 30% | DD_demo_max <= DD_OOS * 1.30 |
+
+Ejemplo:
+  PF OOS backtest = 1.60
+  PF demo = 1.18 → ratio 1.18/1.60 = 0.74 → PASA (>= 0.70)
+  DD OOS backtest = 5.0%
+  DD demo max = 6.2% → 6.2 <= 5.0 * 1.30 = 6.5% → PASA
+
+### Decision automatica post forward test
+
+Si los 3 criterios pasan:
+  → performance-monitor notifica al orchestrator: "FORWARD-TEST-OK"
+  → orchestrator genera notificacion de challenge (CASO 1)
+  → NO hay decision humana sobre si la estrategia "parece buena"
+
+Si algún criterio falla:
+  → performance-monitor notifica al orchestrator: "FORWARD-TEST-FAIL"
+  → hash-logger registra FORWARD-TEST-DESCARTADO con metricas
+  → estrategia pasa automaticamente a cola de reemplazo
+  → orchestrator lanza nuevo ciclo Builder para sustituirla
+  → NO se notifica al humano ni se pide opinion
+
+### Periodo minimo de observacion
+20 trades en demo, sin limite de tiempo.
+Si en 60 dias naturales no se alcanzan 20 trades:
+  → revisar configuracion del EA (horario, activo, condiciones)
+  → si el activo tiene < 10 trades/mes esperados en backtest
+    → ajustar umbral a 15 trades para ese activo especifico
+
+---
+
+## Protocolo de Strategy Decay (Deterioro Silencioso)
+
+Detecta estrategias que se deterioran gradualmente sin
+activar las alertas de riesgo agudo.
+
+### Comparacion mensual
+
+Cada primer lunes del mes calcular:
+  PF_produccion_4s = PF de las ultimas 4 semanas en produccion
+  PF_OOS_backtest = PF del periodo OOS del backtest original
+
+Si PF_produccion_4s < PF_OOS_backtest * 0.85:
+  → marcar estrategia como "Deterioro Silencioso"
+  → registrar en results\decay-tracking\[ID]-decay.log
+
+### Filtro de persistencia (anti-ruido)
+
+La condicion de deterioro debe mantenerse 4 semanas
+consecutivas antes de tomar accion.
+Si en alguna de las 4 semanas el PF recupera al 85%:
+  → reiniciar el contador de semanas
+  → eliminar la marca de "Deterioro Silencioso"
+
+Razon: una semana mala no es deterioro.
+4 semanas consecutivas de deterioro SI es una señal real.
+
+### Accion tras 4 semanas consecutivas
+
+Si deterioro confirmado (4 semanas):
+  → estrategia pasa a cola de reoptimizacion
+  → NO reemplazo inmediato
+  → correlation-analyst verifica si el portfolio
+    puede absorber la posible retirada del EA
+  → si portfolio > 3 estrategias activas: retirar EA y reoptimizar
+  → si portfolio = 3 estrategias: mantener EA con monitoreo intensivo
+    hasta que haya un reemplazo disponible
+  → orchestrator registra en docs/lessons-learned.md automaticamente
+
+---
+
+## Z-Score del PF Mensual
+
+Detecta anomalias estadisticas en el rendimiento.
+
+### Calculo
+
+Requisito: minimo 6 meses de operacion real.
+
+  media_PF = media aritmetica del PF de los ultimos 6 meses
+  std_PF = desviacion estandar del PF de los ultimos 6 meses
+  z_score_mes_actual = (PF_mes_actual - media_PF) / std_PF
+
+### Criterio de alerta
+
+Si z_score_mes_actual <= -2.0:
+  → "Deterioro Silencioso por Z-Score"
+  → Aplica el mismo filtro de persistencia de 4 semanas
+  → Registrar automaticamente en docs/lessons-learned.md:
+    Leccion automatica con formato:
+    "Deterioro Z-Score detectado. Estrategia [ID].
+     Z-score: [valor]. PF mes: [valor]. Media historica: [valor]."
+  → Incrementar contador de ocurrencias de la leccion
+
+Si hay entrada previa de esa estrategia en lessons-learned.md:
+  → Actualizar la entrada existente, no crear duplicado
+
+### Por que Z-Score y no solo el porcentaje
+
+El porcentaje (85%) detecta cuando la estrategia esta
+rindiendo mal en absoluto.
+El Z-Score detecta cuando la estrategia esta rindiendo
+mal RELATIVO a su propio historial — mas sensible.
+Juntos cubren deterioro absoluto y deterioro relativo.
+
+---
+
+## Control de Inactividad de Cuentas Demo
+
+### Problema
+FTMO cierra cuentas demo inactivas despues de 30 dias
+sin operaciones. Perder una cuenta demo implica
+perder el historial del forward test en curso.
+
+### Solucion automatica
+
+performance-monitor verifica diariamente:
+  Para cada cuenta demo activa:
+    Dias desde ultimo trade en esa cuenta
+
+Si dias_sin_trades >= 15:
+  → Registrar evento en log: "INACTIVIDAD-DEMO-ALERT"
+  → Forzar micro-operacion de mantenimiento:
+    Activo: el mismo activo del EA activo en esa cuenta
+    Lotes: 0.01 (minimo posible)
+    Tipo: compra a mercado con SL=20 pips y TP=20 pips
+    (operacion de mantenimiento — no estrategica)
+    Objetivo: solo mantener la cuenta activa
+  → Documentar en el log: "Micro-op mantenimiento ejecutada"
+
+Umbral de 15 dias da 15 dias de margen antes del cierre
+de los 30 dias. Si el EA opera normalmente, este protocolo
+nunca se activa porque habra trades reales antes de los 15 dias.
+
+### Cuentas demo afectadas
+Solo cuentas en fase de forward test.
+Las cuentas de challenge real no necesitan este protocolo
+(siempre tienen actividad si el EA esta corriendo).
+
+---
+
 ## Integracion con el pipeline
 
-performance-monitor opera en paralelo al pipeline:
+performance-monitor opera en paralelo y de forma automatica:
 
-Pipeline normal:
-... → Aprobacion → export-specialist → Challenge
+```
+EA exportado →
+performance-monitor activo (forward test automatico) →
+  Si PASA 3 criterios → orchestrator genera notificacion challenge
+  Si FALLA → cola de reemplazo automatico
 
-Performance monitor (paralelo):
-Challenge iniciado → performance-monitor activo
-→ reportes diarios y semanales
-→ alertas si hay problemas
-→ recomendacion de pausa si necesario
-→ si EA retirado → volver al pipeline para revisar
+Challenge activo →
+performance-monitor activo (monitoreo continuo) →
+  Reportes diarios y semanales automaticos
+  Z-Score mensual automatico
+  Decay detection con filtro 4 semanas
+  Control inactividad demo
+
+Si deterioro confirmado (4s consecutivas) →
+  Cola reoptimizacion automatica
+  Orchestrator lanza nuevo ciclo si necesario
+```
+
+Ningun paso requiere decision humana.
+El humano recibe reportes pero no necesita actuar
+a menos que reciba un CASO 2 (alerta critica).
