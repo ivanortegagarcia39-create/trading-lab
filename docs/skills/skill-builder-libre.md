@@ -399,6 +399,123 @@ Señales de que hay que seguir:
 
 ---
 
+## CONFIGURACION H4 (Fase 9 — Produccion Core)
+
+Activa cuando market-selector elija H4 como temporalidad optima.
+Los parametros H1 son validos salvo estas diferencias:
+
+| Parametro | H1 | H4 |
+|-----------|----|----|
+| Trades minimos | 120 | 50 |
+| Trades/mes minimos | 8 | 3 |
+| Tiempo de build minimo | 48h | 72h |
+| Periodo OOS minimo | 5 años (2021-actual) | 3 años (2023-actual) |
+| Generaciones por ciclo | 30 | 30 |
+
+Razon del OOS de 3 años en H4:
+Con H4 hay menos velas en el mismo periodo de tiempo.
+Un OOS de 5 años en H4 tiene ~2.500 velas H4 frente
+a ~10.000 velas H1. Con 3 años ya hay suficiente muestra
+para el Retester y el WFO.
+
+Razon de 72h de build minimo:
+Una vela H4 dura 4 horas. El Builder necesita mas
+tiempo para generar y evaluar el mismo numero de
+candidatas porque hay menos velas disponibles por
+hora de calculo.
+
+---
+
+## CONFIGURACION M30 (Incubadora Tactica)
+
+Solo para I+D — nunca va directo a produccion.
+Siempre pasa por validacion adicional antes del portfolio.
+
+### Diferencias respecto a H1
+
+| Parametro | H1 | M30 |
+|-----------|----|----|
+| ATR SL multiplicador | 1.5-3.0 | 1.0-2.0 (mas ajustado) |
+| ATR TP multiplicador | 3.0-6.0 | 2.0-4.0 |
+| Trades minimos | 120 | 180 |
+| Trades/mes minimos | 8 | 15 |
+| Test Estres Velocidad | No requerido | OBLIGATORIO |
+| Max slippage config | +0.5 pips extra | +0.5 pips extra |
+
+### Test de Estres de Velocidad obligatorio para M30
+Antes de pasar el WFO, ejecutar en 2 años completos
+aunque el build usara ventana IS de 6 meses.
+PF > 1.2 en cada uno de los 2 años.
+Ver skill-evaluation-auto.md — seccion Test de Estres.
+
+### Ruta al portfolio para M30
+M30 aprobada por pipeline → skill-timeframe-selector.md
+confirma viabilidad → portfolio secundario.
+No va al mismo portfolio que las H1 de produccion principal
+hasta que el portfolio H1 este completo (3+ estrategias).
+
+---
+
+## SLIPPAGE VARIABLE POR HORARIO
+
+El slippage real no es constante durante el dia.
+Las comisiones fijas del Builder no capturan esta variacion.
+Compensar en la configuracion del simbolo en SQ Data Manager.
+
+| Sesion | Horario (CEST) | Factor slippage | Slippage EURUSD | Slippage XAUUSD |
+|--------|---------------|----------------|-----------------|-----------------|
+| Asiatica | 00:00-08:00 | 3x | 1.5 pips | 6 pips |
+| Apertura Londres | 08:00-09:00 | 2x | 1.0 pip | 4 pips |
+| Sesion normal (core) | 09:00-13:00 | 1x (base) | 0.5 pips | 2 pips |
+| Overlap Londres-NY | 13:00-17:00 | 1x (base) | 0.5 pips | 2 pips |
+| Tarde NY | 17:00-20:00 | 1x (base) | 0.5 pips | 2 pips |
+| Cierre NY | 20:00-22:00 | 2x | 1.0 pip | 4 pips |
+
+El Builder opera en la sesion 08:00-20:00 por configuracion.
+Los peores momentos dentro de la sesion son la apertura
+de Londres y el cierre NY. El slippage configurado en SQ
+(0.5 pips EURUSD, 2 pips XAUUSD) es el valor del core.
+
+Para builds sobre activos con alta sensibilidad al horario
+(indices principalmente) usar el factor 2x como base.
+
+---
+
+## SWAP OVERNIGHT — VALORES FTMO ACTUALES
+
+Los swaps afectan directamente la rentabilidad de
+estrategias que mantienen posiciones overnight.
+Verificar en el simbolo [ACTIVO]_ftmo antes de lanzar el Builder.
+
+### Valores FTMO vigentes (verificar antes de cada build)
+
+| Activo | Swap Long (USD/lote/noche) | Swap Short (USD/lote/noche) |
+|--------|--------------------------|----------------------------|
+| XAUUSD | -50.63 | +17.67 |
+| EURUSD | -8.05 | +2.18 |
+| GBPUSD | (verificar en FTMO) | (verificar en FTMO) |
+| USDJPY | (verificar en FTMO) | (verificar en FTMO) |
+
+**Triple swap miercoles:** multiplicar x3 el valor de la noche.
+Ejemplo XAUUSD long miercoles: -50.63 * 3 = -151.89 USD/lote
+
+### Como configurar en SQ
+SQ → Data Manager → Simbolo [ACTIVO]_ftmo → Propiedades
+→ Swap Long / Swap Short
+→ Tipo de swap: en puntos o USD/lote segun el broker
+
+### Impacto en la evaluacion
+Ver skill-evaluation-auto.md:
+  - Triple swap miercoles > 15% del beneficio neto → DESCARTAR
+  - PF post-swaps < 80% del PF pre-swaps → DESCARTAR
+
+Si el swap long del activo es muy negativo (como XAUUSD),
+las estrategias Long-only tienen una desventaja estructural.
+El Builder libre lo detectara y generara mas estrategias Short
+o mixtas — dejar que SQ decida.
+
+---
+
 ## ESTANDAR DE TERMINAL DEL PROYECTO
 
 Para todas las operaciones con datos de SQ y scripts

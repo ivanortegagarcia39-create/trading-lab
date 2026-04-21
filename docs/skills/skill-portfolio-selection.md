@@ -245,10 +245,124 @@ SIGUIENTE ACCION:
 
 ---
 
+## MARKOWITZ vs HRP — CUANDO USAR CADA UNO
+
+El correlation-analyst elige el metodo de optimizacion
+segun el estado del portfolio. El humano no elige el metodo.
+
+### HRP (Hierarchical Risk Parity) — DEFAULT
+
+Usar HRP cuando:
+- Hay < 5 estrategias en el portfolio
+- Las correlaciones son inestables (diferencia > 15%
+  entre los dos semestres del historico — ver hrp-portfolio.py)
+- El historial en produccion real es < 12 meses
+- Acaba de añadirse una estrategia nueva al portfolio
+
+Razon: HRP no requiere estimacion de retornos esperados
+(que es inestable con pocas estrategias) y es mas robusto
+cuando las correlaciones cambian. No sufre del problema
+de "error amplification" de Markowitz con matrices de
+covarianza mal condicionadas.
+
+### MVO Markowitz (Maximo Sharpe) — PARA PORTFOLIO MADURO
+
+Usar MVO cuando:
+- Hay >= 5 estrategias en el portfolio
+- Todas tienen al menos 12 meses de historia en produccion real
+- Las correlaciones han sido estables los ultimos 6 meses
+
+Razon: con 5+ estrategias y historia suficiente la
+estimacion de la matriz de covarianza es fiable y
+Markowitz puede encontrar la frontera eficiente real.
+
+### Implementacion
+script: scripts/hrp-portfolio.py
+  Seleccion automatica del metodo segun los criterios
+  Restriccion: ninguna estrategia > 40% del portfolio
+  Output: results/portfolio-weights.json
+
+**DEFAULT ACTUAL: HRP**
+El portfolio sigue en fase inicial. HRP es el metodo
+hasta que se cumplan las condiciones de MVO.
+
+---
+
+## RESTRICCION ANTI-MONOCULTIVO USD
+
+### Definicion del Factor Dolar
+Los siguientes activos comparten el Factor Dolar como
+fuente de riesgo principal:
+  EURUSD, GBPUSD, AUDUSD, NZDUSD, USDCAD (inverso),
+  USDJPY (inverso), USDCHF (inverso), XAUUSD
+
+Cuando el USD se fortalece, todos estos activos se mueven
+en la misma direccion. Estrategias sobre activos diferentes
+pero correlacionados con el USD tienen drawdowns simultaneos.
+
+### Regla de bloqueo automatico
+Maximo 2 estrategias simultáneas cuyo activo pertenezca
+al Factor Dolar.
+
+Si se intenta añadir una tercera estrategia USD-correlacionada:
+  → correlation-analyst bloquea la inclusion automaticamente
+  → Decision: ESPERA hasta que una de las 2 activas se retire
+  → Mensaje: "Restriccion Anti-Monocultivo USD.
+    Ya hay 2 estrategias en el Factor Dolar.
+    [lista de las 2 activas].
+    Esta estrategia pasa a cola de espera."
+
+### Excepcion de estilos opuestos
+Si las 2 estrategias USD-correlacionadas ya activas tienen
+estilos completamente opuestos (una trend-following, una mean-reversion)
+Y su correlacion real medida es < 0.3:
+  → Permitir la tercera con penalizacion de -5 pts en el score
+  → Registrar la excepcion en el informe de portfolio
+  → Aumentar frecuencia de calculo de correlacion a semanal
+
+---
+
+## PROCESO DE SELECCION AUTOMATICO COMPLETO
+
+Flujo completo que ejecuta el correlation-analyst:
+
+```
+Pool de candidatas WFO aprobadas
+        ↓
+Paso 1: Scoring individual (formula existente)
+  Descartar si score < 55/100
+        ↓
+Paso 2: Ordenar por score descendente
+        ↓
+Paso 3: Para cada candidata (greedy):
+  a. Verificar correlacion < 0.5 con CADA activa
+  b. Verificar DD combinado < 12% si se incluye
+  c. Verificar max 2 por activo
+  d. Verificar max 3 por estilo (TF/MR)
+  e. VERIFICAR ANTI-MONOCULTIVO USD (max 2 Factor Dolar)
+        ↓
+Paso 4: Si cumple TODOS → INCLUIR
+        Si falla correlacion 0.5-0.7 → ESPERA
+        Si falla correlacion > 0.7 con 2+ → DESCARTAR
+        Si falla anti-monocultivo → ESPERA
+        ↓
+Paso 5: Recalcular pesos con HRP (o MVO si aplica)
+        via scripts/hrp-portfolio.py
+        ↓
+Paso 6: Verificar que ningun activo supera 40% del peso
+        ↓
+Output: portfolio actualizado en results/portfolio-weights.json
+```
+
+El humano no interviene en ningun paso.
+Todo es automatico y determinista segun los criterios.
+
+---
+
 ## REGLA FUNDAMENTAL
 
 El portfolio se construye automaticamente
 basandose en numeros y correlaciones.
 No se incluye una estrategia porque "parece buena".
 No se excluye una estrategia por intuicion.
-El score y la correlacion deciden.
+El score, la correlacion, y los pesos HRP deciden.
