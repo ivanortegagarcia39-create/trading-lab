@@ -299,6 +299,23 @@ Filtros personalizados:
 - Ratio Ret/DD > 0.8
   (subimos de 0.5 para mayor calidad)
 
+#### Filtros disponibles en SQ Build 143
+
+Disponibles y configurados en el Builder:
+- Transacciones medias al mes (trades/mes)
+- Factor de beneficio (PF)
+- Ratio Ret/DD
+
+NO disponibles en el Builder (SQ Build 143):
+- Total Trades (numero total de operaciones)
+- Win Rate (porcentaje de operaciones ganadoras)
+- Max Drawdown % (maximo drawdown porcentual)
+
+Estos tres filtros se aplican en Python post-build
+a traves del evaluator-assistant procesando los CSVs
+exportados del databank. No es un problema — el
+Evaluation Gate los aplica automaticamente.
+
 Ranking: Aptitud ponderada
 - Profit Factor: Maximice, Peso 3
 - Max Drawdown %: Minimizar, Peso 2
@@ -309,12 +326,13 @@ Ranking: Aptitud ponderada
 ### Tab Comprobaciones cruzadas
 
 Mayor precision de las pruebas: ACTIVADO
-Monte Carlo gestion de operaciones: ACTIVADO
+Monte Carlo gestion de operaciones: DESACTIVADO
 Todo lo demas: DESACTIVADO
 
-NUEVO: Monte Carlo gestion de operaciones añade
-robustez al filtrado. Descarta estrategias que
-dependen de un orden especifico de las operaciones.
+NOTA: Monte Carlo se aplica en el Retester, no en el Builder.
+Activarlo en el Builder ralentiza la generacion sin beneficio
+adicional ya que el Retester lo aplicara sobre candidatas
+ya filtradas.
 
 ---
 
@@ -330,7 +348,7 @@ Antes de lanzar verificar que muestra:
 [ ] Comisiones aplicadas
 [ ] Start again when finished: ACTIVADO
 [ ] Stop generation: Never
-[ ] Monte Carlo: ACTIVADO
+[ ] Monte Carlo en Builder: DESACTIVADO (se aplica en Retester)
 [ ] Max strategies: 1000
 
 ---
@@ -376,8 +394,34 @@ Señales de que hay que seguir:
 | Modo | Se para solo | Corre indefinido |
 | Max estrategias | 500 | 1000 |
 | PF minimo filtro | 0.8 | 1.3 |
-| Monte Carlo | Desactivado | Activado |
+| Monte Carlo en Builder | Desactivado | Desactivado (se aplica en Retester) |
 | Sesgo humano | En la logica | Solo en el riesgo |
+
+---
+
+## ESTANDAR DE TERMINAL DEL PROYECTO
+
+Para todas las operaciones con datos de SQ y scripts
+de validacion, el proyecto usa los siguientes estandares:
+
+| Herramienta | Cuando usar |
+|-------------|-------------|
+| PowerShell / CMD | Comandos de sistema, git, instalar software |
+| Python directo | Manipulacion de datos SQ — SIEMPRE Python, nunca PowerShell |
+
+**Separador CSV de SQ:** punto y coma (;) — no coma
+
+**Razon critica:** PowerShell corrompe los CSVs de SQ cuando
+el separador es punto y coma y los numeros usan coma decimal
+(formato europeo). Python maneja este formato correctamente
+con csv.DictReader(delimiter=";") y el parse_european_number
+que los scripts de este proyecto implementan.
+
+Ejemplo incorrecto (PowerShell):
+  Import-Csv archivo.csv  ← asume coma como separador
+
+Ejemplo correcto (Python):
+  python validate-sqx-build.py --baseline a.csv --new b.csv
 
 ---
 

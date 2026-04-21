@@ -1,5 +1,5 @@
 # Project Status — TradingLab
-Ultima actualizacion: 2026-04-11
+Ultima actualizacion: 2026-04-21
 
 ---
 
@@ -41,10 +41,18 @@ Con el enfoque actual SQ decide la logica. Los numeros deciden que avanza.
 
 ## 2. ESTADO ACTUAL
 
-**Fecha:** 2026-04-11
-**Situacion:** Proyecto rediseñado completamente. Todo sesgo humano eliminado del pipeline.
-Build 8 corriendo en dispositivo alber (ultimo build con hipotesis humana — referencia).
-Build 9 pendiente: primer Builder libre sin sesgo humano, primer build multi-activo.
+**Fecha:** 2026-04-21
+**Situacion:** Fase 0 completada 2026-04-20. Build 10 corriendo en alber sobre XAUUSD H1.
+Planning maestro de 186 tareas activo.
+
+### Planning Maestro
+
+| Metrica | Valor |
+|---------|-------|
+| Total tareas | 186 |
+| Fase 0 | COMPLETADA |
+| Fase 1 | EN CURSO |
+| Fases 2-10 | PENDIENTES |
 
 ### Documentacion base
 
@@ -59,7 +67,8 @@ Build 9 pendiente: primer Builder libre sin sesgo humano, primer build multi-act
 
 **Agentes activos:** 11
 **Skills operativas:** 22 en docs\skills\
-**Tickets activos:** 1 — TICKET-001 en fase build-running (Build 8, enfoque anterior)
+**Tickets activos:** 1 — TICKET-002-BUILD-9-XAUUSD en fase build-pending
+**Portfolio actual:** 0 estrategias (objetivo minimo: 3)
 
 ---
 
@@ -133,7 +142,8 @@ Build 9 pendiente: primer Builder libre sin sesgo humano, primer build multi-act
 | Build 6 | Hipotesis humana | NBARBreakout-RSI M15 | PF max 1.18 — M15 con comisiones inviable | DESCARTADO |
 | Build 7 | Hipotesis humana | NBARBreakout-RSI H1 | Resultado desconocido — dispositivo anterior | PENDIENTE |
 | Build 8 | Hipotesis humana | TrendFollowing EURUSD H1 EMA50+ADX | EN EJECUCION en dispositivo alber — ultimo build con sesgo humano | EN CURSO |
-| Build 9+ | Builder libre | Paleta completa +100 indicadores | PENDIENTE — primer build sin sesgo humano — multi-activo | PENDIENTE |
+| Build 9 | Builder libre | XAUUSD H1 — Paleta completa — Comisiones FTMO reales | EN CURSO — Ciclo 1 iniciado 2026-04-15 — TICKET-002 | EN CURSO |
+| Build 10 | Builder libre | XAUUSD H1 — datos corregidos, instrumentos FTMO reales | EN CURSO desde 2026-04-20 — Primer build con configuracion validada Fase 0 | EN CURSO |
 
 ### Aprendizajes acumulados
 
@@ -492,8 +502,8 @@ Detalle en: docs\roadmap-v2.md
 
 ## 14. SIGUIENTE ACCION CONCRETA
 
-**Estado:** Build 8 corriendo en dispositivo alber (enfoque anterior — referencia comparativa).
-**Proximo hito:** Lanzar Build 9 con Builder libre multi-activo.
+**Estado:** CICLO 1 EN CURSO — Build 9 XAUUSD configurado. Fase: build-pending.
+**Proximo hito:** Humano lanza Builder en SQ. Dejar correr 48 horas minimo.
 
 ### Paso 1 — Verificar datos disponibles en SQ
 1. data-manager verifica que activos tienen datos M1 disponibles en SQ
