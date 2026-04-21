@@ -296,6 +296,111 @@ Las cuentas de challenge real no necesitan este protocolo
 
 ---
 
+## Correlacion Temporal del Portfolio en Produccion
+
+Detecta cuando estrategias que eran independientes en el backtest
+empiezan a moverse juntas en produccion real — lo que aumenta
+el riesgo de portfolio por encima de lo calculado.
+
+### Calculo de correlacion rolling 30 dias
+
+Frecuencia: calculado diariamente al cierre de mercado.
+Ventana: ultimos 30 dias naturales de trades reales.
+Metodo: correlacion de Pearson entre las curvas de equity
+diarias de cada par de estrategias activas.
+
+Para cada par (i, j) de estrategias en produccion:
+  corr_ij = correlacion de Pearson entre equity_daily_i y equity_daily_j
+  sobre los ultimos 30 dias
+
+### Alertas de correlacion
+
+Si corr_ij > 0.6 para cualquier par activo:
+  → ALERTA CORRELACION ALTA
+  → Mensaje: "Correlacion entre [estrategia_i] y [estrategia_j]
+    ha subido a [valor] (umbral: 0.6).
+    En el backtest/WFO la correlacion era [valor_historico].
+    Si se mantiene >0.6 durante 5 dias → recalcular pesos HRP
+    con los datos de produccion."
+  → Incrementar frecuencia de calculo a diaria (ya era diaria)
+  → Notificar al correlation-analyst
+
+Si la correlacion alta persiste 5 dias consecutivos:
+  → correlation-analyst recalcula pesos HRP con datos reales
+  → hrp-portfolio.py se ejecuta con los retornos reales de los
+    ultimos 30 dias en lugar de los datos del backtest
+  → Los nuevos pesos reemplazan los anteriores automaticamente
+
+### MODO PANICO — correlacion media del portfolio
+
+Si la correlacion media de TODOS los pares activos supera 0.85
+durante 2 dias consecutivos:
+
+  MODO PANICO ACTIVADO
+  → Reducir riesgo de TODAS las estrategias a 0.1% por trade
+  → Esto limita el riesgo total a 0.1% x N_estrategias por dia
+  → Registrar evento en hash-logger:
+    DECISION: MODO-PANICO-ACTIVO
+    CRITERIO: correlacion_media_portfolio > 0.85 por 2 dias
+    RESULTADO: riesgo reducido a 0.1% por estrategia
+  → Notificar CASO 2 al humano (alerta critica)
+  → El Modo Panico se desactiva cuando la correlacion media
+    baja por debajo de 0.70 durante 3 dias consecutivos
+
+Razon: cuando todas las estrategias estan correlacionadas,
+el portfolio se comporta como una estrategia unica pero con
+el riesgo multiplicado. El Modo Panico protege el capital
+hasta que la correlacion se normalice.
+
+### Stress test de correlacion = 1.0
+
+Ejecutado mensualmente (primer lunes del mes).
+Simula el peor escenario posible: todas las estrategias
+con correlacion +1.0 entre si (perfectamente coordinadas).
+
+Calculo:
+  DD_total_worst = sum(DD_i * peso_i para cada estrategia i)
+  (suma directa — sin beneficio de diversificacion)
+
+Si DD_total_worst > 20%:
+  → ADVERTENCIA: "En el peor escenario (correlacion 1.0),
+    el portfolio tiene un DD potencial de [valor]%.
+    Umbral maximo: 20%.
+    Opciones:
+    a) Reducir el numero de estrategias activas
+    b) Reducir los pesos de las estrategias con mayor DD individual
+    c) Reducir el riesgo por trade de todas las estrategias"
+  → correlation-analyst evalua las opciones y recomienda accion
+  → El humano recibe la recomendacion (no es automatico — requiere
+    ajuste en los EA ya desplegados, lo que requiere intervencion)
+
+Si DD_total_worst <= 20%: sin accion. Registrar el resultado en log.
+
+### Registro del historial de correlaciones
+
+Cada calculo diario se guarda en:
+  results/correlation-history/[YYYYMMDD].json
+
+Formato:
+```json
+{
+  "fecha": "2026-04-21",
+  "pares": [
+    {
+      "estrategia_a": "ID_estrategia_1",
+      "estrategia_b": "ID_estrategia_2",
+      "correlacion_30d": 0.32,
+      "alerta": false
+    }
+  ],
+  "correlacion_media_portfolio": 0.28,
+  "modo_panico": false,
+  "stress_test_dd_worst": 14.2
+}
+```
+
+---
+
 ## Integracion con el pipeline
 
 performance-monitor opera en paralelo y de forma automatica:

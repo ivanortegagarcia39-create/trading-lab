@@ -120,23 +120,60 @@ La deriva de regimen se documenta para contextualizarla.
 1. Al INICIO del build:
    - Registrar regimen actual: ADX, ATR, media ATR, hora
    - Guardar en results\regime-history\build-[N]-inicio.json
+   - Adicionalmente guardar en results\build-regime-snapshot.json
+     (archivo de estado activo — se sobreescribe en cada build)
 
 2. Al FIN del build:
    - Calcular regimen al momento de parar
-   - Comparar con el regimen de inicio
+   - Comparar con la foto de inicio
    - Calcular deriva: abs(ADX_fin - ADX_inicio) / ADX_inicio * 100
 
 3. Si deriva de ADX > 30%:
    - Marcar los resultados del build como "potencialmente sesgados"
-   - Añadir nota en el informe de evaluacion:
-     "NOTA: el regimen cambio un [X]% durante el build.
-      Las estrategias generadas pueden estar sesgadas
-      hacia el regimen predominante del periodo.
-      Verificar que el Retester cubre regimenes mixtos."
-   - La nota es informativa — no bloquea el pipeline
+   - Añadir ADVERTENCIA en el informe de resultados:
+     "ADVERTENCIA: El regimen de mercado cambio >30%
+      durante el build. Las estrategias generadas pueden
+      estar optimizadas para un regimen que ya no existe.
+      Regimen inicio: [X] | Regimen fin: [X]"
+   - La advertencia es informativa — no bloquea el pipeline
+   - No descarta automaticamente ninguna estrategia
 
 4. Si deriva <= 30%:
    - Regimen estable durante el build — sin notas adicionales
+
+### Formato del archivo build-regime-snapshot.json
+
+```json
+{
+  "build_num": 10,
+  "activo": "XAUUSD",
+  "snapshot_inicio": {
+    "timestamp": "2026-04-20T08:30:00Z",
+    "adx_14": 27.4,
+    "atr_14": 18.5,
+    "atr_media_20p": 16.2,
+    "atr_ratio": 1.14,
+    "regimen": "tendencia-altavol",
+    "adx_categoria": "TENDENCIA_ACTIVA",
+    "vol_categoria": "VOLATILIDAD_NORMAL"
+  },
+  "snapshot_fin": {
+    "timestamp": null,
+    "adx_14": null,
+    "atr_14": null,
+    "atr_media_20p": null,
+    "atr_ratio": null,
+    "regimen": null
+  },
+  "deriva_adx_pct": null,
+  "build_en_curso": true,
+  "advertencia_deriva": false
+}
+```
+
+Al finalizar el build se rellena snapshot_fin y se calculan
+deriva_adx_pct y advertencia_deriva.
+El archivo queda en disco como registro permanente del build.
 
 ---
 

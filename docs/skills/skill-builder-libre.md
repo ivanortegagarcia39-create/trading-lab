@@ -516,6 +516,103 @@ o mixtas — dejar que SQ decida.
 
 ---
 
+## BACKTEST SUCIO — SPREAD DOBLE OBLIGATORIO
+
+Todos los builds deben configurar el spread en SQ como el
+DOBLE del spread real de FTMO. Esto garantiza que las
+estrategias aprobadas son robustas incluso si el spread
+se amplia momentaneamente durante eventos de liquidez.
+
+Una estrategia que solo funciona con el spread justo
+del broker real falla en produccion al primer evento
+de baja liquidez. El backtest sucio filtra estas
+estrategias fragiles antes de que lleguen al WFO.
+
+### Spreads configurados en SQ (backtest sucio)
+
+| Activo | Spread real FTMO | Spread SQ (x2) | Como verificar |
+|--------|-----------------|----------------|----------------|
+| XAUUSD | 30 pips | 60 pips | pip size = 0.01 → introducir 60 |
+| EURUSD | 0.5 pips | 1.0 pip | pip size = 0.0001 → introducir 1.0 |
+| GBPUSD | 0.8 pips | 1.6 pips | pip size = 0.0001 → introducir 1.6 |
+| USDJPY | 0.5 pips | 1.0 pip | pip size = 0.01 → introducir 1.0 |
+| AUDUSD | 0.6 pips | 1.2 pips | pip size = 0.0001 → introducir 1.2 |
+| NZDUSD | 0.8 pips | 1.6 pips | pip size = 0.0001 → introducir 1.6 |
+| USDCAD | 0.7 pips | 1.4 pips | pip size = 0.0001 → introducir 1.4 |
+| USDCHF | 0.7 pips | 1.4 pips | pip size = 0.0001 → introducir 1.4 |
+| XAGUSD | 3 pips | 6 pips | verificar pip size antes |
+
+Para activos no listados: multiplicar el spread real x2.
+Verificar SIEMPRE el pip size del simbolo en SQ antes
+de introducir el valor. El mismo numero tiene distinto
+impacto segun si el pip size es 0.01 o 0.0001.
+
+### Configuracion en SQ
+
+SQ → Tab Datos → clic en engranaje del simbolo → Spread
+Introducir el valor de la columna "Spread SQ (x2)".
+
+La comision y el slippage NO se doblan — son costes
+fijos que ya estan correctamente calibrados con los
+valores reales de FTMO.
+
+---
+
+## METRICA DE CALIDAD DE SIMULACION
+
+La calidad del backtest depende del porcentaje de ticks
+reales disponibles vs ticks simulados por SQ.
+Un backtest con muchos ticks simulados puede tener
+resultados irreproducibles en produccion.
+
+### Como comprobar en SQ
+
+SQ → Tab Progreso → Seccion "Simulation statistics"
+→ Campo "Modelling quality" o "Tick coverage"
+
+El valor se muestra como porcentaje al finalizar el build.
+
+### Criterios de calidad
+
+| Cobertura de ticks | Calidad | Accion |
+|-------------------|---------|--------|
+| >= 80% | Aceptable | Sin accion |
+| 60-79% | Baja | Advertencia en informe post-build |
+| < 60% | Inaceptable | ADVERTENCIA CRITICA — resultados no fiables |
+
+### Formato de la advertencia en el informe post-build
+
+Si cobertura < 80%:
+
+```
+ADVERTENCIA: Calidad de simulacion baja.
+Cobertura de ticks: [valor]%
+Umbral minimo: 80%
+Causa probable: datos M1 con huecos o periodo fuera
+del rango disponible en Dukascopy.
+Accion: verificar calidad de datos en data-manager.
+Las metricas de este build pueden ser menos fiables.
+```
+
+Si cobertura < 60%, ademas:
+
+```
+ADVERTENCIA CRITICA: Cobertura de ticks < 60%.
+Los resultados de este build NO son fiables.
+Detener el proceso — no avanzar al Evaluation Gate
+hasta resolver la calidad de los datos.
+```
+
+### Quien registra la advertencia
+
+El evaluator-assistant lee el informe post-build del
+orchestrator que incluye la cobertura de ticks.
+Si cobertura < 80% → incluir la advertencia en el
+informe del Evaluation Gate para cada estrategia
+del build afectado.
+
+---
+
 ## ESTANDAR DE TERMINAL DEL PROYECTO
 
 Para todas las operaciones con datos de SQ y scripts
