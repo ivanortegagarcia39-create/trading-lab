@@ -139,9 +139,112 @@ export-specialist exporta a MT5 →
 [humano compra challenge y activa EA] →
 performance-monitor inicia monitoreo
 
+## Proteccion Anti-Deteccion y Anti-Correlacion
+
+Esta seccion define las medidas obligatorias que el
+export-specialist aplica a TODOS los EAs exportados.
+No son opcionales — son parte del proceso de exportacion.
+
+### Modo Sigilo
+
+Cada EA exportado incluye restricciones de frecuencia:
+- Maximo 1 trade por hora por EA
+- Maximo 3 trades por dia por EA (independiente del max 2
+  del Builder — el Builder permite 2, el Modo Sigilo permite 3
+  para dar margen pero nunca se supera el limite del Builder)
+
+Razon: las prop firms detectan patrones de HFT y scalping
+encubierto revisando la distribucion temporal de trades.
+Un EA que abre exactamente 2 trades cada dia a las mismas
+horas levanta alertas. Limitar a 1 por hora y distribuir
+aleatoriamente previene la deteccion de comportamiento mecanico.
+
+### Delay Aleatorio Anti-Sincronizacion
+
+Añadir al codigo MQL5 exportado antes de cada OrderSend:
+  Sleep(MathRand() % 3001 + 500);  // 500 a 3500 ms
+
+Razon: si el mismo sistema opera en multiples cuentas
+(FTMO, E8, TFT simultaneamente), sin delay todas las
+cuentas abririan posiciones en el mismo segundo exacto.
+Las prop firms detectan "group trading" cuando multiples
+cuentas ejecutan el mismo activo en el mismo instante.
+El delay aleatorio de 0.5 a 3.5 segundos desincroniza
+la ejecucion de forma que parece comportamiento humano.
+
+Implementacion en el template MQL5:
+  // Anti-sync delay — TradingLab export protocol
+  if(NewSignalDetected()) {
+      int delay_ms = (int)(MathRand() % 3001 + 500);
+      Sleep(delay_ms);
+      if(SpreadOK() && MarketHealthOK()) {
+          SendOrder(...);
+      }
+  }
+
+### Protocolo Anti-Patron de Ejecucion
+
+Reglas de distribucion de cuentas:
+- Cada cuenta opera un activo diferente preferentemente
+- Maximo 3 cuentas por prop firm con estrategias del
+  mismo sistema (mismo ciclo de build)
+- Cada EA exportado lleva ID unico y version semantica
+  en el nombre del archivo y en los comentarios del codigo:
+  Formato: EA_[ACTIVO]_[BUILD_NUM]_v[MAJOR].[MINOR]_[ID8]
+  Ejemplo: EA_XAUUSD_B10_v1.0_a3f7c291.mq5
+
+El ID unico de 8 caracteres hexadecimales se genera
+automaticamente en el momento de la exportacion.
+Sirve para auditar que cuenta esta usando que EA.
+
+### Limite de Slippage Absoluto
+
+Parametro MaxSlippagePips en cada EA exportado:
+
+| Activo | MaxSlippagePips |
+|--------|----------------|
+| XAUUSD | 50 |
+| XAGUSD | 30 |
+| Forex majors (EUR, GBP, USD, JPY pares) | 5 |
+| Forex crosses (EUR/GBP, GBP/JPY, etc) | 8 |
+| Indices (US30, US500, NAS100) | 20 |
+
+Si el slippage en la ejecucion supera MaxSlippagePips:
+- La orden es RECHAZADA automaticamente por el EA
+- El evento queda en el log del EA con timestamp
+- No se reintenta la orden en la misma barra
+
+Razon: slippage excesivo indica condiciones anormales
+del mercado (spread ampliado, liquidez reducida).
+Ejecutar en esas condiciones daña la expectativa de
+la estrategia que fue validada con spreads normales.
+
+### Monitor de Spread Pre-Orden
+
+Antes de cada OrderSend el EA verifica el spread actual:
+  current_spread = SymbolInfoInteger(Symbol(), SYMBOL_SPREAD);
+  avg_spread = GetAverageSpread(20);  // media de 20 velas anteriores
+
+  if(current_spread > avg_spread * 10) {
+      LogEvent("Spread anormalmente alto: " + current_spread);
+      return;  // cancelar orden
+  }
+
+Umbral: spread > 10x el spread promedio de las ultimas 20 velas.
+Un spread 10x mayor indica slippage de noticias, sesion de
+apertura con liquidez reducida o problema tecnico del broker.
+
+Todos los eventos de spread cancelado quedan en el log:
+  results\production-logs\[EA_ID]-spread-events.csv
+Para auditoria por performance-monitor.
+
+---
+
 ## Lo que este agente NUNCA hace
 
 NUNCA decide si la estrategia es buena
 NUNCA opina sobre la logica de la estrategia
 NUNCA sugiere cambios en los parametros
+NUNCA omite las protecciones anti-deteccion por ninguna razon
 Solo exporta lo que el pipeline aprobo automaticamente
+  con todas las protecciones aplicadas sin excepcion

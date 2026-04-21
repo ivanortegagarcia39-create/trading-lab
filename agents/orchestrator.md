@@ -188,6 +188,40 @@ Si hay duda sobre si un numero cumple o no
 
 Al inicio de cada sesion ejecutar en orden:
 
+### 0. Verificar lock file (primer paso obligatorio)
+
+Comprobar si existe results\pipeline.lock
+
+**Si existe:**
+  Leer el contenido del archivo.
+  Formato: TIMESTAMP|PID|FASE_ACTUAL|ACTIVO|BUILD_NUM
+  Mostrar mensaje:
+  "Pipeline ya corriendo.
+   PID: [PID] desde [TIMESTAMP]
+   Fase: [FASE_ACTUAL] — Activo: [ACTIVO] — Build: [BUILD_NUM]
+   ABORTAR — no iniciar nueva sesion hasta revisar el lock."
+  NO continuar. NO modificar nada. Esperar decision humana.
+
+**Si no existe:**
+  Crear results\pipeline.lock con formato:
+  [TIMESTAMP ISO8601]|[SESSION_ID]|INICIO|[ACTIVO_ACTIVO]|[BUILD_NUM_ACTIVO]
+  Ejemplo:
+  2026-04-21T09:15:00|session-abc123|INICIO|XAUUSD|10
+  Continuar con los pasos siguientes.
+
+**Al finalizar la sesion correctamente:**
+  Eliminar results\pipeline.lock como ultimo paso.
+  Confirmar eliminacion en el log de cierre.
+
+**Si la sesion termina con error:**
+  Mantener results\pipeline.lock intacto.
+  Razon: previene corrupcion de datos si una sesion anterior
+  dejo el pipeline en estado indeterminado.
+  El humano debe revisar el estado manualmente y eliminar
+  el lock solo cuando haya confirmado que el pipeline
+  no esta en un estado corrupto.
+
+### 1. Leer contexto del sistema
 1. Leer CLAUDE.md y docs\project-status.md
 2. Escanear research\active-tickets\
 3. Clasificar tickets:
