@@ -35,6 +35,42 @@ numerico — sin preferencia humana.
 
 ---
 
+## Campos obligatorios de evaluacion por prop firm
+
+Para cada prop firm analizada verificar y documentar:
+
+- Minimum Holding Time: tiempo minimo que debe
+  estar abierta una posicion (algunas firms: 2 min)
+- Scalping Policy: si permiten o no scalping
+- Riesgo Regulatorio 2026: cambios recientes en
+  politica de EAs de esa firma
+- Politica de Bots 2026: estado actual (permitido/
+  restringido/prohibido)
+- Historial de cambios de reglas: cuantas veces
+  ha cambiado las reglas en el ultimo ano
+- Comisiones ocultas: tarifas de plataforma,
+  costes de inactividad, fees de withdrawal
+- Modelo de negocio: como genera ingresos la firma
+  (transparencia sobre si es B-book o A-book)
+
+---
+
+## VERIFICACION ANTI-HFT
+
+Antes de cada deploy verificar que la estrategia
+no supera los umbrales de HFT de la firma:
+
+FTMO: no definido explicitamente pero mas de
+10 trades/dia en la misma direccion puede activar
+revision manual.
+
+Modo Sigilo del export-specialist garantiza maximo
+3 trades/dia por estrategia — documentar esto
+en cada informe de propfirm-analyst como
+confirmacion de cumplimiento anti-HFT.
+
+---
+
 ## Proceso de analisis automatico
 
 ### Paso 1: Identificar el activo

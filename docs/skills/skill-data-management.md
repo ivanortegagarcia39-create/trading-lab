@@ -173,6 +173,58 @@ Para usar H1 en el Builder:
 
 ---
 
+## PROTOCOLO DESCARGA MASIVA NOCTURNA
+
+Programar actualizaciones de datos M1 en horario
+de baja actividad (02:00-06:00 hora local).
+
+Orden de descarga por prioridad del market-selector:
+1. XAUUSD (activo actual del build)
+2. EURUSD (segundo en cola)
+3. Resto del universo en orden de score
+
+Verificacion de gaps tras cada descarga:
+- Si gaps > 0.1% → reintentar descarga
+- Si persiste → documentar como limitacion conocida
+- Si gaps > 2% → añadir nota de advertencia
+  en todos los backtests de ese activo
+
+---
+
+## VERIFICACION DATOS POINT-IN-TIME
+
+Los datos historicos deben reflejar exactamente
+la informacion disponible en cada momento del pasado.
+Para Forex y metales con Dukascopy esto esta
+garantizado — los datos no se revisan retroactivamente.
+Para indices y acciones verificar que no hay
+sesgo de supervivencia (activos que quebraron
+no aparecen en datos historicos actuales).
+
+---
+
+## LIMITACIONES CONOCIDAS POR ACTIVO
+
+XAUUSD M1: gaps estructurales ~2.6% (Dukascopy)
+  → Aceptable para H1, documentar en cada backtest
+EURUSD M1: gaps ~0.16% → Aceptable para todos los TF
+Indices: verificar disponibilidad antes de cada build
+Cripto: mercado 24/7 — verificar configuracion
+  especial en SQ para activos sin cierre diario
+
+---
+
+## AUSENCIA DE SESGO DE SUPERVIVENCIA
+
+Dukascopy proporciona datos continuos para Forex
+y metales — no hay sesgo de supervivencia en
+estos activos ya que no pueden "quebrar".
+Para indices: los componentes cambian con el tiempo
+pero el indice en si continua.
+Documentar esta verificacion en cada nuevo activo.
+
+---
+
 ## MANTENIMIENTO PERIODICO DE DATOS
 
 ### Antes de cada build

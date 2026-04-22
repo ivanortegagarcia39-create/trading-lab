@@ -11,22 +11,27 @@ El scoring numerico decide — no la preferencia.
 
 ## PROP FIRMS ANALIZADAS
 
-### 1. FTMO
+### 1. FTMO — PRINCIPAL 2026
 Web: ftmo.com
 Modelo: Challenge 2-Step
 Mercados: Forex, Indices, Metales, Criptos
 Apalancamiento: hasta 1:100 Forex, 1:50 Indices
 
-Reglas clave:
-- Challenge: +10% objetivo, 5% daily loss dinamico,
-  10% max DD dinamico
-- Verification: +5% objetivo, mismos limites
-- Dias minimos: 4 con posiciones iniciadas
+Reglas clave 2026:
+- Fase 1: +10% objetivo, 5% DD diario dinamico,
+  10% DD total dinamico
+- Fase 2: +5% objetivo, mismos DD
+- Dias minimos: 4 (sin maximo)
 - Sin Regla del Mejor Dia en 2-Step
-- EAs: permitidos — no HFT, no martingala
+- EAs: permitidos con condiciones
+- Prohibiciones: HFT, tick scalping, copy trading,
+  group trading, explotar infraestructura
+- Plataformas: MT4, MT5, cTrader, DXtrade
 
-Profit split: 80% base, hasta 90% con scaling
-Precios: 10k ~155€, 25k ~250€, 50k ~345€
+Profit split: 80% base, hasta 90%
+Scaling: +25% capital cada 4 meses si profit >= 5%
+Precios: 10k ~155€ (reembolsable), 25k ~250€, 50k ~345€
+Riesgo de contraparte: BAJO (8+ anos, $160M+ pagados)
 
 Activos compatibles:
 - Forex Majors: TODOS ✓
@@ -142,7 +147,47 @@ Activos compatibles:
 
 ---
 
-### 6. TopStep
+### 6. BrightFunded
+Web: brightfunded.com
+Modelo: 2-Step
+Mercados: Forex, Metales, Indices
+
+Reglas clave 2026:
+- Reglas similares a FTMO en estructura general
+- Algunos planes sin restriccion de dias minimos
+- EAs: permitidos
+
+Profit split: hasta 90%
+Riesgo de contraparte: MEDIO (firma mas nueva)
+
+Activos compatibles:
+- Forex Majors: SI ✓
+- Forex Crosses: SI ✓
+- XAU/USD: SI ✓
+- Indices: verificar plan especifico
+
+---
+
+### 7. FundingPips
+Web: fundingpips.com
+Modelo: 2-Step
+Mercados: Forex, Metales, Indices
+
+Reglas clave 2026:
+- Reglas mas flexibles que FTMO en algunos aspectos
+- EAs: permitidos
+
+Profit split: hasta 95%
+Riesgo de contraparte: MEDIO
+
+Activos compatibles:
+- Forex: SI ✓
+- Metales: SI ✓
+- Indices: verificar
+
+---
+
+### 8. TopStep
 Web: topstep.com
 Modelo: Trading Combine (1 fase)
 Mercados: Futuros CME exclusivamente
@@ -169,14 +214,47 @@ Activos compatibles:
 
 ## TABLA COMPARATIVA RAPIDA
 
+| Prop Firm      | Permite EAs | DD diario | DD total | Split max | Scaling | Anos | Pagos verificados | Riesgo contraparte |
+|----------------|-------------|-----------|----------|-----------|---------|------|-------------------|--------------------|
+| FTMO           | Si          | 5%        | 10%      | 90%       | Si      | 8+   | Si                | BAJO               |
+| E8 Funding     | Si          | 5%        | 8%       | 80%       | No      | 4+   | Si                | MEDIO              |
+| TFT            | Si          | 5%        | 10%      | 90%       | No      | 3+   | Parcial           | MEDIO              |
+| BrightFunded   | Si          | 5%        | 10%      | 90%       | No      | 2+   | Parcial           | MEDIO              |
+| FundingPips    | Si          | 5%        | 10%      | 95%       | No      | 2+   | Parcial           | MEDIO              |
+| MFF            | Si          | Fijo      | Trail    | 90%       | No      | 4+   | Si                | MEDIO              |
+| Apex           | Si          | Trail     | Trail    | 100%/90%  | No      | 5+   | Si                | BAJO               |
+| TopStep        | Parcial     | 2%        | Trail    | 90%/80%   | No      | 10+  | Si                | BAJO               |
+
+Tabla legacy (activo vs mercado):
+
 | Prop Firm | Forex | Metales | Indices | Cripto | Futuros | DD tipo | Split |
 |-----------|-------|---------|---------|--------|---------|---------|-------|
 | FTMO | SI | SI | SI | SI | NO | Dinamico | 80-90% |
 | E8 | SI | SI | SI | SI | NO | Fijo 8% | 80% |
 | TFT | SI | SI | SI | SI | NO | Trail 10% | 80-90% |
+| BrightFunded | SI | SI | SI | NO | NO | Dinamico | 90% |
+| FundingPips | SI | SI | SI | NO | NO | Dinamico | 95% |
 | MFF | NO | NO | NO | NO | SI | Trail | 80-90% |
 | Apex | NO | NO | NO | NO | SI | Trail | 100%/90% |
 | TopStep | NO | NO | NO | NO | SI | 2% fijo | 90%/80% |
+
+---
+
+## REGLA DE DIVERSIFICACION POR PROP FIRM
+
+Nunca mas del 30% del capital operativo en una
+sola prop firm. Rotar entre 3-4 firms para escalar.
+
+Razon: riesgo de contraparte — si una firma cierra
+o congela cuentas, el 70%+ del capital sigue activo.
+
+Distribucion objetivo cuando hay capital en varias firms:
+- FTMO: maximo 40% (riesgo BAJO, prioridad principal)
+- Segunda firma: maximo 30%
+- Tercera y cuarta firma: el resto distribuido
+
+El orchestrator verifica esta regla antes de
+aprobar cualquier nuevo challenge.
 
 ---
 

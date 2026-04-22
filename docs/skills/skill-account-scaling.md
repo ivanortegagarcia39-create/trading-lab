@@ -200,6 +200,53 @@ en espera que pueda ocupar el slot.
 
 ---
 
+## KELLY FRACCIONADO PARA SIZING
+
+Formula: f = (p*b - q) / b
+donde p = win rate, b = ratio TP/SL, q = 1-p
+Kelly fraccionado: usar 25% del Kelly completo
+para reducir volatilidad de la cuenta.
+
+Ejemplo con PF=1.5, WR=45%, ratio 2:1:
+Kelly = (0.45*2 - 0.55) / 2 = 0.175 = 17.5%
+Kelly fraccionado = 17.5% * 0.25 = 4.4%
+Pero limitado por reglas FTMO: maximo 1% por trade
+→ Usar el minimo entre Kelly fraccionado y 1%
+
+---
+
+## CRITERIOS DE RETIRO POR DECAY
+
+Una estrategia se retira del portfolio cuando:
+- PF produccion < 85% PF OOS durante 4 semanas
+- Z-Score PF <= -2.0 durante 4 semanas
+- DD produccion supera DD OOS + 30%
+- Correlacion con otra estrategia > 0.7 durante
+  2 semanas (una de las dos se retira)
+
+Al retirar: registrar en lessons-learned.md
+con contexto completo del fallo.
+
+---
+
+## PLAN DE SCALING FTMO
+
+Mes 1-4: cuenta 10k, riesgo 1% por trade
+Si profit >= 5% en 4 meses → solicitar scaling
+Mes 5-8: cuenta 12.5k (+25%)
+Mes 9-12: cuenta 15.6k (+25%)
+Ano 2: cuenta potencial 25k-50k
+Ano 4: cuenta potencial hasta 200k+
+
+El scaling-manager gestiona esto automaticamente.
+
+Criterio de scaling automatico FTMO:
+- Profit acumulado >= 5% en periodo de 4 meses
+- Sin violacion de DD durante el periodo
+- Solicitar scaling en la plataforma FTMO
+
+---
+
 ## Lo que esta skill NUNCA hace
 
 NUNCA escala por momentum o porque la estrategia

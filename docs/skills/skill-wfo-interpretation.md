@@ -219,6 +219,53 @@ El orchestrator lee el dictamen y toma la decision:
 
 ---
 
+## ANCHORED WALK-FORWARD
+
+Variante del WFO estandar mas robusta:
+- WFO estandar: ventanas IS+OOS se deslizan
+  manteniendo tamaño fijo
+- Anchored WFO: el inicio del IS es fijo (2003)
+  solo crece el final — simula exactamente como
+  operaria el sistema en tiempo real
+
+Cuando usar Anchored WFO:
+- Cuando hay suficientes datos (10+ anos)
+- Cuando se quiere maxima simulacion realista
+- Recomendado para activos con datos desde 2003
+
+Cuando usar WFO estandar:
+- Cuando hay pocos datos
+- Cuando se quiere detectar estabilidad
+  en periodos recientes especificamente
+
+---
+
+## CATASTROPHIC VETO — YA IMPLEMENTADO
+
+Recordatorio de criterio presente en skill-evaluation-auto:
+Si CUALQUIER ventana individual tiene:
+PF < 0.8 O DD > 10% → descarte automatico
+
+Este criterio tiene prioridad sobre el promedio general.
+Una sola ventana catastrofica descalifica la estrategia
+independientemente de sus otras metricas.
+
+---
+
+## WF MATRIX — CRITERIO >= 3 DE 5
+
+La WF Matrix prueba 5 configuraciones diferentes
+del WFO (distintos tamaños de ventana).
+Criterio de aprobacion: pasar al menos 3 de 5.
+Si pasa solo 1-2 → descarte.
+
+Documenta robustez ante distintas particiones
+temporales — una estrategia verdaderamente robusta
+supera el WFO independientemente de como se dividan
+los datos.
+
+---
+
 ## REGLA DE ORO DEL WFO
 
 La robustez no se puede crear con optimizacion.
