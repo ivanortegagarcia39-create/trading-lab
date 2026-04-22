@@ -239,6 +239,50 @@ orchestrator para el forward test.
 
 ---
 
+## TIMEZONE SYNC PRAGUE — CRITICO
+
+Cada EA debe calcular el DD diario contra
+00:00 Europe/Prague independientemente de:
+- La hora del broker
+- La hora del VPS
+- La hora local del sistema
+
+Ver scripts/ftmo-timezone-sync.mq5 (pendiente crear)
+
+Pre-Reset Protection:
+5 minutos antes de 00:00 CEST, si el P&L flotante
+es > 3.5% del balance → cerrar todo automaticamente.
+Esta proteccion evita que una posicion abierta
+al cruce de medianoche de Prague viole el daily loss
+del nuevo dia en FTMO.
+
+Implementacion en el EA:
+1. Calcular offset entre hora del broker y Europe/Prague
+2. Al iniciar el EA leer este offset y guardarlo
+3. Usar el offset en cada verificacion de DD diario
+4. Ejecutar Pre-Reset Protection antes de cada medianoche
+
+---
+
+## LATENCIA VPS — REQUISITO
+
+VPS debe estar en Equinix LD4 (Londres) para cuentas FTMO EU.
+Latencia objetivo: < 5ms a servidores del broker.
+
+Verificar antes de cada deploy:
+ping al servidor del broker desde el VPS.
+Si latencia > 10ms → cambiar VPS antes de activar el EA.
+
+Proveedores VPS recomendados en LD4:
+- ForexVPS (especializado en trading)
+- AccuWeb Hosting (datacenter LD4)
+- Verificar que el proveedor especifica LD4 explicitamente
+
+La latencia afecta directamente la calidad de ejecucion
+de las ordenes — slippage mayor cuando latencia > 10ms.
+
+---
+
 ## PROTOCOLO DE FAILOVER VPS
 
 El VPS donde corre MT5 es la infraestructura critica.

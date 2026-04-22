@@ -23,13 +23,39 @@ Criterio que activo la decision: [criterio exacto]
 Resultado observado: [que paso concretamente]
 Leccion aplicable: [que debe cambiar o mantenerse en ciclos futuros]
 Ocurrencias confirmadas: [N] / minimo 3 para leccion estructural
+Estado: TENTATIVA / ESTRUCTURAL / OBSOLETA
 
 CONTEXTO:
-  Regimen de mercado: [tendencia-altavol / rango-bajovol / etc]
+  Regimen de mercado: [tendencia-altavol / tendencia-bajovol /
+    rango-altavol / rango-bajovol / N/A]
   Epoca del año: [Q1 / Q2 / Q3 / Q4] [año]
-  Volumen relativo: [alto / normal / bajo]
-  Prop firm activa: [FTMO / E8 / TFT / ninguna]
+  Volumen relativo: [alto / normal / bajo / N/A]
+  Prop firm activa: [FTMO / BrightFunded / E8 / ninguna]
+  Activo principal: [XAUUSD / EURUSD / etc / N/A]
+  Fase del proyecto: [Capa 0 / 1 / 2 / 3 / 4]
 ```
+
+---
+
+## CAMPO CONTEXTO — OBLIGATORIO EN CADA ENTRADA
+
+Sin contexto una leccion puede ser ruido estadistico.
+El contexto permite distinguir lecciones estructurales
+(validas siempre) de lecciones situacionales
+(validas solo en ese regimen o epoca).
+
+Campos obligatorios del CONTEXTO:
+  Regimen de mercado: tendencia-altavol /
+    tendencia-bajovol / rango-altavol / rango-bajovol
+  Epoca del año: Q1 / Q2 / Q3 / Q4 [año]
+  Volumen relativo: alto / normal / bajo
+  Prop firm activa: FTMO / BrightFunded / E8 / ninguna
+  Activo principal: XAUUSD / EURUSD / etc
+  Fase del proyecto: Capa 0 / 1 / 2 / 3 / 4
+
+Si algun campo es N/A (configuracion de herramientas,
+pre-build) documentarlo explicitamente como N/A
+con una razon breve.
 
 ---
 
@@ -47,10 +73,14 @@ en contextos independientes se puede hablar de un patron real.
 El orchestrator NO puede elevar una leccion TENTATIVA
 a ESTRUCTURAL sin las 3 ocurrencias.
 El humano tampoco puede hacerlo por intuicion.
+El knowledge-synthesizer valida automaticamente si se cumplen
+los requisitos de contextos independientes antes de elevar
+el estado de cualquier leccion.
 
 Estado de cada leccion:
   TENTATIVA: 1-2 ocurrencias
-  ESTRUCTURAL: 3+ ocurrencias en contextos diferentes
+  ESTRUCTURAL: 3+ ocurrencias en al menos 2 regimenes de mercado
+    distintos y en al menos 2 epocas del año distintas
   OBSOLETA: condiciones del mercado cambiaron — ya no aplica
 
 ---
@@ -98,6 +128,8 @@ CONTEXTO:
   Epoca del año: Q1 2026
   Volumen relativo: normal
   Prop firm activa: FTMO (objetivo)
+  Activo principal: EURUSD (builds 3-6)
+  Fase del proyecto: Capa 0
 
 ---
 
@@ -124,6 +156,8 @@ CONTEXTO:
   Epoca del año: Q4 2025 a Q1 2026
   Volumen relativo: normal
   Prop firm activa: FTMO (objetivo)
+  Activo principal: EURUSD (builds 1-8)
+  Fase del proyecto: Capa 0
 
 ---
 
@@ -150,7 +184,9 @@ CONTEXTO:
   Regimen de mercado: N/A (configuracion de herramientas)
   Epoca del año: Q2 2026
   Volumen relativo: N/A
-  Prop firm activa: ninguna (Fase 0 pre-build)
+  Prop firm activa: ninguna
+  Activo principal: N/A
+  Fase del proyecto: Capa 0
 
 ---
 
@@ -179,7 +215,9 @@ CONTEXTO:
   Regimen de mercado: N/A (verificacion de datos)
   Epoca del año: Q2 2026
   Volumen relativo: N/A
-  Prop firm activa: ninguna (pre-build)
+  Prop firm activa: ninguna
+  Activo principal: XAUUSD
+  Fase del proyecto: Capa 0
 
 ---
 

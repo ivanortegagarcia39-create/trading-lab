@@ -240,6 +240,70 @@ Para auditoria por performance-monitor.
 
 ---
 
+## News Filter Dinamico
+
+El EA exportado incluye un filtro de noticias
+que consulta una fuente externa en tiempo real.
+
+Implementacion en MQL5:
+- Conectar a ForexFactory API o Investing.com
+  via WebRequest desde el EA
+- Ventana de proteccion: [-15 min, +15 min]
+  alrededor de cada evento de alto impacto
+- Dynamic Spread Protection: si spread actual
+  > 3x el spread promedio → suspender entradas
+  y mover stops a break-even en posiciones abiertas
+- Cierre preventivo: si hay posicion abierta
+  5 minutos antes de evento de alto impacto
+  → cerrar automaticamente
+- Cierre fin de semana: cerrar todas las posiciones
+  viernes 22:00 CEST
+  Excepcion: estrategias Swing explicitamente
+  validadas para overnight weekend
+
+El export-specialist verifica que el filtro esta
+activo y configurado antes de entregar el EA.
+
+---
+
+## Sistema de Versioning de Estrategias
+
+Cada EA exportado lleva identificador unico.
+Formato: [ACTIVO]-[BUILD]-[ID-SQ]-[v1/v2/v3]
+Ejemplo: XAUUSD-B10-1024-v1
+
+Reglas de version:
+- Al reoptimizar: incrementar version (v1→v2)
+- Al cambiar logica: nuevo ID completo
+- Guardar todas las versiones en backups/strategies/
+- El performance-monitor trackea version activa
+  vs versiones anteriores para posible rollback
+
+El nombre del archivo .mq5 incluye el version tag:
+EA_XAUUSD_B10_v1.0_a3f7c291.mq5
+(formato existente con ID hex de 8 caracteres)
+
+---
+
+## Rollback Automatico
+
+Si la version nueva tiene peores metricas que la
+anterior despues de 4 semanas de produccion:
+- PF produccion nueva < PF produccion anterior
+- DD produccion nueva > DD produccion anterior
+
+→ Rollback automatico a version anterior
+→ Registrar en lessons-learned.md con contexto
+  completo del fallo de la version nueva
+→ Notificacion: "Rollback activado: [ID] v2→v1"
+→ La version nueva queda archivada en backups/strategies/
+  con estado: DESCARTADA con fecha y metricas
+
+El performance-monitor ejecuta esta comparacion
+automaticamente cada 4 semanas.
+
+---
+
 ## Lo que este agente NUNCA hace
 
 NUNCA decide si la estrategia es buena

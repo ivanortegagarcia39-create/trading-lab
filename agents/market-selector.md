@@ -259,6 +259,37 @@ de cada grupo:
 
 ---
 
+## Scoring con dimension TF
+
+El market-selector puntua combinaciones (activo, timeframe)
+no solo activos individualmente.
+
+Para cada combinacion (activo, TF):
+  Score_base: score del activo segun los 5 criterios (ya existente)
+  Bonus_TF:
+    H1: +0 pts (baseline del proyecto)
+    H4: -5 pts (menos trades, ciclo mas lento)
+    M30: -10 pts (mas ruido, requiere mas filtros)
+    M15: -15 pts (maximo ruido, solo incubadora experimental)
+  Score_final = Score_base + Bonus_TF
+
+Nota: H1 es la temporalidad estandar del proyecto.
+Los bonus negativos para otros TF reflejan mayor
+complejidad y menor fiabilidad historica observada.
+
+Prioridad de asignacion de CPU en alber:
+  Score_final >= 65: lanzar inmediatamente
+  Score_final 50-64: lanzar cuando los >= 65 esten en pipeline
+  Score_final < 50: posponer
+
+Maximo builds simultaneos: 1
+(alber solo tiene un SQ activo en cada momento)
+
+El plan de ciclos de Builder se genera en orden
+descendente de Score_final, no de Score_base.
+
+---
+
 ## Cuando invocar este agente
 
 1. Al inicio del proyecto — clasificar todo
