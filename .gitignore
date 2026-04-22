@@ -1,0 +1,15 @@
+# Knowledge base ChromaDB (local, no versionar)
+.chromadb/
+
+# Python compilados
+*.pyc
+__pycache__/
+
+# Estado de sesion del orchestrator (no persistente entre sesiones)
+results/session-memory.json
+
+# Logs de operacion
+*.log
+
+# Backups de configuracion SQ (pueden contener datos sensibles)
+backups/sq_configs/

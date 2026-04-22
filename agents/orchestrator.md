@@ -198,6 +198,39 @@ El humano no lanza ni para ninguna fase del pipeline.
 
 ---
 
+## Memoria a corto plazo del orchestrator
+
+El orchestrator mantiene un registro de las ultimas 10 acciones
+del ciclo actual en: results/session-memory.json
+
+Formato de cada entrada:
+```json
+{
+  "timestamp": "ISO-8601",
+  "accion": "descripcion de la accion ejecutada",
+  "resultado": "PASA / DESCARTAR / ALERTA",
+  "criterio": "criterio exacto que activo la decision",
+  "estrategia_id": "ID si aplica, null si no"
+}
+```
+
+Proposito:
+- Evitar bucles infinitos de decision en el mismo ciclo
+- No repetir analisis ya ejecutados durante la sesion actual
+- Contexto para la reflexion diaria del lessons-analyzer
+- Si la misma estrategia aparece 2 veces con resultado PASA
+  → señal de error en el pipeline — revisar logica de deduplicacion
+
+Reglas de uso:
+- El archivo se borra al inicio de cada nueva sesion (no es persistente)
+- Maximo 10 entradas — la mas antigua se elimina al añadir la undecima
+- La persistencia entre sesiones es responsabilidad de ChromaDB
+  (knowledge-base.py), no de este archivo
+- El lessons-analyzer lee este archivo en modo --daily para generar
+  la reflexion de refinamientos del dia
+
+---
+
 ## Protocolo de inicio de sesion
 
 Al inicio de cada sesion ejecutar en orden:
