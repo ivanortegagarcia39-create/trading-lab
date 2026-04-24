@@ -251,6 +251,88 @@ entre regimen y tasa de aprobacion de estrategias.
 
 ---
 
+## ANALISIS DE REGIMEN AVANZADO CON HISTORIAL
+
+Cuando hay 3+ builds completados, el detector usa el historial
+acumulado en results\regime-history.json para mejorar la clasificacion.
+El historial permite detectar si el regimen actual es atipico
+respecto a la media historica del activo.
+
+### Estructura de results\regime-history.json
+
+```json
+{
+  "activo": "XAUUSD",
+  "entradas": [
+    {
+      "fecha": "2026-04-22",
+      "regimen": "tendencia-altavol",
+      "adx_14": 27.4,
+      "atr_14": 18.5,
+      "atr_media": 16.2,
+      "fuente": "produccion"
+    }
+  ]
+}
+```
+
+Campos obligatorios por entrada:
+- fecha: ISO-8601 (solo fecha, sin hora)
+- regimen: uno de los 4 regimenes definidos
+- adx_14: valor ADX del dia
+- atr_14: valor ATR del dia
+- atr_media: media ATR de las 20 velas anteriores
+- fuente: "produccion" o "build" (si viene de un build activo)
+
+### Actualizacion del historial
+
+El historial se actualiza diariamente cuando hay produccion activa.
+El orchestrator invoca el detector cada dia a las 08:00 CEST
+para registrar el regimen del dia antes de que se abran posiciones.
+
+Si no hay produccion activa: el historial se actualiza solo
+al inicio y fin de cada build (como minimo).
+
+### Uso del historial para clasificacion avanzada
+
+Con 30+ entradas en el historial, el detector puede calcular:
+
+1. Regimen dominante historico del activo
+   (el regimen mas frecuente en los ultimos 90 dias)
+
+2. Comparacion del regimen actual con la media historica:
+   "Regimen actual: tendencia-altavol (ADX 27.4)
+    Media historica 90 dias: rango-bajovol (ADX 18.2)
+    Nota: regimen actual es ATIPICO para este activo"
+
+3. Alerta de anomalia de regimen:
+   Si el regimen actual difiere del dominante historico
+   durante 2 semanas consecutivas → notificar al orchestrator:
+   "Cambio de regimen sostenido en [ACTIVO].
+    Regimen previo: [X] | Regimen actual: [X]
+    Duracion: [N] dias
+    Las estrategias activas fueron generadas en [regimen previo].
+    Verificar rendimiento de EAs activos."
+
+### Alerta de degradacion por regimen
+
+El detector monitorea el PF de produccion por regimen.
+Si una estrategia activa muestra PF < 0.8 durante 2 semanas
+en el regimen actual:
+
+Notificacion al orchestrator:
+  "ALERTA: Posible degradacion de estrategia por regimen.
+   Estrategia: [ID] | Activo: [ACTIVO]
+   PF produccion: [X] (< 0.8 durante [N] semanas)
+   Regimen actual: [nombre]
+   Regimen de generacion: [nombre del build original]
+   Accion recomendada: revisar account-recovery-manager."
+
+La alerta no descarta la estrategia — informa al orchestrator.
+El account-recovery-manager decide la accion siguiente.
+
+---
+
 ## LO QUE ESTE AGENTE NUNCA HACE
 
 NUNCA decide si operar o no — solo informa al orchestrator

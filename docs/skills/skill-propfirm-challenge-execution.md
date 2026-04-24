@@ -1,247 +1,219 @@
 # Skill: Ejecucion del Challenge en Prop Firm
 
 ## Proposito
-Guia para el propfirm-analyst y el export-specialist.
-Define el proceso exacto para ejecutar un challenge
-en una prop firm desde la compra hasta el primer
-dia de operativa real.
-Evita errores criticos en el momento mas importante.
+Define el flujo completo de un challenge desde que el
+pipeline genera la notificacion de autorizacion hasta
+que la cuenta pasa a funded y entra en modo scaling.
+Guia para el orchestrator, propfirm-analyst y export-specialist.
+Evita errores criticos en el momento mas delicado del pipeline.
 
 ---
 
-## ANTES DE COMPRAR EL CHALLENGE
+## FLUJO COMPLETO DE UN CHALLENGE
 
-### Verificaciones obligatorias
-Antes de gastar dinero en un challenge verificar:
+### PRE-CHALLENGE (automatico)
 
-[ ] La estrategia tiene informe de aprobacion completo
-[ ] EA exportado y compilado en MT5 sin errores
-[ ] Backtest MT5 consistente con SQ (diferencia < 10%)
-[ ] Forward test en demo completado (minimo 2 semanas)
-[ ] propfirm-analyst ha recomendado esta prop firm
-[ ] El DD simulado < 70% del limite de la prop firm
-[ ] Trades por mes >= 20 (alcanzable el objetivo)
-[ ] Decision humana final: SI
+El orchestrator ejecuta estos pasos en orden antes de
+solicitar autorizacion humana. Si cualquier paso falla
+→ no enviar solicitud de autorizacion hasta resolver.
 
-### Seleccion del tamaño de cuenta
-Para el primer challenge:
-- Empezar con la cuenta mas pequeña disponible
-- FTMO: cuenta de 10.000$ para el primer intento
-- Si pasa → escalar a 25.000$ en Verification
-- Si falla → analizar causa y repetir con 10.000$
+**Paso 1 — Forward Test pasa 3 criterios numericos**
+- Minimo 20 trades ejecutados en demo.
+- PF demo >= 70% del PF OOS backtest.
+- DD demo <= DD OOS + 30%.
+Los 3 criterios deben cumplirse simultaneamente.
+Ver skill-forward-test-protocol.md para detalles.
 
-Razon: minimizar el coste de aprendizaje.
-Un challenge de 10.000$ en FTMO cuesta ~155 EUR.
-Un challenge de 25.000$ cuesta ~250 EUR.
+**Paso 2 — propfirm-compliance-officer verifica reglas**
+Checklist automatico:
+  [ ] Ratio TP/SL efectivo >= 2:1 en forward test
+  [ ] Max trades/dia respetado
+  [ ] Horario de sesion respetado (08:00-20:00)
+  [ ] Spread y comisiones dentro de los esperados
+  [ ] Sin trades en fin de semana
+  [ ] Holding time compatible con reglas de la firma
+  [ ] Magic number unico — sin colision con otros EAs
+Si cualquier check falla → no continuar.
 
----
+**Paso 3 — propfirm-health-monitor verifica salud de la firma**
+Score de la firma >= 60/100 (ver agents/propfirm-health-monitor.md).
+Si score < 60 → pausar y notificar al humano antes de comprar.
 
-## PROCESO DE COMPRA DEL CHALLENGE
+**Paso 4 — propfirm-regulatory-watcher verifica T&C**
+Sin cambios CRITICOS en T&C en las ultimas 2 semanas.
+Si hay cambio CRITICO reciente → no comprar hasta clarificar.
 
-### FTMO 2-Step
-1. Ir a ftmo.com
-2. Seleccionar FTMO Challenge
-3. Seleccionar 2-Step (NO el 1-Step)
-4. Seleccionar tamaño: 10.000$ para empezar
-5. Seleccionar divisa de la cuenta: USD
-6. Completar el pago
-7. Recibireis email con credenciales MT5
+**Paso 5 — coordination-detector verifica sin conflictos**
+Verificar que no hay otro EA con el mismo activo corriendo
+en otra cuenta de la misma firma en el mismo horario.
 
-### Verificar el email de bienvenida
-El email de FTMO incluye:
-- Servidor MT5 de conexion
-- Login de la cuenta
-- Password
-- Nombre del simbolo EUR/USD en ese broker
-  (puede ser EURUSD, EURUSDm, EURUSD. etc)
+**Paso 6 — Sistema genera notificacion Telegram**
+Formato exacto (ver orchestrator.md — protocolo de challenge):
+```
+SISTEMA LISTO PARA CHALLENGE
 
----
+Estrategia: [ID-version] | [Activo] [TF]
+Prop firm:  [nombre] | Cuenta: [tamaño] | Coste: [X] EUR
 
-## CONFIGURACION DEL MT5 PARA EL CHALLENGE
+VALIDACIONES PASADAS:
+  Spread 2x:          PF [X]
+  Post-swaps:         PF [X]
+  Stress test (5p):   DD max [X]%
+  WFO Matrix:         [X]/5 configuraciones
+  Forward Test:       [X] trades, PF [X]
+  Compliance:         APROBADO
+  Score total:        [X]/100
 
-### Paso 1: Conectar MT5 al servidor de FTMO
-1. Abrir MT5
-2. File → Open an Account
-3. Buscar el broker de FTMO (Eightcap o similar)
-4. Introducir las credenciales del email
-5. Verificar que la cuenta aparece conectada
-
-### Paso 2: Verificar el simbolo correcto
-CRITICO: el nombre del simbolo puede ser diferente
-al que usamos en SQ.
-
-En MT5 verificar exactamente como aparece EUR/USD:
-- Ver en Market Watch el nombre exacto
-- Puede ser: EURUSD, EURUSDm, EURUSD.
-- Anotar el nombre exacto
-
-### Paso 3: Ajustar el EA al simbolo correcto
-Si el simbolo en MT5 es diferente al del backtest:
-1. Abrir MetaEditor (F4 en MT5)
-2. Abrir el archivo .mq5 del EA
-3. Buscar el parametro de simbolo
-4. Cambiar al nombre exacto del broker
-5. Recompilar con F7
-6. Verificar 0 errores
-
-### Paso 4: Activar el EA en MT5
-1. Abrir el grafico de EUR/USD H1
-2. Verificar que la temporalidad es H1
-3. Arrastrar el EA desde el Navigator al grafico
-4. En la ventana de parametros verificar:
-   - Risk percent: 1.0
-   - Max trades per day: 2
-   - Start hour: 8
-   - End hour: 20
-   - Magic number: [el asignado en la exportacion]
-5. Activar el boton de AutoTrading (verde)
-6. Verificar que el EA muestra cara sonriente
-   en la esquina superior derecha del grafico
+Autorizar compra? → SI para confirmar
+```
 
 ---
 
-## PRIMER DIA DE OPERATIVA
+### COMPRA DEL CHALLENGE (unico paso humano)
 
-### Verificaciones del primer dia
-Al inicio del primer dia de trading:
+El humano recibe el mensaje de Telegram, revisa los datos
+y responde SI para confirmar.
 
-[ ] MT5 conectado al servidor correctamente
-[ ] EA activo con cara sonriente en el grafico
-[ ] AutoTrading activado (boton verde arriba)
-[ ] Balance correcto segun el tamaño del challenge
-[ ] No hay posiciones abiertas de dias anteriores
+El sistema registra la autorizacion en el audit trail:
+  hash-logger registra CHALLENGE-AUTORIZADO con timestamp y firma.
 
-### Que esperar el primer dia
-- El EA puede no abrir ninguna posicion el primer dia
-  si las condiciones de mercado no se cumplen
-- Esto es NORMAL — no tocar nada
-- El EA opera solo cuando se cumplen las condiciones
-- No forzar trades manualmente
+El humano accede a la web de la prop firm y compra el challenge.
+El challenge ID (numero de cuenta) se comunica al orchestrator.
 
-### Verificaciones durante el dia
-Cada 2-3 horas verificar:
-- MT5 sigue conectado al servidor
-- EA sigue activo (cara sonriente)
-- No hay errores en el journal de MT5
-- Balance y equity dentro de los limites
+Timeout: si el humano no responde en 72 horas →
+la estrategia pasa a cola de espera y se lanza nuevo ciclo.
 
 ---
 
-## MONITOREO DIARIO DEL CHALLENGE
+### CHALLENGE FASE 1 (automatico tras compra)
 
-### Al final de cada dia de trading
-1. Anotar en Obsidian → 06_Decisions:
-   - Fecha
-   - Trades ejecutados
-   - Resultado del dia (+/- %)
-   - DD acumulado
-   - Distancia al daily loss limit
-   - Distancia al max DD limit
+**Configuracion inicial (export-specialist)**
+- EA desplegado en VPS con los instrumentos exactos de la firma.
+- Verificar que el simbolo del broker coincide exactamente.
+- ftmo-timezone-sync.mq5 activo para calculo correcto del DD.
+- ConnectionMonitor.mqh activo para deteccion de freeze.
 
-2. Calcular distancia a limites:
-   FTMO cuenta 10.000$:
-   - Daily Loss Limit: 500$ (5%)
-   - Max DD Limit: 1.000$ (10%)
-   - Margen operativo daily: 300$ (3%)
-   - Margen operativo max DD: 700$ (7%)
+**Parametros de riesgo (Risk Manager)**
+El margen operativo para challenge de 10k FTMO:
+  Daily Loss Limit FTMO: 5% = 500 USD
+  Margen operativo: 4.8% = 480 USD por dia (buffer de 20 USD)
+  Max DD FTMO: 10% = 1.000 USD total
+  Margen operativo: 9.5% = 950 USD total
+  Riesgo por trade: 1% del balance actual
 
-3. Activar alerta si:
-   - DD diario > 300$ → ALERTA AMARILLA
-   - DD diario > 400$ → ALERTA NARANJA
-   - DD diario > 450$ → ALERTA ROJA — considerar
-     cerrar posiciones manualmente
+**Monitoreo continuo (performance-monitor)**
+- Verificar EA activo cada 10 minutos.
+- Si sin datos 10 minutos → CASO 2 al humano.
+- Alertas Telegram automaticas:
+  DD > 3% del dia: "[WARNING] DD diario: [X]%"
+  DD > 4.5% del dia: "[CRITICAL] DD diario: [X]% — acercandose al limite"
 
-### Señales de problema durante el challenge
-- EA no opera en 5 dias consecutivos
-  → verificar conexion y parametros
-- EA opera fuera del horario configurado
-  → revisar parametros de sesion
-- Tamaño de posicion incorrecto
-  → revisar money management
-- DD acumulado > 7%
-  → activar protocolo de alerta del
-  performance-monitor
+**account-recovery-manager en standby**
+  Activacion automatica si DD > 6% (ver agents/account-recovery-manager.md).
+
+**Criterios de exito Fase 1**
+- Profit: >= +10% del capital inicial.
+- DD diario: siempre < 5%.
+- DD total: siempre < 10%.
+- Dias operados: >= 4 dias minimos.
+- Ningun trade fuera de horario ni en fin de semana.
 
 ---
 
-## ERRORES CRITICOS A EVITAR
+### CHALLENGE FASE 2 (automatico tras pasar Fase 1)
 
-### Error 1: Operar manualmente durante el challenge
-NUNCA abrir o cerrar posiciones manualmente
-mientras el EA esta activo.
-Puede crear confusion entre trades del EA
-y trades manuales.
-FTMO puede detectarlo como cambio de estrategia.
+Mismo EA, mismos parametros, mismo VPS.
+FTMO mueve automaticamente el challenge a Fase 2.
 
-### Error 2: Cambiar parametros del EA durante el challenge
-NUNCA cambiar los parametros del EA una vez
-el challenge ha empezado.
-Si hay un problema → pausar el EA y analizar
-antes de cualquier cambio.
+El objetivo es mas reducido (+5%) con los mismos limites de DD.
+El performance-monitor detecta el cambio de fase y lo registra.
+No hay intervencion humana entre Fase 1 y Fase 2.
 
-### Error 3: Ignorar las alertas de DD
-Si el DD se acerca al limite → actuar inmediatamente.
-No esperar a que se viole el limite.
-Mejor pausar el EA y perder el challenge que
-violar el limite y perder el deposito.
-
-### Error 4: No verificar la conexion MT5 diariamente
-Si MT5 se desconecta del servidor durante horas
-el EA no opera y puede perder oportunidades.
-Verificar conexion al inicio de cada sesion.
-
-### Error 5: Usar el mismo magic number en dos cuentas
-Cada cuenta debe tener un magic number unico.
-Si dos EAs tienen el mismo magic number en la
-misma plataforma MT5 pueden interferir entre si.
+**Criterios de exito Fase 2**
+- Profit: >= +5% del capital.
+- DD diario: siempre < 5%.
+- DD total: siempre < 10%.
+- Dias operados: >= 4 dias minimos.
 
 ---
 
-## PROCESO DE PASO AL VERIFICATION (Fase 2)
+### CUENTA FUNDED (automatico tras pasar Fase 2)
 
-Cuando se alcanza el objetivo del Challenge (+10%):
+**Transicion**
+FTMO notifica por email que la cuenta paso a funded.
+El orchestrator registra el cambio de estado del ticket:
+  challenge → funded.
+El mismo EA sigue corriendo en el mismo VPS sin cambios.
 
-1. FTMO notificara por email
-2. NO cerrar el EA — dejar que cierre
-   todas las posiciones abiertas
-3. Verificar que todas las posiciones estan cerradas
-4. Esperar la activacion de la cuenta Verification
-5. Conectar con las mismas credenciales o nuevas
-   segun indique FTMO
-6. Activar el EA con los mismos parametros
-7. Objetivo Verification: +5%
+**Periodo de observacion (4 semanas)**
+No escalar durante las primeras 4 semanas.
+El performance-monitor monitorea en tiempo real.
+El scaling-manager inicia el conteo del periodo de 4 meses.
 
----
+**Distribucion del profit**
+FTMO: 80% al trader, 20% a la firma.
+Los retiros se pueden solicitar una vez al mes.
 
-## PROCESO SI FALLA EL CHALLENGE
+**Monitoreo de decay**
+performance-monitor evalua cada semana:
+  Si PF produccion < 85% del PF OOS backtest durante 4 semanas:
+  → activar protocolo de reoptimizacion (ver account-recovery-manager.md).
 
-Si se viola algun limite y el challenge falla:
-
-1. Documentar en Obsidian que salio mal
-2. Analizar el trade o periodo que causo el fallo
-3. Determinar si fue:
-   - Error del EA: revisar y corregir
-   - Condicion de mercado extrema: aceptable
-   - Error de configuracion: corregir antes de repetir
-4. Decidir si repetir el mismo challenge o
-   volver al pipeline para mejorar la estrategia
-5. Si fue error del EA → corregir antes de repetir
-6. Si fue condicion extrema → puede repetir
-   con el mismo EA
+**Scaling automatico (cada 4 meses)**
+scaling-manager evalua criterios y notifica al humano
+si se cumplen todos para solicitar el scaling de +25%.
+Ver agents/scaling-manager.md para criterios exactos.
 
 ---
 
-## CHECKLIST COMPLETO PRE-CHALLENGE
+## CRITERIOS DE EXITO RESUMIDOS
 
-[ ] Estrategia aprobada con todos los informes
-[ ] EA exportado y compilado sin errores
-[ ] Backtest MT5 consistente con SQ
-[ ] Forward test en demo completado
-[ ] Challenge comprado y credenciales recibidas
-[ ] MT5 conectado al servidor de la prop firm
-[ ] Simbolo correcto verificado en MT5
-[ ] EA configurado con parametros correctos
-[ ] AutoTrading activado
-[ ] performance-monitor activado
-[ ] Obsidian preparado para registro diario
-[ ] Decision humana final: SI — empezar challenge
+| Fase | Objetivo profit | DD diario max | DD total max |
+|------|----------------|---------------|--------------|
+| Challenge Fase 1 | +10% | 5% | 10% |
+| Challenge Fase 2 | +5% | 5% | 10% |
+| Funded — operativo | — | 5% | 10% |
+
+---
+
+## ACCIONES ANTE FALLO DEL CHALLENGE
+
+### Si el challenge falla (DD maxima violada)
+
+1. orchestrator registra el fallo en el audit trail.
+2. La estrategia pasa a estado "challenge-fallado" en el registry.
+3. El capital usado se descuenta del presupuesto de reintentos.
+4. lessons-analyzer.py analiza las condiciones del fallo.
+5. Si la causa es tecnica (configuracion) → corregir y reintentar.
+6. Si la causa es la estrategia → descarte definitivo.
+   No hay segunda oportunidad para estrategias con fallo de mercado.
+
+### Si el EA tiene un problema tecnico durante el challenge
+
+El performance-monitor detecta el problema y notifica CASO 2.
+El humano interviene para resolver el problema tecnico.
+El pipeline no descarta la estrategia por fallo tecnico del VPS.
+
+---
+
+## SELECCION DEL TAMANIO DE CUENTA
+
+Para el primer challenge de cada estrategia:
+- FTMO: cuenta 10k USD (minimo riesgo de capital).
+- E8: cuenta 25k USD (el tamanio mas pequeno disponible).
+- TFT: cuenta 25k USD.
+
+Si la estrategia pasa el challenge en la cuenta pequena:
+el scaling-manager gestiona el escalado gradual.
+No empezar con cuentas grandes hasta tener historial en produccion.
+
+---
+
+## LO QUE ESTA SKILL NUNCA HACE
+
+NUNCA salta el pre-challenge automatico para "ahorrar tiempo".
+NUNCA compra el challenge sin autorizacion humana explicita.
+NUNCA lanza Fase 2 con parametros diferentes a Fase 1.
+NUNCA descarta la estrategia por un fallo tecnico del VPS.
+NUNCA escala antes de 4 semanas de observacion en funded.
+NUNCA acepta un challenge fallado como "normal" sin analisis.

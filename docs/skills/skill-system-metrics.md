@@ -227,6 +227,75 @@ o el activo elegido son los responsables.
 
 ---
 
+## Dashboard de salud del sistema
+
+Panel de estado global del proyecto. Distinto del dashboard
+de metricas de pipeline — este mide la salud operativa
+del sistema completo, no solo las tasas de aprobacion.
+
+Archivo: results\health-dashboard.md
+Actualizar al inicio de cada sesion de trabajo.
+
+### Metricas de pipeline (semana actual)
+
+| Metrica | Valor | Referencia |
+|---------|-------|------------|
+| Tasa aprobacion EvalGate (semana) | [%] | 5-15% |
+| Tasa aprobacion WFO (semana) | [%] | 30-60% |
+| Tiempo medio de build | [h] | 24-48h |
+| Builds completados (mes) | [N] | >= 2/mes |
+| Ratio databank IS/OOS | [ratio] | 70/30 |
+
+### Metricas de portfolio
+
+| Metrica | Valor | Referencia |
+|---------|-------|------------|
+| Estrategias activas | [N] | objetivo 3-5 |
+| DD combinado actual | [%] | < 12% |
+| Correlacion media entre pares | [valor] | < 0.5 |
+| PF medio en produccion | [valor] | >= 1.3 |
+| Semanas sin deterioro detectado | [N] | continuo |
+
+### Metricas de sistema
+
+| Metrica | Valor | Estado |
+|---------|-------|--------|
+| Ultimo commit | [fecha] | verde si < 7 dias |
+| Build activo en SQ | SI/NO | — |
+| Ultimo backup SQ | [fecha] | verde si < 3 dias |
+| VPS MT5 activo | SI/NO | verde si SI |
+| ChromaDB indexado | [N entradas] | — |
+| Ollama disponible | SI/NO | — |
+
+### Alertas del meta-monitor
+
+El orchestrator evalua estas condiciones al inicio de cada semana.
+Si se cumple alguna condicion → alerta inmediata al humano.
+
+**Build posiblemente estancado:**
+  Condicion: build activo > 72 horas y 0 estrategias generadas.
+  Mensaje: "Build [N] lleva [X]h sin generar candidatas.
+    Verificar SQ: posible congelacion o recursos insuficientes."
+
+**Portfolio perdiendo diversificacion:**
+  Condicion: correlacion media del portfolio > 0.6 durante 1 semana.
+  Mensaje: "Correlacion media del portfolio: [X] (maximo: 0.5).
+    El portfolio esta convergiendo — revisar diversificacion de activos."
+
+**Sistema posiblemente abandonado:**
+  Condicion: sin commit en el repositorio durante > 7 dias.
+  Mensaje: "Sin actividad en 7 dias.
+    Estado del pipeline: desconocido.
+    Verificar si hay trabajo en curso no registrado."
+
+**Degradacion de produccion:**
+  Condicion: PF medio de produccion < 85% del PF OOS backtest
+    durante 4 semanas consecutivas.
+  Mensaje: "Degradacion detectada en produccion.
+    Ver account-recovery-manager para protocolo de reoptimizacion."
+
+---
+
 ## Lo que esta skill NUNCA hace
 
 NUNCA ajusta criterios de aprobacion para
