@@ -1,0 +1,85 @@
+name: Validate Skills and Documentation
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate-markdown:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Validate docs/skills/ and agents/ structure
+        run: |
+          python3 - <<'PYEOF'
+          import sys
+          from pathlib import Path
+
+          errors = []
+
+          # ── Validate docs/skills/ ─────────────────────────────────────
+          # Each skill file must have:
+          #   - An H1 heading at the top
+          #   - A "## Proposito" or "## Purpose" section
+          skills_dir = Path("docs/skills")
+          if not skills_dir.exists():
+              print(f"[SKIP] docs/skills/ not found — nothing to validate")
+          else:
+              for md_file in sorted(skills_dir.glob("*.md")):
+                  content = md_file.read_text(encoding="utf-8", errors="replace")
+                  lines = content.splitlines()
+
+                  # Check H1
+                  has_h1 = any(line.startswith("# ") for line in lines)
+                  if not has_h1:
+                      errors.append(f"{md_file}: missing H1 heading")
+
+                  # Check Proposito / Purpose section
+                  has_proposito = any(
+                      line.strip().lower().startswith("## proposito") or
+                      line.strip().lower().startswith("## purpose")
+                      for line in lines
+                  )
+                  if not has_proposito:
+                      errors.append(
+                          f"{md_file}: missing '## Proposito' or '## Purpose' section"
+                      )
+
+          # ── Validate agents/ ──────────────────────────────────────────
+          # Each agent file must have a "Lo que este agente NUNCA hace" section
+          agents_dir = Path("agents")
+          if not agents_dir.exists():
+              print(f"[SKIP] agents/ not found — nothing to validate")
+          else:
+              for md_file in sorted(agents_dir.glob("*.md")):
+                  content = md_file.read_text(encoding="utf-8", errors="replace")
+                  lines = content.splitlines()
+
+                  has_nunca = any(
+                      "nunca" in line.lower() and line.strip().startswith("#")
+                      for line in lines
+                  )
+                  if not has_nunca:
+                      errors.append(
+                          f"{md_file}: missing 'Lo que este agente NUNCA hace' section"
+                      )
+
+          # ── Report ────────────────────────────────────────────────────
+          if errors:
+              print(f"\n{'='*60}")
+              print(f"VALIDATION FAILED — {len(errors)} error(s) found:")
+              print(f"{'='*60}")
+              for e in errors:
+                  print(f"  ✗ {e}")
+              print()
+              sys.exit(1)
+          else:
+              skills_count = len(list(Path("docs/skills").glob("*.md"))) if Path("docs/skills").exists() else 0
+              agents_count = len(list(Path("agents").glob("*.md"))) if Path("agents").exists() else 0
+              print(f"Validation passed: {skills_count} skill files, {agents_count} agent files — all OK")
+              sys.exit(0)
+          PYEOF

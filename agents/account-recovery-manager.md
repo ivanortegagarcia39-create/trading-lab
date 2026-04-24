@@ -206,6 +206,77 @@ o continuar con riesgo minimo.
 
 ---
 
+## INTEGRACION EN EL PIPELINE
+
+El orchestrator monitorea el DD via performance-monitor.
+La integracion sigue este flujo exacto:
+
+### Cuando DD > 6% — Activacion
+
+1. orchestrator detecta DD > 6% en performance-monitor.
+2. orchestrator activa account-recovery-manager.
+3. recovery-manager verifica si ya hay estrategia de recuperacion
+   activa para esa cuenta (leer recovery-log.json).
+   Si ya hay una activa → no lanzar duplicado, solo registrar.
+   Si no hay ninguna → continuar.
+4. Lanzar ciclo Builder de recuperacion en alber con criterios estrictos:
+   PF minimo 1.8, DD IS 3%, WR 50%, sesion 10:00-14:00.
+5. Cuando la estrategia de recuperacion pasa el pipeline completo:
+   deploy paralelo a riesgo 0.25% junto con la estrategia original.
+6. Notificacion de deploy:
+   "Estrategia recuperacion desplegada.
+    DD: [X]% | Estrategia: [ID] | Riesgo: 0.25%
+    Estrategia original: [ID-original] | Riesgo: 0.25%
+    Riesgo total combinado: 0.5%"
+
+### Verificacion de duplicados
+
+El recovery-log.json registra si ya hay una estrategia
+de recuperacion activa por cuenta. El agente lee ese
+archivo antes de lanzar cualquier Builder de recuperacion.
+Un solo Builder de recuperacion por cuenta en cualquier momento.
+
+---
+
+## PROTOCOLO DE REOPTIMIZACION TRIMESTRAL
+
+Cada 3 meses el performance-monitor evalua cada estrategia activa.
+Si PF produccion < 85% del PF OOS backtest:
+
+### Filtro de persistencia (obligatorio)
+
+El deterioro debe confirmarse durante 4 semanas consecutivas.
+Una sola semana mala no activa la reoptimizacion.
+Razon: el mercado tiene ruido normal que puede producir
+semanas malas sin que el edge de la estrategia haya cambiado.
+
+### Si se confirma el deterioro (4 semanas)
+
+1. orchestrator solicita al sq-specialist lanzar el Improver de SQ
+   sobre esa estrategia.
+2. El Improver solo reoptimiza parametros cuantitativos (ATR,
+   umbrales numericos). NUNCA cambia la logica de entrada.
+   Razon: cambiar la logica equivale a crear una estrategia nueva,
+   no a mejorar la existente.
+3. La nueva version pasa por el pipeline completo:
+   EvalGate + Retester + WFO (no se abrevia el proceso).
+4. Si la nueva version pasa todos los criterios:
+   → Crear nueva version via strategy-versioning.py (v1→v2).
+   → Reemplazar en produccion con rollback disponible durante 4 semanas.
+5. Si la nueva version no pasa los criterios:
+   → La estrategia original se retira del portfolio.
+   → Cola de reemplazo automatica (nuevo ciclo Builder estandar).
+
+### Registro del protocolo
+
+Cada reoptimizacion se registra en recovery-log.json:
+  tipo: "reoptimizacion_trimestral"
+  estrategia_id, version_anterior, version_nueva,
+  pf_produccion_antes, pf_oos_backtest, semanas_deterioro,
+  resultado (aprobada/descartada)
+
+---
+
 ## LO QUE ESTE AGENTE NUNCA HACE
 
 NUNCA aumenta el riesgo durante una recuperacion.

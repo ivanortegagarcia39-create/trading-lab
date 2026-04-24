@@ -41,8 +41,13 @@ Con el enfoque actual SQ decide la logica. Los numeros deciden que avanza.
 
 ## 2. ESTADO ACTUAL
 
-**Fecha:** 2026-04-21
-**Situacion:** Fase 0 completada 2026-04-20. Build 10 corriendo en alber sobre XAUUSD H1.
+**Fecha:** 2026-04-22
+**Situacion:** Fases 0, 1, 2, 3 y 4 completadas desde ivano.
+Build 10 corriendo en alber (relanzado tras apagon).
+2 estrategias en databank Build 10 a las 23h de build.
+DD de mejor estrategia: 57.99% — spread actual 30 pips
+(pendiente corregir a 60 pips en proximo build).
+Proximos pasos: Fase 5 (VPS), Fase 6 (N8N), reparar alber.
 Planning maestro de 186 tareas activo.
 
 ### Planning Maestro
@@ -101,7 +106,7 @@ Planning maestro de 186 tareas activo.
 
 ---
 
-## 4. SKILLS OPERATIVAS (22)
+## 4. SKILLS OPERATIVAS (24)
 
 | Skill | Proposito |
 |-------|-----------|
@@ -127,7 +132,43 @@ Planning maestro de 186 tareas activo.
 | skill-propfirm-challenge-execution.md | Proceso de ejecucion de challenges |
 | skill-claude-sessions.md | Gestion de sesiones con Claude Code |
 | skill-ticket-system.md | Sistema de tickets de seguimiento |
+| skill-gt-score-calc.md | GT-Score: metrica avanzada de calidad (Capa 3+) |
+| skill-reactive-sim.md | Market Impact Simulator — escalabilidad de lotes |
 | skill-hypothesis-design.md | OBSOLETA — referencia historica solamente |
+
+## 4b. AGENTES ADICIONALES (Fase 4)
+
+| Agente | Proposito |
+|--------|-----------|
+| propfirm-regulatory-watcher.md | Monitoreo semanal de cambios en T&C de prop firms |
+| account-recovery-manager.md | Recuperacion adaptativa en drawdown (2 niveles) |
+| scaling-manager.md | Gestion del scaling FTMO +25% cada 4 meses |
+| multi-account-orchestrator.md | Coordinacion de multiples cuentas (Capa 4) |
+
+## 4c. SCRIPTS PYTHON
+
+| Script | Proposito |
+|--------|-----------|
+| build-analyzer.py | Resumen ejecutivo post-build con Ollama |
+| knowledge-base.py | Indexacion ChromaDB para consultas semanticas |
+| lessons-analyzer.py | Analisis de lecciones con Ollama + reflexion diaria |
+| inflation-diagnostic.py | Deteccion de sobreajuste IS/OOS post-WFO |
+| strategy-versioning.py | Ciclo de vida y versioning de estrategias |
+| vps-health-monitor.py | Monitoreo de salud del VPS en produccion |
+
+## 4d. LIBRERIAS MQL5
+
+| Archivo | Proposito |
+|---------|-----------|
+| scripts/ftmo-timezone-sync.mq5 | Sincronizacion timezone Prague para EAs |
+| include/ConnectionMonitor.mqh | Monitoreo de conexion reutilizable en EAs |
+
+## 4e. CI/CD (GitHub Actions)
+
+| Workflow | Proposito |
+|----------|-----------|
+| validate-skills.yml | Verificacion de formato de docs y agentes en cada push |
+| pipeline-check.yml | Alerta si los criterios numericos se relajan en documentacion |
 
 ---
 
