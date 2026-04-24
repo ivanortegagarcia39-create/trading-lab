@@ -183,6 +183,83 @@ Intervencion humana: NO
 
 ---
 
+## STRESS TEST EN EL RETESTER
+
+Despues del Retester estandar (OOS 2021-actual),
+ejecutar los 5 periodos criticos de skill-stress-test.md
+usando el Retester de SQ con fechas especificas.
+
+Proceso:
+1. Cargar la misma estrategia en el Retester
+2. Cambiar Tab Datos → Fecha inicio/fin al periodo critico
+3. Ejecutar y registrar DD maximo del periodo
+4. Repetir para los 5 periodos
+
+Documentar en el informe de cada estrategia:
+
+| Periodo | Fechas | DD maximo | Estado |
+|---------|--------|-----------|--------|
+| Crisis 2008 | 2008-09-01 / 2008-10-31 | [X]% | PASA/FALLA |
+| CHF 2015 | 2015-01-13 / 2015-02-28 | [X]% | PASA/FALLA |
+| COVID 2020 | 2020-02-15 / 2020-04-15 | [X]% | PASA/FALLA |
+| Inflacion 2022 | 2022-01-01 / 2022-06-30 | [X]% | PASA/FALLA |
+| SVB 2023 | 2023-03-01 / 2023-03-31 | [X]% | PASA/FALLA |
+
+Criterio: DD < 8% en cada periodo → PASA el stress test.
+Si cualquier periodo supera 8% → DESCARTE AUTOMATICO.
+Ver skill-stress-test.md para detalle completo.
+
+El stress test se ejecuta DESPUES del paso 12b y ANTES del WFO.
+Solo las estrategias que pasan el paso 12b reciben el stress test.
+
+---
+
+## PASO 12B — OOS DEGRADATION ANALYSIS
+
+Ejecutar ANTES del WFO para evitar desperdiciar
+compute en estrategias que fallan en OOS basico.
+
+Criterios de PASA (todos deben cumplirse):
+- PF OOS >= 1.3
+- Caida PF IS→OOS <= 20%
+- DD OOS <= 6.5%
+- Trades/mes OOS >= 6
+- Caida frecuencia de trades IS→OOS <= 40%
+
+Criterios de DESCARTE automatico (cualquiera):
+- PF OOS < 1.2
+- Caida PF IS→OOS > 25%
+- DD OOS > 7%
+- Trades/mes OOS < 5
+- Caida frecuencia > 50%
+
+No hay zona intermedia. O PASA → WFO. O DESCARTA.
+Sin segunda oportunidad.
+
+Orden correcto del pipeline:
+  EvalGate → Retester → PASO 12B → Stress Test → WFO
+
+---
+
+## SPP — SYSTEM PARAMETER PERMUTATION
+
+Ejecutar DESPUES del paso 12b y ANTES del WFO.
+Prueba la sensibilidad de la estrategia a variaciones
+de parametros. Una estrategia robusta no colapsa
+cuando sus parametros cambian ligeramente.
+
+Ver skill-spp-validation.md para protocolo completo.
+
+Criterio de descarte:
+Si el PF cae > 30% en alguna permutacion de parametros
+→ descartar sin ejecutar WFO.
+La estrategia depende de parametros exactos que
+no seran reproducibles en produccion real.
+
+Si supera SPP → continuar con WFO.
+
+---
+
 ## REGLA FUNDAMENTAL
 
 El Retester verifica. El paso 12b decide.
