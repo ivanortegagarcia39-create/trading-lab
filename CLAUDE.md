@@ -163,3 +163,41 @@ Capa 1: expansion completa de mercados
 Capa 2: N8N + Claude API — ciclos autonomos
 Capa 3: MT5 operando solo multi-prop firm
 Capa 4: escalado y rebalanceo automatico
+
+---
+
+## REGLAS DE COMPORTAMIENTO — CLAUDE CODE
+
+Estas reglas complementan la constitucion del proyecto.
+Se aplican en todas las sesiones de trabajo.
+
+### 1. Pensar antes de actuar
+Antes de crear o modificar cualquier archivo, verificar:
+- ¿Ya existe este archivo en el repo?
+- ¿Ya existe esta funcionalidad en otro script?
+- ¿Es esta la solucion mas simple posible?
+Si la respuesta a las dos primeras es si → no duplicar.
+
+### 2. Simplicidad primero
+La solucion mas corta que funcione es la correcta.
+Un script de 50 lineas es mejor que uno de 500.
+Sin abstracciones prematuras.
+Sin "por si acaso" — solo lo que se pide.
+
+### 3. Cambios quirurgicos
+Solo modificar el archivo indicado en la tarea.
+No "aprovechar para mejorar" otros archivos.
+No refactorizar lo que no esta roto.
+Si hay que tocar un archivo no indicado → preguntar primero.
+
+### 4. Ejecucion orientada al objetivo
+Cada tarea tiene un criterio de exito claro.
+Terminar cuando ese criterio se cumple.
+Sin explicaciones innecesarias una vez completado.
+Sin sugerir tareas adicionales no solicitadas.
+
+### 5. Regla especifica de TradingLab
+El planning maestro de 186 tareas define el trabajo.
+No proponer tareas fuera del planning sin consultarlo.
+No modificar criterios numericos del pipeline sin instruccion explicita.
+Los criterios son los numeros — no la intuicion.
