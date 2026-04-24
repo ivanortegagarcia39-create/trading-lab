@@ -1,6 +1,6 @@
 # Planning Maestro — Estado de Implementacion
 
-Ultima actualizacion: 2026-04-22
+Ultima actualizacion: 2026-04-24
 
 ---
 
@@ -11,16 +11,16 @@ Ultima actualizacion: 2026-04-22
 | Fase 0 | Cimientos | 6 | 6 | COMPLETA |
 | Fase 1 | Pipeline core | 45 | 45 | COMPLETA |
 | Fase 2 | Multi-activo y prop firms | 22 | 22 | COMPLETA |
-| Fase 3 | Inteligencia y aprendizaje | 9 | 16 | EN CURSO |
+| Fase 3 | Inteligencia y aprendizaje | 10 | 16 | EN CURSO |
 | Fase 4 | Produccion y monitoreo | 8 | 14 | EN CURSO |
 | Fase 5 | VPS y despliegue real | 0 | 6 | PENDIENTE (VPS) |
 | Fase 6 | Portfolio multi-estrategia | 0 | 9 | PENDIENTE (5 estrategias) |
 | Fase 7 | Auditoria y compliance | 3 | 3 | COMPLETA |
 | Fase 8 | Optimizacion en produccion | 0 | 12 | PENDIENTE (produccion) |
 | Fase 9 | Scaling y funded | 0 | 7 | PENDIENTE (3 estrategias) |
-| Fase 10 | Infraestructura avanzada | 8 | 16 | EN CURSO |
+| Fase 10 | Infraestructura avanzada | 14 | 16 | EN CURSO |
 
-**Total completadas: 101 / 156 tareas documentadas**
+**Total completadas: 113 / 156 tareas documentadas**
 
 ---
 
@@ -89,10 +89,14 @@ Todos los agentes y skills del pipeline principal:
 - [x] docs/skills/skill-reactive-sim.md
 - [x] docs/lessons-learned.md (estructura inicial)
 
+- [x] docs/skills/skill-pca-portfolio.md
+- [x] docs/skills/skill-news-filter.md
+- [x] docs/skills/skill-stress-test.md
+- [x] docs/skills/skill-system-metrics.md (entropia Shannon añadida)
+
 ### Pendientes — requieren hardware/infraestructura
 - [ ] Integracion Ollama en produccion (requiere VPS o maquina local dedicada)
 - [ ] ChromaDB en produccion (requiere instalacion pip en entorno activo)
-- [ ] Obsidian vault para notas de sesion (requiere decision de workflow)
 - [ ] Pipeline Capa 2 — N8N (requiere servidor N8N configurado)
 - [ ] Claude API integration (requiere API key activa y presupuesto)
 - [ ] Feedback loop automatico entre lecciones y Builder (requiere Capa 3+)
@@ -208,6 +212,12 @@ Requiere al menos 3 estrategias pasando challenges.
 - [x] agents/knowledge-synthesizer.md
 - [x] docs/roadmap/ estructura
 - [x] docs/roadmap/planning-maestro-status.md (este archivo)
+- [x] dashboard.md con Dataview y lista de scripts
+- [x] templates/ con 3 plantillas (build-report, strategy-evaluation, daily-review)
+- [x] results/build-10-report.md con observacion spread 30→60 pips
+- [x] docs/obsidian-setup.md — instrucciones Templater y Dataview
+- [x] CLAUDE.md — seccion REGLAS DE COMPORTAMIENTO (5 reglas)
+- [x] agents/market-regime-detector.md — historial avanzado de regimen
 
 ### Pendientes
 - [ ] N8N instalado y configurado (requiere servidor)

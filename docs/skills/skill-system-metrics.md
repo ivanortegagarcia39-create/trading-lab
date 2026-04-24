@@ -296,6 +296,63 @@ Si se cumple alguna condicion → alerta inmediata al humano.
 
 ---
 
+## Entropia de Shannon sobre Equity
+
+Indicador adelantado de fatiga de estrategia.
+Complementa el Z-Score del PF con una perspectiva
+diferente: la variedad de los retornos, no solo su magnitud.
+
+### Intuicion del indicador
+
+Una curva de equity saludable tiene alta entropia:
+  los retornos son variados, impredecibles en magnitud
+  pero positivos en promedio. El EA sigue encontrando
+  oportunidades en condiciones distintas.
+
+Una curva de equity en fatiga tiene baja entropia:
+  los retornos se vuelven muy uniformes (todos pequeños
+  o todos identicos) o la curva se aplana.
+  El EA puede haber perdido su edge sin que el PF
+  lo indique todavia de forma clara.
+
+### Calculo simplificado
+
+```
+1. Dividir la curva de equity en ventanas de 20 trades
+2. Para cada ventana: calcular distribucion de retornos
+   (bins: <-1%, -1 a 0%, 0 a 0.5%, 0.5 a 1%, >1%)
+3. Calcular entropia de Shannon:
+   H = -Σ p(x) * log2(p(x))
+   donde p(x) es la proporcion de retornos en cada bin
+4. Si H de las ultimas 4 ventanas < H_promedio_historico * 0.7
+   → señal de fatiga adelantada
+5. Combinar con Z-Score del PF para confirmacion:
+   Fatiga confirmada si: H < 0.7 * H_media Y Z-Score PF < -1.5
+```
+
+El valor de H varia entre 0 (todos los retornos identicos)
+y log2(N_bins) — maximo cuando todos los bins son equiprobables.
+Para 5 bins: H_max = log2(5) ≈ 2.32 bits.
+
+### Uso practico
+
+Esta metrica es complementaria — nunca exclusiva.
+Un solo periodo de baja entropia puede ser ruido normal.
+La señal es relevante solo si persiste 4+ ventanas consecutivas
+Y se confirma con deterioro del Z-Score del PF.
+
+Accion si se confirma fatiga:
+  Notificar al orchestrator → account-recovery-manager evalua.
+  No desactivar el EA de forma automatica solo por entropia baja.
+
+### Cuando implementar
+
+Fase 10 — requiere al menos 200 trades en produccion real
+para tener historial suficiente de ventanas H.
+En Capa 0-2: usar solo el Z-Score del PF como indicador primario.
+
+---
+
 ## Lo que esta skill NUNCA hace
 
 NUNCA ajusta criterios de aprobacion para
