@@ -65,6 +65,31 @@ SORT file.mtime DESC
 
 ---
 
+## Pipeline de Evaluación
+
+| Puerta | Herramienta | Criterio Principal | Ratio |
+|--------|-------------|-------------------|-------|
+| 1. Builder Filter | SQ | PF > 1.3 | ~5% |
+| 2. EvalGate | evaluator-assistant.py | Trades/WR/DD | ~40% |
+| 3. Retester 12b | SQ + Python | OOS degradation | ~40% |
+| 4. SPP | SQ/Python | Robustez ±10% | ~50% |
+| 5. WFO Matrix | SQ | WFE >= 50% | ~50% |
+| 6. Stress Test | SQ Retester | DD < 8% periodos | ~60% |
+| 7. Multimarket | SQ Retester | PF > 1.0 correl. | ~70% |
+| 8. Portfolio | portfolio-builder.py | Corr < 0.5 | 3-5 |
+| 9. Forward Test | MT5 demo | PF >= 70% OOS | ~70% |
+
+---
+
+## Builds Históricos
+
+| Build | Activo | TF | Estado | Databank | Mejor PF |
+|-------|--------|----|--------|----------|----------|
+| 1-8 | Varios | M15/H1 | DESCARTADOS | 0 | < 1.3 |
+| 10 | XAUUSD | H1 | EN CURSO | 2 | 1.31 |
+
+---
+
 ## Últimas Lecciones Aprendidas
 
 ```dataview
