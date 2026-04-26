@@ -1,5 +1,21 @@
 # CLAUDE.md — Constitucion del Proyecto TradingLab
 
+## Estado Actual (2026-04-26)
+- Fase: Capa 0 activa
+- Build activo: Build 10 — XAUUSD H1 (alber)
+- Planning maestro: ~120/186 tareas completadas
+- Estrategias en produccion: 0
+- Proximo hito: Primera estrategia aprobada por WFO
+
+### Contexto para esta sesion
+- Documentacion completa en agents/ y docs/skills/
+- Scripts Python en scripts/
+- Ver dashboard.md para estado visual
+- Ver docs/roadmap/planning-maestro-status.md
+  para progreso detallado
+
+---
+
 ## Proposito del proyecto
 Sistema 100% automatico de generacion, validacion
 y despliegue de portfolios de estrategias de trading
