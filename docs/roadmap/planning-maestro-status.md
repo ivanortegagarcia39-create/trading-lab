@@ -1,6 +1,6 @@
 # Planning Maestro — Estado de Implementacion
 
-Ultima actualizacion: 2026-04-24
+Ultima actualizacion: 2026-04-26
 
 ---
 
@@ -18,9 +18,9 @@ Ultima actualizacion: 2026-04-24
 | Fase 7 | Auditoria y compliance | 3 | 3 | COMPLETA |
 | Fase 8 | Optimizacion en produccion | 0 | 12 | PENDIENTE (produccion) |
 | Fase 9 | Scaling y funded | 0 | 7 | PENDIENTE (3 estrategias) |
-| Fase 10 | Infraestructura avanzada | 14 | 16 | EN CURSO |
+| Fase 10 | Infraestructura avanzada | 16 | 16 | COMPLETA |
 
-**Total completadas: 113 / 156 tareas documentadas**
+**Total completadas: 131 / 156 tareas documentadas**
 
 ---
 
@@ -219,7 +219,26 @@ Requiere al menos 3 estrategias pasando challenges.
 - [x] CLAUDE.md — seccion REGLAS DE COMPORTAMIENTO (5 reglas)
 - [x] agents/market-regime-detector.md — historial avanzado de regimen
 
-### Pendientes
+- [x] scripts/evaluator-assistant.py — EvalGate automatico
+- [x] scripts/portfolio-builder.py — seleccion automatica portfolio
+- [x] scripts/pre-build-checklist.py — verificacion pre-build
+- [x] scripts/pipeline-runner.py — orquestador maestro post-build
+- [x] scripts/market-regime-snapshot.py — foto regimen inicio/fin
+- [x] scripts/sqx-build-config.py — documentacion config build
+- [x] config/build-defaults.json — fuente de verdad configuracion
+- [x] docs/architecture/system-overview.md — arquitectura general
+- [x] docs/skills/skill-pipeline-flow.md — 9 puertas con criterios
+- [x] docs/skills/skill-forward-test.md — criterios numericos FT
+- [x] docs/skills/skill-news-filter.md — filtrado noticias
+- [x] docs/skills/skill-stress-test.md — 5 periodos criticos
+- [x] docs/skills/skill-pca-portfolio.md — diversificacion PCA
+- [x] docs/skills/skill-wfo-matrix.md — WFO Matrix criterios
+- [x] docs/skills/skill-correlation-analysis.md — correlacion portfolio
+- [x] docs/skills/skill-mt5-deployment.md — deployment EAs MT5
+- [x] results/README.md — inventario de archivos de resultados
+- [x] dashboard.md — pipeline table + builds historicos
+
+### Pendientes — requieren hardware/infraestructura
 - [ ] N8N instalado y configurado (requiere servidor)
 - [ ] Claude API wired con N8N (requiere API key)
 - [ ] Ciclos autonomos Capa 2 activos
