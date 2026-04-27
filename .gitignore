@@ -13,3 +13,5 @@ results/session-memory.json
 
 # Backups de configuracion SQ (pueden contener datos sensibles)
 backups/sq_configs/
+.obsidian/ 
+.claude/settings.local.json 
