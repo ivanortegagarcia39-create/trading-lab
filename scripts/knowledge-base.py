@@ -47,19 +47,27 @@ INDEX_PATHS = [
     "docs/lessons-learned.md",
     "docs/project-status.md",
     "docs/Fase-0-verificacion.md",
+    "config/pipeline-config.json",
+    "results/build-10-report.md",
+    "results/criteria-proposals.json",
 ]
 
 # Patrones para buscar en subcarpetas
 INDEX_PATTERNS = [
-    ("results", "*.md"),
-    ("results", "*.csv"),
+    ("docs/skills", "*.md"),
+    ("agents",      "*.md"),
+    ("results",     "*.md"),
+    ("results",     "*.csv"),
 ]
 
 # Metadata por tipo de archivo
 TYPE_MAP = {
-    "lessons-learned.md": "leccion",
-    "project-status.md":  "estado",
-    "Fase-0-verificacion.md": "verificacion",
+    "lessons-learned.md":       "leccion",
+    "project-status.md":        "estado",
+    "Fase-0-verificacion.md":   "verificacion",
+    "pipeline-config.json":     "configuracion",
+    "build-10-report.md":       "resultado",
+    "criteria-proposals.json":  "propuesta",
 }
 
 
@@ -137,7 +145,8 @@ def load_documents(repo_path: Path) -> list[tuple[str, dict, Path]]:
     """
     docs = []
 
-    # Documentos fijos
+    # Documentos fijos (omitir silenciosamente si no existen — son opcionales)
+    optional_paths = {"results/build-10-report.md", "results/criteria-proposals.json"}
     for rel_path in INDEX_PATHS:
         fp = repo_path / rel_path
         if fp.exists():
@@ -145,7 +154,7 @@ def load_documents(repo_path: Path) -> list[tuple[str, dict, Path]]:
             meta = extract_metadata(text, fp)
             for chunk in chunk_text(text):
                 docs.append((chunk, meta.copy(), fp))
-        else:
+        elif rel_path not in optional_paths:
             print(f"  [SKIP] No encontrado: {fp}")
 
     # Patrones en subcarpetas
@@ -267,6 +276,15 @@ def main() -> int:
         help="Ruta raiz del repo (default: .)",
     )
 
+    # Subcomando re-index (borra y recrea desde cero)
+    p_reindex = subparsers.add_parser("re-index", help="Borrar indice y reindexar desde cero")
+    p_reindex.add_argument(
+        "--repo-path",
+        type=Path,
+        default=Path("."),
+        help="Ruta raiz del repo (default: .)",
+    )
+
     # Subcomando query
     p_query = subparsers.add_parser("query", help="Consultar la base de datos")
     p_query.add_argument("pregunta", help="Pregunta en lenguaje natural")
@@ -288,6 +306,16 @@ def main() -> int:
     if args.command == "index":
         indexed = index_project(args.repo_path)
         print(f"Indexacion completada: {indexed} chunks.")
+        return 0
+
+    if args.command == "re-index":
+        import shutil
+        db_path = args.repo_path / CHROMA_PATH
+        if db_path.exists():
+            shutil.rmtree(db_path)
+            print(f"Indice eliminado: {db_path}")
+        indexed = index_project(args.repo_path)
+        print(f"Re-indexacion completada: {indexed} chunks.")
         return 0
 
     if args.command == "query":
