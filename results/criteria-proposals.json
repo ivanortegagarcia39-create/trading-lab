@@ -1,0 +1,22 @@
+{
+  "timestamp": "2026-04-27T13:28:31",
+  "total_structural_lessons": 2,
+  "ollama_used": false,
+  "proposals": [
+    {
+      "lesson_id": "LECCION-001",
+      "still_valid": null,
+      "proposed_adjustment": "Revisar manualmente — Ollama no disponible.",
+      "confidence": 0.0,
+      "ocurrencias": 4
+    },
+    {
+      "lesson_id": "LECCION-002",
+      "still_valid": null,
+      "proposed_adjustment": "Revisar manualmente — Ollama no disponible.",
+      "confidence": 0.0,
+      "ocurrencias": 8
+    }
+  ],
+  "nota": "El humano revisa estas propuestas antes de aplicar cambios a criterios."
+}
