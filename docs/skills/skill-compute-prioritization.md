@@ -1,174 +1,140 @@
-# Skill: Priorizacion de Computo y Builds
+# Skill: Priorización de Recursos Computacionales
 
 ## Proposito
-Define como priorizar que activos se procesan
-primero y cuantos ciclos dedicar a cada uno.
-Con 30+ activos y builds de 24-48h por activo,
-un ciclo completo sin priorizacion tardaria meses.
-La priorizacion es numerica y automatica.
-No se elige un activo porque "parece prometedor".
+Define como distribuir la carga de CPU entre ivano y alber
+para que los builds de SQ y los scripts de análisis no compitan
+por recursos y no se degraden mutuamente.
 
 ---
 
-## Sistema de scoring de prioridad
+## RECURSOS DISPONIBLES
 
-Cada activo recibe un score de prioridad (0-100)
-calculado antes de cada ciclo de builds.
-El activo con mayor score se procesa primero.
-
-### Componentes del score
-
-#### Factor 1 — Historial de aprobacion (0-40 pts)
-Basado en ciclos anteriores del mismo activo.
-
-Sin historial previo: 20 pts (neutro)
-Tasa de aprobacion IS->Portfolio > 10%: 40 pts
-Tasa de aprobacion IS->Portfolio 5-10%: 30 pts
-Tasa de aprobacion IS->Portfolio 1-5%: 15 pts
-Tasa de aprobacion IS->Portfolio 0%
-  con 2+ ciclos: 5 pts
-Activo pausado por 2 challenges fallidos: 0 pts
-
-#### Factor 2 — Necesidad del portfolio (0-30 pts)
-Basado en gaps del portfolio actual.
-
-Portfolio vacio (0 estrategias): 30 pts
-Activo no representado en portfolio: 25 pts
-Activo con 1 estrategia en portfolio: 10 pts
-Activo con 2 estrategias en portfolio: 0 pts
-  (maximo 2 por activo segun regla de portfolio)
-
-#### Factor 3 — Calidad de datos historicos (0-20 pts)
-Basado en disponibilidad y calidad de datos H1.
-
-10+ años de datos limpios verificados: 20 pts
-7-10 años de datos: 15 pts
-5-7 años de datos: 10 pts
-3-5 años de datos: 5 pts
-Menos de 3 años: 0 pts (no usar)
-
-#### Factor 4 — Diversificacion de estilo (0-10 pts)
-Basado en estilos ya presentes en el portfolio.
-
-El activo tiene perfil de volatilidad distinto
-a todos los activos ya en portfolio: 10 pts
-Perfil similar a 1 activo en portfolio: 5 pts
-Perfil similar a 2+ activos en portfolio: 0 pts
+| Dispositivo | Uso principal | Limitación |
+|-------------|--------------|------------|
+| ivano | Claude Code, scripts Python, documentación | No ejecutar SQ |
+| alber | SQ builds (CPU intensivo), MT5, scripts de análisis | No ejecutar builds pesados durante SQ |
 
 ---
 
-## Calculo del score — ejemplo
+## REGLAS DE PRIORIZACIÓN EN ALBER
 
-Activo: EURUSD
-Factor 1: tasa aprobacion 8% en ciclo anterior = 30 pts
-Factor 2: ya tiene 1 estrategia en portfolio = 10 pts
-Factor 3: 12 años de datos limpios = 20 pts
-Factor 4: perfil similar a GBPUSD en portfolio = 5 pts
-Score total: 65/100
+### Prioridad de procesos
 
-Activo: XAUUSD
-Factor 1: sin historial previo = 20 pts
-Factor 2: no representado en portfolio = 25 pts
-Factor 3: 8 años de datos = 15 pts
-Factor 4: perfil distinto a todos = 10 pts
-Score total: 70/100
+1. **SQ build activo — prioridad máxima de CPU**
+   No ejecutar ningún otro proceso pesado mientras SQ está generando.
+   SQ usa todos los núcleos disponibles en modo continuo.
+   Cualquier competencia por CPU alarga el build y puede causar
+   que SQ se congele (ver sq-watchdog.py).
 
-Decision automatica: XAUUSD se procesa primero.
+2. **No ejecutar procesos pesados durante builds**
+   Prohibido durante build activo: compilaciones, instalaciones pip,
+   actualizaciones de Windows, renderizado de video, Ollama con modelos grandes.
 
----
+3. **Ollama puede correr en paralelo con SQ pero con prioridad baja**
+   Si se usa Ollama (deepseek-r1:7b) durante un build:
+   - Establecer prioridad de proceso a "Por debajo de lo normal" en Task Manager
+   - Solo usar modelos <= 7B durante builds
+   - Si temperatura > 75°C → detener Ollama inmediatamente
 
-## Reglas de ciclos por activo
+4. **MT5 puede correr siempre — consume muy poca CPU**
+   MT5 en modo forward test demo es ligero.
+   Compatible con builds activos sin restricción.
 
-### Ciclos maximos consecutivos por activo
-Un mismo activo no puede recibir mas de
-2 ciclos de build consecutivos sin rotar
-a otro activo.
-Razon: evitar sobre-representacion y
-detectar activos improductivos antes.
-
-### Rotacion obligatoria
-Despues de 2 ciclos consecutivos en un activo:
-rotar al siguiente por score aunque el activo
-anterior tenga score mas alto.
-El activo anterior puede volver despues de
-que otros 2 activos hayan tenido su ciclo.
-
-### Activos en pausa
-Activos pausados por 2 challenges fallidos
-consecutivos: excluir del scoring durante
-4 ciclos completos.
-Despues de 4 ciclos: reincorporar con
-Factor 1 = 5 pts hasta nuevo historial.
+5. **Scripts Python de análisis solo cuando SQ está parado**
+   Scripts que procesan muchos CSVs (evaluator-assistant, portfolio-builder,
+   data-quality-checker) consumen CPU y disco.
+   Ejecutarlos después de que SQ haya completado el build o en pausa.
 
 ---
 
-## Lista de activos disponibles por categoria
+## REGLAS DE PRIORIZACIÓN EN IVANO
 
-### Forex Majors (prioridad base alta)
-EURUSD, GBPUSD, USDJPY, USDCHF,
-AUDUSD, USDCAD, NZDUSD
+1. **Claude Code tiene prioridad máxima**
+   No ejecutar builds ni procesos intensivos mientras se trabaja con Claude Code.
+   Claude Code + navegador + Obsidian es el perfil de uso normal de ivano.
 
-### Forex Crosses (prioridad base media)
-EURGBP, EURJPY, GBPJPY, AUDJPY,
-EURCHF, GBPCHF, CADJPY
+2. **Obsidian puede correr siempre en paralelo**
+   Obsidian es ligero. Compatible con cualquier otro proceso en ivano.
 
-### Metales (prioridad base alta — diversificacion)
-XAUUSD, XAGUSD
-
-### Indices US (prioridad base media)
-US30, US500, US100
-
-### Indices EU/JP (prioridad base baja — datos limitados)
-GER40, UK100, JPN225
-
-### Crypto (prioridad base baja — volatilidad extrema)
-BTCUSD, ETHUSD
+3. **Python scripts de documentación son ligeros — sin restricción**
+   auto-reporter.py, session-starter.py, system-health-check.py:
+   todos son operaciones de lectura/escritura de archivos.
+   Sin impacto en rendimiento general.
 
 ---
 
-## Planificacion de ciclos
+## TEMPERATURA Y HARDWARE
 
-Antes de cada nuevo ciclo el orchestrator:
+### Umbrales críticos
 
-Paso 1 — Recalcular scores de todos los activos
-Usar formula de 4 factores con datos actualizados.
+| Temperatura CPU | Acción |
+|----------------|--------|
+| < 70°C | Normal — sin restricciones |
+| 70-75°C | Advertencia — monitorear |
+| 75-80°C | Detener Ollama si está corriendo |
+| 80-85°C | Reducir carga — pausar scripts de análisis |
+| > 85°C | **Pausar build SQ. Dejar enfriar 30 minutos** |
 
-Paso 2 — Aplicar reglas de rotacion
-Excluir activos en pausa.
-Verificar limite de 2 ciclos consecutivos.
+### Comportamiento durante builds largos (24-48h)
 
-Paso 3 — Generar cola de prioridad
-Ordenar activos por score descendente.
-Documentar en: results\build-queue.md
+SQ en build continuo eleva la temperatura de forma sostenida.
+Verificar temperatura cada 4-6 horas durante builds.
 
-Paso 4 — Estimar tiempo total
-Numero de activos en cola x duracion media de build.
-Si el tiempo estimado supera 2 semanas:
-limitar la cola a los 5 activos de mayor score.
+Herramientas de monitoreo en Windows:
+- Task Manager → Performance → CPU
+- HWiNFO64 (recomendado para monitoreo continuo)
 
-Formato de build-queue.md:
-========================================
-COLA DE BUILDS — [fecha]
-========================================
-Posicion | Activo | Score | Razon principal
-1        | [sim]  | [N]   | [factor dominante]
-2        | [sim]  | [N]   | [factor dominante]
-...
-Activos en pausa: [lista]
-Ciclos consecutivos actuales: [activo] x[N]
-Tiempo estimado cola completa: [dias]
-========================================
+**Regla crítica:** Nunca ejecutar SQ y Ollama simultáneamente
+si la temperatura supera los 75°C.
 
 ---
 
-## Lo que esta skill NUNCA hace
+## REGLA DE SINCRONIZACIÓN ENTRE DISPOSITIVOS
 
-NUNCA elige un activo porque "el mercado
-esta interesante ahora mismo".
-NUNCA salta la cola de prioridad por
-intuicion o noticias del mercado.
-NUNCA dedica ciclos ilimitados al mismo activo.
-NUNCA ignora un activo con score alto
-por preferencia personal.
+Protocolo obligatorio antes y después de cada sesión:
 
-El score decide el orden. Sin excepciones.
+```bash
+# Al INICIAR sesión en cualquier dispositivo
+git pull origin main
+
+# Al CERRAR sesión en cualquier dispositivo
+git add .
+git commit -m "descripción de lo trabajado"
+git push origin main
+```
+
+**Nunca dejar cambios sin pushear al cerrar sesión.**
+Si alber tiene resultados de build sin commitear y se apaga,
+esos resultados se pierden o quedan inaccesibles desde ivano.
+
+### División de trabajo por dispositivo
+
+| Tipo de trabajo | Dispositivo |
+|----------------|-------------|
+| Claude Code, documentación, skills, agentes | ivano |
+| SQ Builder, Retester, Optimizer | alber |
+| Scripts de análisis post-build | alber (cuando SQ está parado) |
+| git push de código Python | ivano |
+| git push de resultados CSV | alber |
+| MT5 forward test | alber |
+
+---
+
+## MONITOREO DEL BUILD (sq-watchdog.py)
+
+Durante builds largos en alber, sq-watchdog.py verifica
+que SQ no se haya congelado.
+
+```bash
+# Verificar que SQ sigue corriendo
+python scripts/sq-watchdog.py --check
+
+# Monitoreo continuo con alerta Telegram si SQ se detiene
+python scripts/sq-watchdog.py --monitor --interval 1800
+```
+
+Si SQ se congela durante un build:
+1. Anotar cuántas estrategias hay en el databank
+2. Anotar el PF máximo observado
+3. Reiniciar SQ
+4. Retomar el build desde el databank existente (SQ no pierde lo generado)

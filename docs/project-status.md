@@ -42,26 +42,29 @@ Con el enfoque actual SQ decide la logica. Los numeros deciden que avanza.
 ## 2. ESTADO ACTUAL
 
 **Fecha:** 2026-04-27
-**Situacion:** Build 10 completado (4+ dias corriendo en alber).
+**Situacion:** Capa 0 activa. Sistema completamente construido en ivano.
+Build 10 completado (spread 30 pips — incorrecto, pendiente exportar resultados).
 Build 11 pendiente de lanzar en alber con spread corregido a 60 pips.
-Scripts Python operativos y probados en ivano.
+31 scripts Python operativos y probados en ivano.
 Telegram bot activo (@tradinglab_monitor_bot).
 ChromaDB indexado con 90 chunks.
-Planning maestro: ~145/156 tareas completadas.
-Proxima accion: lanzar Build 11 en alber con spread 60 pips.
+Python 3.13 instalado en ivano.
+Planning maestro: ~152/172 tareas completadas.
+Pendiente solo de hardware: Ollama en alber, Build 11, VPS.
+Proxima sesion: ir a alber, git pull, lanzar Build 11 con spread 60 pips.
 
 ### Planning Maestro
 
 | Metrica | Valor |
 |---------|-------|
-| Total tareas | 156 |
-| Completadas | ~145 |
+| Total tareas | 172 |
+| Completadas | ~152 |
 | Fase 0 | COMPLETA |
 | Fases 1-2 | COMPLETAS |
-| Fases 3-4 | EN CURSO |
+| Fases 3-4 | EN CURSO (pendiente solo hardware) |
 | Fases 5-6 | PENDIENTES (requieren VPS + estrategia aprobada) |
 | Fase 7 | COMPLETA |
-| Fase 10 | EN CURSO |
+| Fase 10 | COMPLETA |
 
 ### Documentacion base
 
@@ -74,8 +77,9 @@ Proxima accion: lanzar Build 11 en alber con spread 60 pips.
 | docs\roadmap-v2.md | Roadmap por capas |
 | docs\project-status.md | Este archivo |
 
-**Agentes activos:** 11
-**Skills operativas:** 22 en docs\skills\
+**Agentes activos:** 19
+**Skills operativas:** 42+ en docs\skills\
+**Scripts Python operativos:** 31 en scripts\
 **Tickets activos:** 1 — TICKET-002-BUILD-9-XAUUSD en fase build-pending
 **Portfolio actual:** 0 estrategias (objetivo minimo: 3)
 
@@ -188,7 +192,8 @@ Proxima accion: lanzar Build 11 en alber con spread 60 pips.
 | Build 7 | Hipotesis humana | NBARBreakout-RSI H1 | Resultado desconocido — dispositivo anterior | PENDIENTE |
 | Build 8 | Hipotesis humana | TrendFollowing EURUSD H1 EMA50+ADX | EN EJECUCION en dispositivo alber — ultimo build con sesgo humano | EN CURSO |
 | Build 9 | Builder libre | XAUUSD H1 — Paleta completa — Comisiones FTMO reales | EN CURSO — Ciclo 1 iniciado 2026-04-15 — TICKET-002 | EN CURSO |
-| Build 10 | Builder libre | XAUUSD H1 — datos corregidos, instrumentos FTMO reales | EN CURSO desde 2026-04-20 — Primer build con configuracion validada Fase 0 | EN CURSO |
+| Build 10 | Builder libre | XAUUSD H1 — datos corregidos, instrumentos FTMO reales | COMPLETADO 2026-04-27 — 2 estrategias — Spread 30 pips (incorrecto, deberia ser 60) | COMPLETADO |
+| Build 11 | Builder libre | XAUUSD H1 — spread 60 pips corregido | PENDIENTE — lanzar en alber proxima sesion | PENDIENTE |
 
 ### Aprendizajes acumulados
 
@@ -547,8 +552,9 @@ Detalle en: docs\roadmap-v2.md
 
 ## 14. SIGUIENTE ACCION CONCRETA
 
-**Estado:** Build 10 completado. Build 11 pendiente con spread corregido a 60 pips.
-**Proximo hito:** Lanzar Build 11 en alber (XAUUSD H1, spread 60 pips). Dejar correr 48 horas.
+**Estado:** Sistema Capa 0 completamente construido en ivano (152/172 tareas).
+Build 10 completado. Build 11 pendiente con spread corregido a 60 pips.
+**Proximo hito:** Ir a alber, git pull, lanzar Build 11 (XAUUSD H1, spread 60 pips). Dejar correr 48 horas.
 
 ### Paso 1 — Verificar datos disponibles en SQ
 1. data-manager verifica que activos tienen datos M1 disponibles en SQ

@@ -5,10 +5,10 @@
 | Campo | Valor |
 |-------|-------|
 | Fase actual | Capa 0 |
-| Build activo | Build 10 — XAUUSD H1 |
+| Build activo | Build 11 — XAUUSD H1 (pendiente lanzar en alber) |
 | Estrategias en producción | 0 |
-| Estrategias en databank | 2 (en curso) |
-| Última actualización | 2026-04-22 |
+| Estrategias en databank | 2 (Build 10 completado) |
+| Última actualización | 2026-04-27 |
 
 ---
 
@@ -83,10 +83,11 @@ SORT file.mtime DESC
 
 ## Builds Históricos
 
-| Build | Activo | TF | Estado | Databank | Mejor PF |
-|-------|--------|----|--------|----------|----------|
-| 1-8 | Varios | M15/H1 | DESCARTADOS | 0 | < 1.3 |
-| 10 | XAUUSD | H1 | EN CURSO | 2 | 1.31 |
+| Build | Activo | TF | Estado | Databank | Mejor PF | Notas |
+|-------|--------|----|--------|----------|----------|-------|
+| 1-8 | Varios | M15/H1 | DESCARTADOS | 0 | < 1.3 | — |
+| 10 | XAUUSD | H1 | COMPLETADO | 2 estrategias | 1.31 | Spread 30 pips — incorrecto, debería ser 60 |
+| 11 | XAUUSD | H1 | PENDIENTE | — | — | Spread 60 pips — pendiente lanzar en alber |
 
 ---
 
@@ -163,6 +164,12 @@ Todos los scripts probados y operativos en ivano (2026-04-27):
 | portfolio-monitor.py | OK | pandas |
 | system-health-check.py | OK | subprocess |
 | session-starter.py | OK | subprocess |
+| data-quality-checker.py | OK | pandas |
+| challenge-simulator.py | OK | json |
+| portfolio-rebalancer.py | OK | pandas, numpy |
+| auto-reporter.py | OK | subprocess |
+| build-comparator.py | OK | pandas |
+| risk-calculator.py | OK | json |
 
 ---
 
@@ -174,12 +181,29 @@ Todos los scripts probados y operativos en ivano (2026-04-27):
 
 ---
 
+## 📊 Métricas del Sistema (2026-04-27)
+
+| Métrica | Valor |
+|---------|-------|
+| Planning maestro | 152/172 tareas (88%) |
+| Scripts Python operativos | 31 |
+| Agentes documentados | 19 |
+| Skills documentadas | 42+ |
+| ChromaDB chunks | 90 |
+| Telegram bot | @tradinglab_monitor_bot ✅ |
+| Audit trail entradas | 2 |
+| Estrategias registradas | 1 (XAUUSD-B10-1114-v1) |
+| Builds completados | 1 (Build 10) |
+| Estrategias en producción | 0 |
+
+---
+
 ## Pendiente de Hardware
 
-| Tarea | Requiere | Fase |
-|-------|----------|------|
-| Instalar Ollama | alber encendido | Fase 3 |
-| Instalar ChromaDB | alber encendido | Fase 3 |
-| Lanzar Build 11 con spread 60 pips | SQ en alber | Inmediato |
+| Tarea | Requiere | Prioridad |
+|-------|----------|-----------|
+| Lanzar Build 11 con spread 60 pips | SQ en alber | PRÓXIMA ACCIÓN |
+| Exportar resultados Build 10 | alber encendido | PRÓXIMA ACCIÓN |
+| Instalar Ollama en alber | alber encendido | PENDIENTE |
 | Contratar VPS MT5 | Tarjeta de credito | Fase 5 |
 | Instalar N8N | alber + 5 estrategias | Fase 6 |

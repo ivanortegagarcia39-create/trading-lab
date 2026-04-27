@@ -1,165 +1,167 @@
-# Skill: Protocolo de Cambios de Reglas en Prop Firms
+# Skill: Gestión de Cambios de Reglas en Prop Firms
 
 ## Proposito
-Define como detectar, evaluar y responder
-cuando una prop firm cambia sus reglas.
-Un cambio de reglas no detectado puede invalidar
-estrategias en produccion de un dia para otro.
-La respuesta debe ser automatica y numerica,
-no reactiva ni emocional.
+Protocolo para detectar, clasificar y responder a cambios
+en las reglas de prop firms.
+Un cambio de reglas puede invalidar una estrategia o una cuenta
+de forma inmediata — el sistema debe detectarlo antes que el EA.
 
 ---
 
-## Tipos de cambios y nivel de impacto
+## RIESGO PRINCIPAL
 
-### Nivel 1 — Critico (accion inmediata)
-Cambios que invalidan estrategias en produccion:
-- DD cambia de estatico a trailing
-- DD maximo reducido por debajo del DD historico
-  de alguna estrategia activa
-- Prohibicion de EAs o trading algoritmico
-- Cambio en horario de trading que afecta H1
-- Suspension temporal o cierre de la prop firm
+Las prop firms pueden cambiar sus reglas sin previo aviso.
+Casos históricos documentados:
 
-Accion: pausar challenges activos ese mismo dia.
-Reevaluar todas las estrategias contra nuevas reglas.
+- **MyForexFunds (agosto 2023):** CFTC emitió orden de cese.
+  Fondos bloqueados sin previo aviso. Afectó a miles de traders.
+- **FTMO (enero 2024):** Cambió definición de "group trading".
+  Muchas cuentas canceladas retroactivamente.
+- **Varios (2024-2025):** Prohibición progresiva de criptos
+  y aumento de restricciones en noticias.
 
-### Nivel 2 — Moderado (accion en 48h)
-Cambios que afectan el scoring pero no invalidan:
-- Cambio en profit split (> 5 puntos)
-- Cambio en precio de challenge (> 20%)
-- Cambio en objetivo de profit
-- Nuevas restricciones de instrumentos
-- Cambio en dias minimos de trading
-
-Accion: recalcular scoring de prop firms afectadas.
-Actualizar skill-propfirms-comparison.md.
-Verificar si la prop firm principal sigue siendo
-la recomendada por scoring.
-
-### Nivel 3 — Menor (accion en proximo ciclo)
-Cambios que no afectan estrategias actuales:
-- Cambios en plan de scaling (no en Capa 0)
-- Nuevos tipos de cuenta no usados
-- Cambios en soporte o plataforma
-- Actualizaciones de terminos legales menores
-
-Accion: registrar el cambio. Actualizar documentacion
-en el proximo ciclo de mantenimiento.
+**Lección:** La diversificación entre firms es una protección real,
+no una preferencia. Un sistema mono-firm tiene riesgo de ruina total.
 
 ---
 
-## Proceso de deteccion
+## MONITOREO SEMANAL
 
-### Verificacion periodica
-Frecuencia minima: una vez por semana.
-Fuentes a revisar en orden:
-1. Pagina oficial de la prop firm (reglas/FAQ)
-2. Email de comunicaciones de la prop firm
-3. Foro oficial o Discord de la prop firm
-4. Comunidades de trading algoritmico
+El agente `propfirm-regulatory-watcher.md` ejecuta hash check
+semanal de las páginas de T&C de cada prop firm activa.
 
-El orchestrator registra la fecha de cada
-verificacion en: results\propfirm-changelog.md
+### Proceso automático
+1. Descargar HTML de página T&C de cada firm
+2. Calcular SHA-256 del contenido relevante
+3. Comparar con hash de la semana anterior
+4. Si el hash cambia → clasificar cambio y notificar
 
-### Señales de alerta temprana
-Prestar atencion especial si:
-- La prop firm anuncia "actualizacion de terminos"
-- Hay quejas masivas en comunidades de traders
-- La prop firm cambia de plataforma tecnologica
-- Hay noticias sobre problemas financieros
-  de la prop firm
+### Clasificación del cambio
+
+| Clasificación | Criterio | Tiempo de respuesta |
+|--------------|----------|---------------------|
+| CRÍTICO | Afecta cuentas activas o capital | Inmediato (< 2h) |
+| IMPORTANTE | Afecta estrategia futura | Próxima sesión |
+| INFORMATIVO | Cambio de UI, texto aclaratorio | Siguiente revisión semanal |
 
 ---
 
-## Proceso de evaluacion tras deteccion
+## CAMBIOS CRÍTICOS — acción inmediata
 
-Cuando se detecta un cambio:
+Actuar en menos de 2 horas al detectar cualquiera:
 
-Paso 1 — Clasificar el nivel de impacto
-Usar la tabla de tipos de cambios de arriba.
-Si hay duda: asumir nivel superior (mas critico).
+### Prohibición de EAs / trading algorítmico
+→ Pausar todas las cuentas afectadas inmediatamente
+→ Cerrar todas las posiciones abiertas manualmente
+→ No abrir nuevas posiciones hasta aclarar
+→ Contactar soporte de la firm para confirmar alcance
 
-Paso 2 — Evaluar estrategias en produccion
-Para cada estrategia activa en challenge o funded:
-- DD historico OOS vs nuevo limite de DD
-- Frecuencia de trades vs nuevos dias minimos
-- Instrumentos usados vs nuevas restricciones
-Resultado: COMPATIBLE / INCOMPATIBLE / REVISAR
+### Cambio en Daily Loss Limit o Max Drawdown
+→ Actualizar Risk Manager EA en VPS con nuevos valores
+→ Verificar que ninguna cuenta activa está cerca del nuevo límite
+→ Recalcular `risk-calculator.py` con nuevos parámetros
+→ Actualizar `config/pipeline-config.json` sección `risk_manager`
 
-Paso 3 — Evaluar estrategias aprobadas en espera
-Misma evaluacion que paso 2.
-Si son incompatibles: no lanzar challenge
-hasta reevaluar con nuevas reglas.
+### Prohibición de activos
+→ Retirar EAs de esos activos del VPS inmediatamente
+→ Cerrar posiciones abiertas en esos activos
+→ Actualizar `market-selector` para excluir el activo
 
-Paso 4 — Recalcular scoring de prop firms
-Si el cambio afecta al scoring:
-Actualizar skill-propfirms-comparison.md.
-Recalcular prop firm recomendada.
-Si la prop firm principal pierde el primer puesto:
-registrar nueva recomendacion con fecha.
-
-Paso 5 — Registrar en changelog
-Formato obligatorio:
-Fecha deteccion: [fecha]
-Prop firm: [nombre]
-Tipo de cambio: [descripcion breve]
-Nivel de impacto: 1 / 2 / 3
-Estrategias afectadas: [IDs o "ninguna"]
-Accion tomada: [descripcion]
-Documentacion actualizada: SI/NO
+### Cierre de la firma (regulatorio o voluntario)
+→ Retirar capital inmediatamente si es posible
+→ Documentar fondos en riesgo
+→ Activar firm alternativa con estrategias equivalentes
+→ No depositar nuevo capital en esa firm
 
 ---
 
-## Protocolo de emergencia — Nivel 1
+## CAMBIOS IMPORTANTES — acción en próxima sesión
 
-Si se detecta cambio de nivel 1:
+### Nuevas restricciones de horario de trading
+→ Actualizar parámetros de sesión en EA (`sesion_inicio`, `sesion_fin`)
+→ Recompilar EA con nuevos valores
+→ Verificar que el cambio no invalida el backtest IS
 
-1. Pausar inmediatamente cualquier challenge
-   activo en esa prop firm.
-2. Notificar al operador con resumen del cambio
-   y estrategias afectadas.
-3. No lanzar nuevos challenges hasta revision.
-4. Evaluar si otras prop firms del portfolio
-   pueden absorber las estrategias afectadas.
-5. Si ninguna prop firm es viable:
-   las estrategias vuelven a estado "aprobada-espera"
-   hasta que el mercado de prop firms se estabilice.
+### Cambios en profit split
+→ Recalcular rentabilidad esperada del portfolio
+→ Si split cae por debajo de 70% → evaluar migrar a firm alternativa
+→ Actualizar proyecciones en `docs/project-status.md`
 
-El operador toma la decision final en nivel 1.
-En niveles 2 y 3 el sistema actua de forma autonoma.
+### Nuevos requisitos de días mínimos de trading
+→ Ajustar frecuencia mínima de la estrategia
+→ Verificar que el EA tiene suficientes señales para cumplir el nuevo mínimo
+→ Si no cumple → buscar estrategia con mayor frecuencia en databank
 
----
-
-## Prop firms alternativas pre-evaluadas
-
-Mantener siempre una lista actualizada de
-al menos 3 prop firms alternativas viables
-por si la principal queda invalidada.
-
-Lista base del proyecto:
-- FTMO (principal)
-- E8 Funding
-- The Funded Trader
-- Apex Trader Funding
-- My Forex Funds (verificar estado operativo)
-
-Si una prop firm cierra o queda invalidada:
-activar la siguiente de la lista por scoring.
-No esperar — tener la alternativa lista antes
-de que sea necesaria.
+### Cambios en el proceso de verificación / KYC
+→ Completar el nuevo proceso antes del próximo retiro
+→ No afecta cuentas activas — acción no urgente
 
 ---
 
-## Lo que esta skill NUNCA hace
+## HISTORIAL DE CAMBIOS CONOCIDOS FTMO 2026
 
-NUNCA ignora un cambio de reglas porque
-"probablemente no afecte a nuestras estrategias".
-NUNCA continua challenges activos tras
-detectar un cambio de nivel 1 sin revision.
-NUNCA asume que las reglas son permanentes.
-NUNCA toma decision de nivel 1 de forma
-autonoma — siempre notifica al operador.
+| Fecha | Cambio | Clasificación | Estado |
+|-------|--------|--------------|--------|
+| Hasta 2026-04-27 | Sin cambios críticos detectados | — | OK |
+| 2026 T&C | Scaling plan: +25% cada 4 meses confirmado | INFORMATIVO | Documentado |
+| 2026 T&C | Prohibición HFT reforzada con detección automática | INFORMATIVO | Documentado |
+| 2026 T&C | Group trading detection mejorada | IMPORTANTE | Ver export-specialist.md |
 
-Las reglas cambian. El sistema se adapta.
-Los numeros siguen decidiendo.
+**Próxima revisión programada:** primera sesión de cada semana.
+
+---
+
+## DIVERSIFICACIÓN COMO PROTECCIÓN
+
+### Regla de concentración máxima
+**Nunca más del 30% del capital total en una sola firma.**
+
+Con 3 firms activas en Capa 3+:
+- FTMO: 40% del capital (máximo permitido por excepción si es la única activa)
+- E8 Funding: 30% del capital
+- TFT o alternativa: 30% del capital
+
+Si una firma cierra sin aviso → máximo 40% del capital en riesgo.
+El sistema continúa operativo con las otras firms.
+
+### Plan de activación de firm alternativa
+Mantener siempre una estrategia aprobada lista para desplegarse
+en una segunda firm. Tiempo de activación objetivo: < 48h.
+
+1. Estrategia aprobada en databank con WFO aprobado
+2. EA compilado y probado en demo
+3. Cuenta de la firm alternativa creada (aunque no activa)
+4. Proceso de challenge conocido y documentado
+
+### Firms priorizadas por tipo de activo
+
+| Firm | Activos principales | DD permitido | Estado |
+|------|--------------------|--------------|----- --|
+| FTMO 2-Step | Forex + Metales + Índices | 10% dinámico | PRINCIPAL |
+| E8 Funding | Forex + Metales | 8% estático | ALTERNATIVA |
+| TFT | Forex + Metales + Índices | 6% dinámico | ALTERNATIVA |
+| Apex | Futuros CME | Variable | PENDIENTE datos |
+| MFF | Futuros CME | Variable | PENDIENTE datos |
+
+---
+
+## CHECKLIST DE REVISIÓN SEMANAL
+
+Ejecutar cada lunes al inicio de sesión:
+
+- [ ] Hash check T&C FTMO — ¿hubo cambios?
+- [ ] Hash check T&C E8/TFT — ¿hubo cambios?
+- [ ] Verificar que ninguna cuenta está cerca del límite de DD
+- [ ] Verificar que los EAs siguen activos en VPS
+- [ ] Revisar noticias del sector (Twitter/X: @FTMO_com, foros prop trading)
+- [ ] Si hay cambio detectado → clasificar y actuar según protocolo
+
+---
+
+## RELACIÓN CON OTROS AGENTES Y SKILLS
+
+- `agents/propfirm-regulatory-watcher.md` — automatiza el hash check
+- `agents/propfirm-compliance-officer.md` — verifica compliance continuo
+- `agents/propfirm-analyst.md` — compara firms para nuevas estrategias
+- `skill-ftmo-rules.md` — reglas FTMO vigentes documentadas
+- `skill-propfirms-comparison.md` — comparativa detallada de firms
