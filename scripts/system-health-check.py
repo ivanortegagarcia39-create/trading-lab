@@ -217,7 +217,7 @@ def check_git():
 # ─── 8. Scripts importables ────────────────────────────────────────────────
 
 def check_scripts():
-    print("\n[8] Scripts Python (importacion)")
+    print("\n[8] Scripts Python (sintaxis)")
     scripts_dir = ROOT / "scripts"
     py_files = sorted(scripts_dir.glob("*.py"))
     errors = []
@@ -226,7 +226,7 @@ def check_scripts():
             continue
         try:
             result = subprocess.run(
-                [sys.executable, "-c", f"import ast; ast.parse(open(r'{f}').read())"],
+                [sys.executable, "-m", "py_compile", str(f)],
                 capture_output=True, timeout=10
             )
             if result.returncode != 0:
