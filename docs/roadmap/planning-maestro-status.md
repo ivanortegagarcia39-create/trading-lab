@@ -1,6 +1,6 @@
 # Planning Maestro — Estado de Implementacion
 
-Ultima actualizacion: 2026-04-26
+Ultima actualizacion: 2026-04-27
 
 ---
 
@@ -11,8 +11,8 @@ Ultima actualizacion: 2026-04-26
 | Fase 0 | Cimientos | 6 | 6 | COMPLETA |
 | Fase 1 | Pipeline core | 45 | 45 | COMPLETA |
 | Fase 2 | Multi-activo y prop firms | 22 | 22 | COMPLETA |
-| Fase 3 | Inteligencia y aprendizaje | 10 | 16 | EN CURSO |
-| Fase 4 | Produccion y monitoreo | 8 | 14 | EN CURSO |
+| Fase 3 | Inteligencia y aprendizaje | 11 | 16 | EN CURSO |
+| Fase 4 | Produccion y monitoreo | 13 | 14 | EN CURSO |
 | Fase 5 | VPS y despliegue real | 0 | 6 | PENDIENTE (VPS) |
 | Fase 6 | Portfolio multi-estrategia | 0 | 9 | PENDIENTE (5 estrategias) |
 | Fase 7 | Auditoria y compliance | 3 | 3 | COMPLETA |
@@ -20,7 +20,7 @@ Ultima actualizacion: 2026-04-26
 | Fase 9 | Scaling y funded | 0 | 7 | PENDIENTE (3 estrategias) |
 | Fase 10 | Infraestructura avanzada | 16 | 16 | COMPLETA |
 
-**Total completadas: 131 / 156 tareas documentadas**
+**Total completadas: 142 / 156 tareas documentadas**
 
 ---
 
@@ -93,6 +93,7 @@ Todos los agentes y skills del pipeline principal:
 - [x] docs/skills/skill-news-filter.md
 - [x] docs/skills/skill-stress-test.md
 - [x] docs/skills/skill-system-metrics.md (entropia Shannon añadida)
+- [x] scripts/strategy-analyzer.py — analisis detallado con EvalGate, swaps y Ollama
 
 ### Pendientes — requieren hardware/infraestructura
 - [ ] Integracion Ollama en produccion (requiere VPS o maquina local dedicada)
@@ -115,6 +116,11 @@ Todos los agentes y skills del pipeline principal:
 - [x] scripts/ftmo-timezone-sync.mq5
 - [x] .github/workflows/validate-skills.yml
 - [x] .github/workflows/pipeline-check.yml
+
+- [x] scripts/telegram-notifier.py — notificaciones centralizadas por nivel
+- [x] scripts/ftmo-dd-calculator.py — simulacion DD diario/total con timezone Prague
+- [x] scripts/portfolio-monitor.py — monitoreo portfolio con alertas Telegram
+- [x] docs/skills/skill-challenge-tracker.md — semaforo y protocolo challenge FTMO
 
 ### Pendientes — requieren VPS o produccion activa
 - [ ] Telegram bot activo (requiere token y chat_id configurados)
@@ -237,6 +243,13 @@ Requiere al menos 3 estrategias pasando challenges.
 - [x] docs/skills/skill-mt5-deployment.md — deployment EAs MT5
 - [x] results/README.md — inventario de archivos de resultados
 - [x] dashboard.md — pipeline table + builds historicos
+- [x] config/pipeline-config.json — umbrales numericos centralizados de todas las puertas
+- [x] docs/skills/skill-mql5-coding.md — estandares de codigo MQL5
+- [x] docs/skills/skill-vps-setup.md — guia de configuracion VPS Windows
+- [x] docs/skills/skill-telegram-setup.md — configuracion bot Telegram
+- [x] docs/skills/skill-obsidian-workflow.md — flujo diario y semanal en Obsidian
+- [x] templates/challenge-daily-log.md — log diario de challenge FTMO con semaforo
+- [x] templates/weekly-pipeline-review.md — revision semanal del pipeline completo
 
 ### Pendientes — requieren hardware/infraestructura
 - [ ] N8N instalado y configurado (requiere servidor)

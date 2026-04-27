@@ -111,6 +111,28 @@ WHERE file.name = "lessons-learned"
 
 ---
 
+## Archivos de Configuracion
+
+| Archivo | Proposito |
+|---------|-----------|
+| config/build-defaults.json | Spreads, slippage, swaps por activo |
+| config/pipeline-config.json | Umbrales numericos de todas las puertas |
+| config/telegram-config.json | Credenciales Telegram (no en git) |
+
+---
+
+## Templates Disponibles
+
+| Template | Uso |
+|----------|-----|
+| templates/build-report.md | Resultado de cada build SQ |
+| templates/strategy-evaluation.md | Evaluacion individual de estrategia |
+| templates/daily-review.md | Revision diaria del sistema |
+| templates/challenge-daily-log.md | Log diario de challenge FTMO |
+| templates/weekly-pipeline-review.md | Revision semanal del pipeline |
+
+---
+
 ## Pendiente de Hardware
 
 | Tarea | Requiere | Fase |
