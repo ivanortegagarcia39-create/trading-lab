@@ -112,15 +112,17 @@ def _structural_lessons() -> list[str]:
         if not line.strip().startswith("### LECCION-"):
             continue
         title = line.strip().lstrip("#").strip()
-        # 3. Buscar "Estado:" en las siguientes 20 líneas
-        estado = None
-        for j in range(1, min(21, len(history) - i)):
+        # 3. Buscar "Ocurrencias confirmadas:" en las siguientes 30 líneas
+        is_structural = False
+        for j in range(1, min(31, len(history) - i)):
             candidate = history[i + j].strip()
-            if candidate.lower().startswith("estado:"):
-                estado = candidate.split(":", 1)[1].strip().upper()
+            if candidate.lower().startswith("ocurrencias confirmadas:"):
+                value = candidate.upper()
+                if "ESTRUCTURAL" in value or "PERMANENTE" in value:
+                    is_structural = True
                 break
-        # 4. Incluir solo ESTRUCTURAL o PERMANENTE
-        if estado in ("ESTRUCTURAL", "PERMANENTE"):
+        # 4. Incluir solo lecciones estructurales o permanentes
+        if is_structural:
             lessons.append(title)
 
     return lessons[:5]
