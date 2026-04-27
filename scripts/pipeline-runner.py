@@ -28,6 +28,16 @@ SCRIPTS_DIR = Path(__file__).parent
 RESULTS_DIR = Path("results")
 
 
+def _notify(level: str, message: str):
+    notifier = SCRIPTS_DIR / "telegram-notifier.py"
+    if not notifier.exists():
+        return
+    subprocess.run(
+        [sys.executable, str(notifier), "--level", level, "--message", message],
+        capture_output=True
+    )
+
+
 def run(cmd, step_name, critical=True):
     """Ejecuta un subcomando y devuelve (exit_code, stdout, stderr)."""
     print(f"\n[STEP] {step_name}")
@@ -208,6 +218,8 @@ def main():
     print(f"PIPELINE RUNNER — Build {args.build} | {args.activo} {args.timeframe}")
     print(f"{'='*50}")
 
+    _notify("INFO", f"Pipeline iniciado. Build {args.build}, activo {args.activo} {args.timeframe}")
+
     # Verificar que hay CSVs
     n_csvs = count_csvs(results_folder)
     if n_csvs == 0:
@@ -235,8 +247,10 @@ def main():
         print("       - Spread backtest_sucio = 2x spread real FTMO?")
         print("       - Datos IS suficientes (2003-2020)?")
         print("       - Filtros SQ demasiado restrictivos?")
+        _notify("WARNING", "0 estrategias pasan EvalGate. Revisar configuracion del Builder.")
         sys.exit(1)
 
+    _notify("INFO", f"EvalGate completado: {pasan} estrategias pasan de {gate_data.get('total', 0)}.")
     print(f"\n[INFO]  {pasan} estrategias pasan el EvalGate — continuando pipeline.")
 
     # PASO 2 — Portfolio Builder
@@ -249,6 +263,8 @@ def main():
     )
 
     portfolio_data = load_json(portfolio_json)
+    port_n_step2 = portfolio_data.get("metricas_portfolio", {}).get("estrategias", 0)
+    _notify("INFO", f"Portfolio construido: {port_n_step2} estrategias seleccionadas.")
 
     # PASO 3 — Build Analyzer (Ollama opcional — no critico)
     analysis_path = results_folder / f"build-{args.build}-analysis.md"
@@ -305,6 +321,8 @@ def main():
     print(f"EvalGate:    {pasan}/{gate_data.get('total',0)} pasan ({gate_data.get('tasa_aprobacion_pct',0)}%)")
     print(f"Portfolio:   {port_n} estrategias — {port_estado}")
     print(f"Informe:     {report_path}")
+
+    _notify("INFO", f"Pipeline completado. Ver results/pipeline-report-{fecha_str}.md")
 
     if port_n >= min_strat:
         print(f"\nSIGUIENTE PASO: Ejecutar Retester en SQ con las {pasan} estrategias.")
