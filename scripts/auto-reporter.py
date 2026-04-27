@@ -93,25 +93,35 @@ def _portfolio_metrics() -> dict:
 
 def _structural_lessons() -> list[str]:
     text = _read_text(ROOT / "docs" / "lessons-learned.md")
+    lines = text.splitlines()
+
+    # 1. Encontrar la sección "## HISTORIAL DE LECCIONES"
+    start_idx = None
+    for i, line in enumerate(lines):
+        if line.strip().startswith("## HISTORIAL DE LECCIONES"):
+            start_idx = i + 1
+            break
+
+    if start_idx is None:
+        return []
+
+    # 2. Buscar lecciones a partir de esa sección
     lessons = []
-    current_title = None
-    current_estado = None
-
-    for line in text.splitlines():
-        stripped = line.strip()
-        if stripped.startswith("### LECCION-"):
-            # Guardar la leccion anterior si era estructural
-            if current_title and current_estado in ("ESTRUCTURAL", "PERMANENTE"):
-                lessons.append(current_title)
-            # Extraer titulo: "### LECCION-001: M15 con comisiones..."
-            current_title = stripped.lstrip("#").strip()
-            current_estado = None
-        elif current_title and stripped.lower().startswith("estado:"):
-            current_estado = stripped.split(":", 1)[1].strip().upper()
-
-    # Capturar la ultima leccion del archivo
-    if current_title and current_estado in ("ESTRUCTURAL", "PERMANENTE"):
-        lessons.append(current_title)
+    history = lines[start_idx:]
+    for i, line in enumerate(history):
+        if not line.strip().startswith("### LECCION-"):
+            continue
+        title = line.strip().lstrip("#").strip()
+        # 3. Buscar "Estado:" en las siguientes 20 líneas
+        estado = None
+        for j in range(1, min(21, len(history) - i)):
+            candidate = history[i + j].strip()
+            if candidate.lower().startswith("estado:"):
+                estado = candidate.split(":", 1)[1].strip().upper()
+                break
+        # 4. Incluir solo ESTRUCTURAL o PERMANENTE
+        if estado in ("ESTRUCTURAL", "PERMANENTE"):
+            lessons.append(title)
 
     return lessons[:5]
 
