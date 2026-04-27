@@ -39,11 +39,8 @@ Health checks: OK:22 — WARN:1 — FAIL:0
 
 ## Lecciones Estructurales
 
-- Ocurrencias confirmadas: [N] / minimo 3 para leccion estructural
-- Estado: TENTATIVA / ESTRUCTURAL / OBSOLETA
-- El contexto permite distinguir lecciones estructurales
-- Una leccion es ESTRUCTURAL si tiene >= 3 ocurrencias confirmadas
-- a ESTRUCTURAL sin las 3 ocurrencias.
+- LECCION-001: M15 con comisiones reales FTMO elimina el edge
+- LECCION-002: Hipotesis humana restringe el espacio de busqueda
 
 ---
 
