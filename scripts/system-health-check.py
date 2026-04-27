@@ -113,9 +113,13 @@ def check_telegram():
             _record("  token configurado", "WARN", "token aun es placeholder")
             return
 
+        import ssl
         import urllib.request
+        ctx = ssl.create_default_context()
+        ctx.check_hostname = False
+        ctx.verify_mode = ssl.CERT_NONE
         url = f"https://api.telegram.org/bot{token}/getMe"
-        with urllib.request.urlopen(url, timeout=5) as resp:
+        with urllib.request.urlopen(url, timeout=5, context=ctx) as resp:
             data = json.loads(resp.read().decode())
             if data.get("ok"):
                 username = data["result"].get("username", "?")
