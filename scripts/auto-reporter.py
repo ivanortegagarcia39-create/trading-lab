@@ -94,14 +94,26 @@ def _portfolio_metrics() -> dict:
 def _structural_lessons() -> list[str]:
     text = _read_text(ROOT / "docs" / "lessons-learned.md")
     lessons = []
+    current_title = None
+    current_estado = None
+
     for line in text.splitlines():
-        if "ESTRUCTURAL" in line.upper():
-            clean = line.strip().lstrip("| -#").strip()
-            if clean:
-                lessons.append(clean[:100])
-        if len(lessons) >= 5:
-            break
-    return lessons
+        stripped = line.strip()
+        if stripped.startswith("### LECCION-"):
+            # Guardar la leccion anterior si era estructural
+            if current_title and current_estado in ("ESTRUCTURAL", "PERMANENTE"):
+                lessons.append(current_title)
+            # Extraer titulo: "### LECCION-001: M15 con comisiones..."
+            current_title = stripped.lstrip("#").strip()
+            current_estado = None
+        elif current_title and stripped.lower().startswith("estado:"):
+            current_estado = stripped.split(":", 1)[1].strip().upper()
+
+    # Capturar la ultima leccion del archivo
+    if current_title and current_estado in ("ESTRUCTURAL", "PERMANENTE"):
+        lessons.append(current_title)
+
+    return lessons[:5]
 
 
 # ── 4. Progreso del planning maestro ──────────────────────────────────────
