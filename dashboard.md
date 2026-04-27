@@ -133,14 +133,53 @@ WHERE file.name = "lessons-learned"
 
 ---
 
+## Estado de Scripts Python
+Todos los scripts probados y operativos en ivano (2026-04-27):
+
+| Script | Estado | Dependencias |
+|--------|--------|-------------|
+| pre-build-checklist.py | OK | pandas, pytz |
+| evaluator-assistant.py | OK | pandas |
+| portfolio-builder.py | OK | pandas, numpy |
+| pipeline-runner.py | OK | pandas |
+| build-analyzer.py | OK | pandas |
+| hash-logger.py | OK | hashlib |
+| strategy-versioning.py | OK | json |
+| knowledge-base.py | OK | chromadb |
+| telegram-notifier.py | OK | requests |
+| lessons-analyzer.py | OK | re |
+| hrp-portfolio.py | OK | numpy |
+| strategy-fingerprint.py | OK | xml, hashlib |
+| inflation-diagnostic.py | OK | pandas |
+| coordination-detector.py | OK | json |
+| sqx-build-config.py | OK | json, pytz |
+| market-regime-snapshot.py | OK | pandas, numpy |
+| validate-sqx-folder.py | OK | pandas |
+| mql5-auditor.py | OK | re |
+| sq-watchdog.py | OK | subprocess |
+| vps-health-monitor.py | OK | subprocess |
+| ftmo-dd-calculator.py | OK | pandas, pytz |
+| strategy-analyzer.py | OK | pandas |
+| portfolio-monitor.py | OK | pandas |
+| system-health-check.py | OK | subprocess |
+| session-starter.py | OK | subprocess |
+
+---
+
+## Telegram Bot
+
+- Bot: @tradinglab_monitor_bot
+- Estado: Activo
+- Notificaciones: INFO / WARNING / CRITICAL
+
+---
+
 ## Pendiente de Hardware
 
 | Tarea | Requiere | Fase |
 |-------|----------|------|
 | Instalar Ollama | alber encendido | Fase 3 |
 | Instalar ChromaDB | alber encendido | Fase 3 |
-| Relanzar Build 10 con spread 60 pips | SQ en alber | Inmediato |
-| Reparar repo alber | alber encendido | Inmediato |
-| Contratar VPS MT5 | Tarjeta de crédito | Fase 5 |
-| Crear bot Telegram | Cuenta Telegram | Fase 4 |
+| Lanzar Build 11 con spread 60 pips | SQ en alber | Inmediato |
+| Contratar VPS MT5 | Tarjeta de credito | Fase 5 |
 | Instalar N8N | alber + 5 estrategias | Fase 6 |

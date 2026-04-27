@@ -41,23 +41,27 @@ Con el enfoque actual SQ decide la logica. Los numeros deciden que avanza.
 
 ## 2. ESTADO ACTUAL
 
-**Fecha:** 2026-04-22
-**Situacion:** Fases 0, 1, 2, 3 y 4 completadas desde ivano.
-Build 10 corriendo en alber (relanzado tras apagon).
-2 estrategias en databank Build 10 a las 23h de build.
-DD de mejor estrategia: 57.99% — spread actual 30 pips
-(pendiente corregir a 60 pips en proximo build).
-Proximos pasos: Fase 5 (VPS), Fase 6 (N8N), reparar alber.
-Planning maestro de 186 tareas activo.
+**Fecha:** 2026-04-27
+**Situacion:** Build 10 completado (4+ dias corriendo en alber).
+Build 11 pendiente de lanzar en alber con spread corregido a 60 pips.
+Scripts Python operativos y probados en ivano.
+Telegram bot activo (@tradinglab_monitor_bot).
+ChromaDB indexado con 90 chunks.
+Planning maestro: ~145/156 tareas completadas.
+Proxima accion: lanzar Build 11 en alber con spread 60 pips.
 
 ### Planning Maestro
 
 | Metrica | Valor |
 |---------|-------|
-| Total tareas | 186 |
-| Fase 0 | COMPLETADA |
-| Fase 1 | EN CURSO |
-| Fases 2-10 | PENDIENTES |
+| Total tareas | 156 |
+| Completadas | ~145 |
+| Fase 0 | COMPLETA |
+| Fases 1-2 | COMPLETAS |
+| Fases 3-4 | EN CURSO |
+| Fases 5-6 | PENDIENTES (requieren VPS + estrategia aprobada) |
+| Fase 7 | COMPLETA |
+| Fase 10 | EN CURSO |
 
 ### Documentacion base
 
@@ -543,8 +547,8 @@ Detalle en: docs\roadmap-v2.md
 
 ## 14. SIGUIENTE ACCION CONCRETA
 
-**Estado:** CICLO 1 EN CURSO — Build 9 XAUUSD configurado. Fase: build-pending.
-**Proximo hito:** Humano lanza Builder en SQ. Dejar correr 48 horas minimo.
+**Estado:** Build 10 completado. Build 11 pendiente con spread corregido a 60 pips.
+**Proximo hito:** Lanzar Build 11 en alber (XAUUSD H1, spread 60 pips). Dejar correr 48 horas.
 
 ### Paso 1 — Verificar datos disponibles en SQ
 1. data-manager verifica que activos tienen datos M1 disponibles en SQ
