@@ -1,0 +1,125 @@
+{
+  "timestamp": "2026-04-27T13:43:08.159544",
+  "checks": [
+    {
+      "check": "  pandas",
+      "status": "OK",
+      "detail": ""
+    },
+    {
+      "check": "  numpy",
+      "status": "OK",
+      "detail": ""
+    },
+    {
+      "check": "  pytz",
+      "status": "OK",
+      "detail": ""
+    },
+    {
+      "check": "  requests",
+      "status": "OK",
+      "detail": ""
+    },
+    {
+      "check": "  chromadb (opcional)",
+      "status": "OK",
+      "detail": ""
+    },
+    {
+      "check": "  agents/",
+      "status": "OK",
+      "detail": ""
+    },
+    {
+      "check": "  docs/skills/",
+      "status": "OK",
+      "detail": ""
+    },
+    {
+      "check": "  scripts/",
+      "status": "OK",
+      "detail": ""
+    },
+    {
+      "check": "  config/",
+      "status": "OK",
+      "detail": ""
+    },
+    {
+      "check": "  results/",
+      "status": "OK",
+      "detail": ""
+    },
+    {
+      "check": "  templates/",
+      "status": "OK",
+      "detail": ""
+    },
+    {
+      "check": "  CLAUDE.md",
+      "status": "OK",
+      "detail": ""
+    },
+    {
+      "check": "  config/pipeline-config.json",
+      "status": "OK",
+      "detail": ""
+    },
+    {
+      "check": "  config/build-defaults.json",
+      "status": "OK",
+      "detail": ""
+    },
+    {
+      "check": "  config/telegram-config.json",
+      "status": "OK",
+      "detail": ""
+    },
+    {
+      "check": "  bot responde ping",
+      "status": "WARN",
+      "detail": "sin conexion o timeout: <urlopen error [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: self-signed certificate in certificate chain (_ssl.c:1032)>"
+    },
+    {
+      "check": "  .chromadb/",
+      "status": "OK",
+      "detail": ""
+    },
+    {
+      "check": "  datos indexados",
+      "status": "OK",
+      "detail": "90 chunks en 1 colecciones"
+    },
+    {
+      "check": "  results/pipeline.lock",
+      "status": "OK",
+      "detail": "sin lock activo"
+    },
+    {
+      "check": "  git repo",
+      "status": "OK",
+      "detail": ""
+    },
+    {
+      "check": "  working tree",
+      "status": "WARN",
+      "detail": "2 archivo(s) sin commitear"
+    },
+    {
+      "check": "  sincronizado con origin/main",
+      "status": "OK",
+      "detail": ""
+    },
+    {
+      "check": "  27 scripts",
+      "status": "FAIL",
+      "detail": "errores de sintaxis: telegram-notifier.py"
+    }
+  ],
+  "summary": {
+    "ok": 20,
+    "warn": 2,
+    "fail": 1
+  }
+}
