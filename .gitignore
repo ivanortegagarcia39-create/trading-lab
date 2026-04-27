@@ -13,5 +13,11 @@ results/session-memory.json
 
 # Backups de configuracion SQ (pueden contener datos sensibles)
 backups/sq_configs/
-.obsidian/ 
-.claude/settings.local.json 
+.obsidian/
+.claude/settings.local.json
+
+# Credenciales y configs sensibles
+config/telegram-config.json
+config/*.secret
+*.env
+heartbeat.txt
