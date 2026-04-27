@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-04-27T13:43:08.159544",
+  "timestamp": "2026-04-27T13:57:39.928905",
   "checks": [
     {
       "check": "  pandas",
@@ -78,8 +78,8 @@
     },
     {
       "check": "  bot responde ping",
-      "status": "WARN",
-      "detail": "sin conexion o timeout: <urlopen error [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: self-signed certificate in certificate chain (_ssl.c:1032)>"
+      "status": "OK",
+      "detail": "@tradinglab_monitor_bot"
     },
     {
       "check": "  .chromadb/",
@@ -104,7 +104,7 @@
     {
       "check": "  working tree",
       "status": "WARN",
-      "detail": "2 archivo(s) sin commitear"
+      "detail": "1 archivo(s) sin commitear"
     },
     {
       "check": "  sincronizado con origin/main",
@@ -113,13 +113,13 @@
     },
     {
       "check": "  27 scripts",
-      "status": "FAIL",
-      "detail": "errores de sintaxis: telegram-notifier.py"
+      "status": "OK",
+      "detail": "sin errores de sintaxis"
     }
   ],
   "summary": {
-    "ok": 20,
-    "warn": 2,
-    "fail": 1
+    "ok": 22,
+    "warn": 1,
+    "fail": 0
   }
 }
