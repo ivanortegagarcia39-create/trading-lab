@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-04-28T21:18:00.696548",
+  "timestamp": "2026-04-29T00:08:55.295580",
   "checks": [
     {
       "check": "  pandas",
@@ -103,8 +103,8 @@
     },
     {
       "check": "  working tree",
-      "status": "OK",
-      "detail": "limpio"
+      "status": "WARN",
+      "detail": "2 archivo(s) sin commitear"
     },
     {
       "check": "  sincronizado con origin/main",
@@ -112,14 +112,14 @@
       "detail": ""
     },
     {
-      "check": "  43 scripts",
+      "check": "  53 scripts",
       "status": "OK",
       "detail": "sin errores de sintaxis"
     }
   ],
   "summary": {
-    "ok": 23,
-    "warn": 0,
+    "ok": 22,
+    "warn": 1,
     "fail": 0
   }
 }
