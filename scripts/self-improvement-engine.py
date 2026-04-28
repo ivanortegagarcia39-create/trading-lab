@@ -199,6 +199,52 @@ def run_cycle(dry_run: bool = False) -> dict:
     else:
         print("      internal-critic.py no encontrado — omitido")
 
+    # PASO 2e: PropFirm monitor
+    print("\n[2e/7] Verificando cambios en T&C de prop firms...")
+    propfirm_mon = ROOT / "scripts" / "propfirm-monitor.py"
+    if propfirm_mon.exists():
+        pf_out = _run([PYTHON, str(propfirm_mon), "--check", "--dry-run"], dry_run=False)
+        if pf_out:
+            for line in pf_out.split("\n")[:6]:
+                if line.strip():
+                    print(f"      {line.strip()}")
+            if "CRÍTICO" in pf_out:
+                summary.setdefault("alerts", []).append("CAMBIO CRÍTICO en T&C de prop firm — revisar urgente")
+            elif "IMPORTANTE" in pf_out:
+                summary.setdefault("alerts", []).append("Cambio IMPORTANTE en T&C de prop firm")
+    else:
+        print("      propfirm-monitor.py no encontrado — omitido")
+
+    # PASO 2f: Actualizar Thompson Sampling con builds de la semana
+    print("\n[2f/7] Actualizando Thompson Sampling con resultados recientes...")
+    thompson = ROOT / "scripts" / "thompson-sampling.py"
+    thompson_updates = 0
+    if thompson.exists():
+        # Leer builds completados en el audit trail de la semana
+        build_outcomes = [e for e in recent_entries
+                          if e.get("event") == "build_completed" and "activo" in e]
+        if build_outcomes:
+            for build in build_outcomes:
+                activo  = build.get("activo", "")
+                tf      = build.get("tf", "H1")
+                success = str(build.get("success", False)).lower()
+                if activo:
+                    _run([PYTHON, str(thompson), "--update-asset", activo, tf, success], dry_run)
+                    thompson_updates += 1
+            print(f"      {thompson_updates} builds actualizados en Thompson Sampling")
+        else:
+            print("      Sin builds completados esta semana en el audit trail")
+        # También actualizar estrategias activas si hay resultados semanales
+        strategy_outcomes = [e for e in recent_entries
+                             if e.get("event") == "strategy_weekly_result" and "strategy_id" in e]
+        for so in strategy_outcomes:
+            sid     = so["strategy_id"]
+            success = str(so.get("success", False)).lower()
+            _run([PYTHON, str(thompson), "--update-strategy", sid, success], dry_run)
+    else:
+        print("      thompson-sampling.py no encontrado — omitido")
+    summary["thompson_updates"] = thompson_updates
+
     # PASO 3: Verificar si hay suficientes ejemplos para recompilar
     print("\n[3/7] Verificando estado de compilación DSPy...")
     stats_out = _run([PYTHON, str(dspy_opt), "--stats"], dry_run=False)

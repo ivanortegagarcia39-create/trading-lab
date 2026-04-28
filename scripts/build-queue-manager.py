@@ -11,6 +11,7 @@ Uso:
 
 import argparse
 import json
+import subprocess
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -90,17 +91,62 @@ def cmd_list(queue: list) -> None:
     print()
 
 
+def _thompson_suggestion(queue: list) -> dict | None:
+    """Consulta Thompson Sampling si hay datos suficientes."""
+    thompson = ROOT / "scripts" / "thompson-sampling.py"
+    if not thompson.exists():
+        return None
+    # Activos en curso o completados (excluir de sugerencia)
+    in_progress = [q["activo"] for q in queue if q["estado"] in ("EN_CURSO", "COMPLETADO")]
+    cmd = [sys.executable, str(thompson), "--next-asset"]
+    for a in in_progress:
+        cmd.extend(["--exclude", a])
+    try:
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
+        if result.returncode != 0 or not result.stdout:
+            return None
+        # Parsear salida: "Próximo activo sugerido: XAUUSD (H1)"
+        for line in result.stdout.splitlines():
+            if "sugerido:" in line and "None" not in line:
+                parts = line.split("sugerido:")[-1].strip().split()
+                if parts:
+                    activo = parts[0]
+                    method = "fifo"
+                    for l2 in result.stdout.splitlines():
+                        if "Método:" in l2:
+                            method = l2.split("Método:")[-1].strip()
+                    return {"activo": activo, "method": method, "raw": result.stdout.strip()}
+    except Exception:
+        pass
+    return None
+
+
 def cmd_next(queue: list) -> None:
-    activo = next(
+    # Intentar Thompson Sampling primero
+    thompson_result = _thompson_suggestion(queue)
+
+    # Activo según cola FIFO
+    fifo_activo = next(
         (q for q in queue if q["estado"] in ("PENDIENTE", "EN_CURSO")),
         None
     )
-    if not activo:
+    if not fifo_activo:
         print("Cola vacía — no hay builds pendientes.")
         return
 
-    print(f"\nPróximo build: {activo['activo']}")
-    print(f"{'='*40}")
+    # Seleccionar activo: Thompson si está disponible y usó método thompson
+    if thompson_result and thompson_result.get("method") == "thompson":
+        # Buscar en la cola el activo sugerido por Thompson
+        suggested = thompson_result["activo"].upper()
+        activo = next((q for q in queue if q["activo"] == suggested
+                       and q["estado"] in ("PENDIENTE", "EN_CURSO")), fifo_activo)
+        source = f"Thompson Sampling ({thompson_result['method']})"
+    else:
+        activo = fifo_activo
+        source = "FIFO (datos insuficientes para Thompson)"
+
+    print(f"\nPróximo build: {activo['activo']}  [Fuente: {source}]")
+    print(f"{'='*50}")
     print(f"Activo   : {activo['activo']}")
     print(f"TF       : {activo.get('tf', 'H1')}")
     print(f"Score    : {activo.get('score') or 'TBD'}")
