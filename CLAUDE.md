@@ -1,11 +1,14 @@
 # CLAUDE.md — Constitucion del Proyecto TradingLab
 
-## Estado Actual (2026-04-26)
-- Fase: Capa 0 activa
-- Build activo: Build 10 — XAUUSD H1 (alber)
-- Planning maestro: ~120/186 tareas completadas
-- Estrategias en produccion: 0
-- Proximo hito: Primera estrategia aprobada por WFO
+## Estado Actual (2026-04-29)
+- Fase: Capa 0 activa — Sistema v8.0 completo
+- Build activo: Build 11 PENDIENTE en alber (spread 60 pips)
+- Planning maestro: ~185/205 tareas completadas
+- Scripts Python operativos: 55 (todos probados)
+- Autoaprendizaje: Knowledge Graph + DSPy + Bayesian + Drift + Champion-Challenger
+- Telegram bot: @tradinglab_monitor_bot activo
+- ChromaDB: 909 chunks indexados
+- Proximo hito: Primera estrategia aprobada por WFO (Build 11)
 
 ### Contexto para esta sesion
 - Documentacion completa en agents/ y docs/skills/

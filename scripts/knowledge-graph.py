@@ -321,6 +321,35 @@ def add_lesson(lesson_data: dict, db_path: Path = DB_PATH) -> None:
         )
 
 
+def add_criterion(criterion_data: dict, db_path: Path = DB_PATH) -> None:
+    db   = _get_db(db_path)
+    conn = kuzu.Connection(db)
+
+    cid    = str(criterion_data.get("criterion_id", ""))
+    params = {
+        "cid":     cid,
+        "nombre":  str(criterion_data.get("nombre", cid)),
+        "umbral":  float(criterion_data.get("umbral_actual", 0.0)),
+        "inicial": float(criterion_data.get("umbral_inicial", 0.0)),
+        "fecha":   str(criterion_data.get("ultima_actualizacion",
+                       datetime.now().strftime("%Y-%m-%d"))),
+    }
+    try:
+        conn.execute(
+            "CREATE (:Criterion {criterion_id: $cid, nombre: $nombre, "
+            "umbral_actual: $umbral, umbral_inicial: $inicial, "
+            "ultima_actualizacion: $fecha})",
+            params
+        )
+    except Exception:
+        conn.execute(
+            "MATCH (c:Criterion {criterion_id: $cid}) "
+            "SET c.nombre=$nombre, c.umbral_actual=$umbral, "
+            "c.umbral_inicial=$inicial, c.ultima_actualizacion=$fecha",
+            params
+        )
+
+
 def add_live_outcome(strategy_id: str, outcome_data: dict,
                      db_path: Path = DB_PATH) -> None:
     db   = _get_db(db_path)

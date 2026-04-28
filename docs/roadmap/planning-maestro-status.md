@@ -1,6 +1,6 @@
 # Planning Maestro — Estado de Implementacion
 
-Ultima actualizacion: 2026-04-27
+Ultima actualizacion: 2026-04-29
 
 ---
 
@@ -11,16 +11,16 @@ Ultima actualizacion: 2026-04-27
 | Fase 0 | Cimientos | 6 | 6 | COMPLETA |
 | Fase 1 | Pipeline core | 45 | 45 | COMPLETA |
 | Fase 2 | Multi-activo y prop firms | 22 | 22 | COMPLETA |
-| Fase 3 | Inteligencia y aprendizaje | 24 | 29 | EN CURSO |
-| Fase 4 | Produccion y monitoreo | 17 | 18 | EN CURSO |
+| Fase 3 | Inteligencia y aprendizaje | 46 | 51 | EN CURSO |
+| Fase 4 | Produccion y monitoreo | 18 | 19 | EN CURSO |
 | Fase 5 | VPS y despliegue real | 0 | 6 | PENDIENTE (VPS) |
 | Fase 6 | Portfolio multi-estrategia | 0 | 9 | PENDIENTE (5 estrategias) |
 | Fase 7 | Auditoria y compliance | 3 | 3 | COMPLETA |
-| Fase 8 | Optimizacion en produccion | 0 | 12 | PENDIENTE (produccion) |
+| Fase 8 | Optimizacion en produccion | 1 | 13 | EN CURSO |
 | Fase 9 | Scaling y funded | 0 | 7 | PENDIENTE (3 estrategias) |
 | Fase 10 | Infraestructura avanzada | 26 | 26 | COMPLETA |
 
-**Total completadas: 163 / 183 tareas documentadas**
+**Total completadas: 185 / 205 tareas documentadas**
 
 ---
 
@@ -104,6 +104,31 @@ Todos los agentes y skills del pipeline principal:
 - [x] scripts/wfo-helper.py — instrucciones WFO + checklist por ventana
 - [x] scripts/stress-tester.py — guia stress test 5 epocas criticas con tabla de resultados
 
+### Completadas v8.0 (2026-04-29)
+- [x] scripts/knowledge-graph.py — KG Kuzu con 7 nodos y 7 aristas
+- [x] scripts/kg-importer.py — importador del historial al KG (builds, estrategias, lecciones, decisiones, criterios)
+- [x] scripts/model-router.py — router de modelos DeepSeek/Kimi/GPT-5.5
+- [x] config/api-keys.json.template — template claves API
+- [x] scripts/dspy-optimizer.py — auto-optimizacion de prompts DSPy (3 modulos)
+- [x] scripts/bayesian-criteria-updater.py — actualizacion bayesiana de 5 umbrales del pipeline
+- [x] scripts/self-improvement-engine.py — ciclo semanal de autoaprendizaje (7 pasos)
+- [x] scripts/concept-drift-detector.py — BOCPD + ADDM deteccion de drift sin librerias externas
+- [x] scripts/champion-challenger.py — Shadow Mode champion vs challenger con t-test
+- [x] scripts/internal-critic.py — critico interno automatico retrospectivo
+- [x] scripts/thompson-sampling.py — seleccion optima de activos (24 activos del universo)
+- [x] scripts/propfirm-monitor.py — monitoreo T&C prop firms con clasificacion CRITICO/IMPORTANTE
+- [x] scripts/quarterly-reoptimizer.py — protocolo trimestral de deteccion de decay
+- [x] config/propfirm-rules.json — reglas FTMO/E8/BrightFunded
+- [x] scripts/challenge-demo-simulator.py — AutoDemoPipeline v3.0
+- [x] agents/challenge-verdict-generator.md — veredicto PASS/FAIL/REVIEW automatico
+- [x] agents/demo-account-factory.md — gestion cuentas demo
+- [x] docs/skills/skill-self-improvement.md — autoaprendizaje documentado
+- [x] docs/skills/skill-concept-drift.md — drift detection documentado
+- [x] docs/skills/skill-thompson-sampling.md — Thompson Sampling documentado
+- [x] docs/skills/skill-model-router.md — router modelos documentado
+- [x] docs/skills/skill-challenge-simulation.md — simulacion challenge documentado
+- [x] docs/architecture/knowledge-graph-schema.md — esquema KG documentado
+
 ### Pendientes — requieren hardware/infraestructura
 - [ ] Integracion Ollama en produccion (requiere VPS o maquina local dedicada)
 - [ ] ChromaDB en produccion (requiere instalacion pip en entorno activo)
@@ -181,11 +206,12 @@ Requiere al menos 5 estrategias aprobadas y pasando forward test.
 
 ---
 
-## Fase 8 — Optimizacion en produccion (0/12) PENDIENTE
+## Fase 8 — Optimizacion en produccion (1/13) EN CURSO
 
 Requiere produccion activa con al menos 3 meses de datos.
 
-- [ ] Protocolo de reoptimizacion trimestral activo
+- [x] scripts/quarterly-reoptimizer.py — protocolo trimestral de deteccion de decay y reoptimizacion SQ
+- [ ] Protocolo de reoptimizacion trimestral activo en produccion
 - [ ] SQ Improver configurado para reoptimizacion
 - [ ] strategy-versioning.py en uso con versiones reales
 - [ ] Rollback automatico probado en produccion

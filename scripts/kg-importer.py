@@ -134,6 +134,10 @@ def parse_lessons(text: str) -> list[dict]:
                 except ValueError:
                     pass
 
+        # Ocurrencias >= 3 → ESTRUCTURAL, independientemente del campo Estado
+        if ocurrencias >= 3:
+            estado = "ESTRUCTURAL"
+
         lessons.append({
             "lesson_id":   lid,
             "titulo":      titulo,
@@ -300,6 +304,34 @@ def main() -> int:
             print(f"  WARN: {config_file.name}: {e}")
     if not imported_config:
         print("  No se encontraron configs de build — saltando.")
+
+    # ── 6. Criterios bayesianos desde bayesian-criteria.json ─────────────────
+    print("\n[7] Importando criterios bayesianos...")
+    criteria_file = repo / "config" / "bayesian-criteria.json"
+    criteria_imported = 0
+    if criteria_file.exists():
+        try:
+            raw_criteria = json.loads(criteria_file.read_text(encoding="utf-8"))
+            for crit_name, crit_data in raw_criteria.items():
+                criterion = {
+                    "criterion_id":         crit_name,
+                    "nombre":               crit_data.get("descripcion", crit_name),
+                    "umbral_actual":        float(crit_data.get("valor_actual",
+                                                  crit_data.get("valor_inicial", 0.0))),
+                    "umbral_inicial":       float(crit_data.get("valor_inicial", 0.0)),
+                    "ultima_actualizacion": datetime.now().strftime("%Y-%m-%d"),
+                }
+                try:
+                    kg.add_criterion(criterion, db_path)
+                    nodes_created += 1
+                    criteria_imported += 1
+                except Exception as e:
+                    print(f"  WARN: criterion {crit_name}: {e}")
+            print(f"  {criteria_imported} criterios importados.")
+        except Exception as e:
+            print(f"  WARN: error leyendo bayesian-criteria.json: {e}")
+    else:
+        print(f"  WARN: {criteria_file} no encontrado — saltando.")
 
     # ── Informe final ─────────────────────────────────────────────────────────
     stats = kg.get_stats(db_path)
