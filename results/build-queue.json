@@ -1,0 +1,42 @@
+[
+  {
+    "activo": "XAUUSD",
+    "score": 80,
+    "razon": "Build 10 completado (spread 30 pips). Build 11 pendiente con spread 60 pips.",
+    "estado": "EN_CURSO",
+    "build": 11,
+    "tf": "H1",
+    "notas": "Spread corregido a 60 pips. Lanzar en alber.",
+    "fecha_add": "2026-04-27"
+  },
+  {
+    "activo": "EURUSD",
+    "score": 80,
+    "razon": "Siguiente tras XAUUSD. Score 80 — mismo nivel de prioridad.",
+    "estado": "PENDIENTE",
+    "build": null,
+    "tf": "H1",
+    "notas": "Comisiones: spread 0.5 pips + 7 USD/lote. Verificar antes del build.",
+    "fecha_add": "2026-04-27"
+  },
+  {
+    "activo": "GBPUSD",
+    "score": null,
+    "razon": "Recalcular score tras Ciclo 1 completo.",
+    "estado": "PENDIENTE",
+    "build": null,
+    "tf": "H1",
+    "notas": "Score TBD — esperar resultados de XAUUSD y EURUSD.",
+    "fecha_add": "2026-04-27"
+  },
+  {
+    "activo": "USDJPY",
+    "score": null,
+    "razon": "Recalcular score tras Ciclo 1 completo.",
+    "estado": "PENDIENTE",
+    "build": null,
+    "tf": "H1",
+    "notas": "Score TBD — esperar resultados de XAUUSD y EURUSD.",
+    "fecha_add": "2026-04-27"
+  }
+]
