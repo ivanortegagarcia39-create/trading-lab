@@ -544,17 +544,79 @@ def main() -> int:
         print(f"Outcome de {sid} añadido al KG.")
 
     elif args.mode == "query":
-        if args.query == "similar_builds":
+        q = args.query or ""
+        parts = q.split()
+        qtype = parts[0] if parts else ""
+
+        if qtype == "builds":
+            db   = _get_db(db_path)
+            conn = kuzu.Connection(db)
+            r = conn.execute(
+                "MATCH (b:Build) "
+                "RETURN b.build_id, b.activo, b.timeframe, b.estado "
+                "ORDER BY b.build_id"
+            )
+            print(f"\n{'BUILD':12s}  {'ACTIVO':10s}  {'TF':4s}  ESTADO")
+            print("-" * 48)
+            while r.has_next():
+                row = r.get_next()
+                print(f"  {row[0]:10s}  {row[1]:10s}  {row[2]:4s}  {row[3]}")
+
+        elif qtype == "lessons":
+            db   = _get_db(db_path)
+            conn = kuzu.Connection(db)
+            r = conn.execute(
+                "MATCH (l:Lesson) "
+                "RETURN l.lesson_id, l.titulo, l.estado, l.ocurrencias "
+                "ORDER BY l.ocurrencias DESC"
+            )
+            print(f"\n{'ID':14s}  {'ESTADO':12s}  {'OCC':4s}  TITULO")
+            print("-" * 72)
+            while r.has_next():
+                row = r.get_next()
+                titulo = str(row[1])[:40]
+                print(f"  {row[0]:12s}  {row[2]:12s}  {row[3]:4}  {titulo}")
+
+        elif qtype == "strategies":
+            db   = _get_db(db_path)
+            conn = kuzu.Connection(db)
+            r = conn.execute(
+                "MATCH (b:Build)-[:PRODUCED]->(s:Strategy) "
+                "RETURN s.strategy_id, b.activo, s.pf, s.estado "
+                "ORDER BY s.pf DESC"
+            )
+            print(f"\n{'STRATEGY_ID':28s}  {'ACTIVO':8s}  {'PF':6s}  ESTADO")
+            print("-" * 64)
+            while r.has_next():
+                row = r.get_next()
+                print(f"  {str(row[0]):26s}  {str(row[1]):8s}  {row[2]:6.3f}  {row[3]}")
+
+        elif qtype == "lineage":
+            sid = parts[1] if len(parts) > 1 else (args.strategy_id or "")
+            data = query_strategy_lineage(sid, db_path=db_path)
+            print(json.dumps(data, indent=2, ensure_ascii=False))
+
+        elif qtype == "similar":
+            activo = parts[1] if len(parts) > 1 else (args.activo or "")
+            tf     = parts[2] if len(parts) > 2 else "H1"
+            rows   = query_similar_builds(activo, timeframe=tf, db_path=db_path)
+            print(json.dumps(rows, indent=2, ensure_ascii=False))
+
+        elif qtype == "similar_builds":
             rows = query_similar_builds(args.activo or "", db_path=db_path)
             print(json.dumps(rows, indent=2, ensure_ascii=False))
-        elif args.query == "lessons_for_gate":
+
+        elif qtype == "lessons_for_gate":
             rows = query_lessons_for_gate(args.gate or 0, db_path=db_path)
             print(json.dumps(rows, indent=2, ensure_ascii=False))
-        elif args.query == "lineage":
-            data = query_strategy_lineage(args.strategy_id or "", db_path=db_path)
-            print(json.dumps(data, indent=2, ensure_ascii=False))
+
         else:
-            print(f"Query '{args.query}' no reconocida.")
+            print("Queries disponibles:")
+            print("  --query builds")
+            print("  --query lessons")
+            print("  --query strategies")
+            print("  --query 'lineage STRATEGY_ID'")
+            print("  --query 'similar ACTIVO [TIMEFRAME]'")
             return 1
 
     elif args.mode == "stats":
