@@ -11,16 +11,16 @@ Ultima actualizacion: 2026-04-27
 | Fase 0 | Cimientos | 6 | 6 | COMPLETA |
 | Fase 1 | Pipeline core | 45 | 45 | COMPLETA |
 | Fase 2 | Multi-activo y prop firms | 22 | 22 | COMPLETA |
-| Fase 3 | Inteligencia y aprendizaje | 20 | 25 | EN CURSO |
-| Fase 4 | Produccion y monitoreo | 15 | 16 | EN CURSO |
+| Fase 3 | Inteligencia y aprendizaje | 24 | 29 | EN CURSO |
+| Fase 4 | Produccion y monitoreo | 17 | 18 | EN CURSO |
 | Fase 5 | VPS y despliegue real | 0 | 6 | PENDIENTE (VPS) |
 | Fase 6 | Portfolio multi-estrategia | 0 | 9 | PENDIENTE (5 estrategias) |
 | Fase 7 | Auditoria y compliance | 3 | 3 | COMPLETA |
 | Fase 8 | Optimizacion en produccion | 0 | 12 | PENDIENTE (produccion) |
 | Fase 9 | Scaling y funded | 0 | 7 | PENDIENTE (3 estrategias) |
-| Fase 10 | Infraestructura avanzada | 21 | 21 | COMPLETA |
+| Fase 10 | Infraestructura avanzada | 26 | 26 | COMPLETA |
 
-**Total completadas: 152 / 172 tareas documentadas**
+**Total completadas: 163 / 183 tareas documentadas**
 
 ---
 
@@ -76,13 +76,13 @@ Todos los agentes y skills del pipeline principal:
 
 ---
 
-## Fase 3 — Inteligencia y aprendizaje (20/25) EN CURSO
+## Fase 3 — Inteligencia y aprendizaje (24/29) EN CURSO
 
 ### Completadas
 - [x] agents/knowledge-synthesizer.md
 - [x] agents/market-regime-detector.md
 - [x] scripts/build-analyzer.py
-- [x] scripts/knowledge-base.py (ChromaDB, re-index añadido)
+- [x] scripts/knowledge-base.py (ChromaDB, re-index, soporte .sqx y audit-trail)
 - [x] scripts/lessons-analyzer.py
 - [x] scripts/inflation-diagnostic.py
 - [x] docs/skills/skill-gt-score-calc.md
@@ -99,6 +99,10 @@ Todos los agentes y skills del pipeline principal:
 - [x] scripts/auto-reporter.py — informe semanal automatico con Telegram y Ollama
 - [x] scripts/build-comparator.py — comparacion estadistica entre dos builds
 - [x] scripts/risk-calculator.py — calculadora de lotes con ajuste dinamico por DD
+- [x] scripts/build-queue-manager.py — cola de builds con scoring, comandos list/next/complete/add
+- [x] scripts/retester-helper.py — instrucciones Retester + checklist Paso 12b
+- [x] scripts/wfo-helper.py — instrucciones WFO + checklist por ventana
+- [x] scripts/stress-tester.py — guia stress test 5 epocas criticas con tabla de resultados
 
 ### Pendientes — requieren hardware/infraestructura
 - [ ] Integracion Ollama en produccion (requiere VPS o maquina local dedicada)
@@ -109,7 +113,7 @@ Todos los agentes y skills del pipeline principal:
 
 ---
 
-## Fase 4 — Produccion y monitoreo (15/16) EN CURSO
+## Fase 4 — Produccion y monitoreo (17/18) EN CURSO
 
 ### Completadas
 - [x] agents/performance-monitor.md
@@ -127,6 +131,8 @@ Todos los agentes y skills del pipeline principal:
 - [x] scripts/system-health-check.py — health checks automaticos del sistema (py_compile, SSL fix)
 - [x] scripts/session-starter.py — inicio de sesion automatico detectando dispositivo ivano/alber
 - [x] Telegram bot @tradinglab_monitor_bot activo — token y chat_id configurados en ivano
+- [x] scripts/build-launcher.py — checklist interactivo pre-build con confirmacion y audit trail
+- [x] scripts/build-finisher.py — pipeline post-build: EvalGate→analyzer→cola→versioning→re-index
 
 ### Pendientes — requieren VPS o produccion activa
 - [ ] Risk Manager automatico en MT5 (requiere EA desplegado en VPS)
@@ -208,7 +214,7 @@ Requiere al menos 3 estrategias pasando challenges.
 
 ---
 
-## Fase 10 — Infraestructura avanzada (21/21) COMPLETA
+## Fase 10 — Infraestructura avanzada (26/26) COMPLETA
 
 ### Completadas
 - [x] GitHub Actions CI/CD (validate-skills, pipeline-check)
@@ -256,6 +262,11 @@ Requiere al menos 3 estrategias pasando challenges.
 - [x] docs/skills/skill-propfirm-rule-changes.md — protocolo cambios de reglas con historial FTMO
 - [x] Python 3.13 instalado en ivano — todos los scripts compatibles y probados
 - [x] dashboard.md actualizado con metricas reales del sistema 2026-04-27
+- [x] docs/skills/skill-pipeline-gates-checklist.md — checklist 9 puertas con criterios por puerta
+- [x] docs/skills/skill-pipeline-execution-guide.md — guia practica de ejecucion del pipeline completo
+- [x] docs/architecture/pipeline-diagram.md — ASCII art del pipeline con ratios y herramientas
+- [x] CLAUDE.md — seccion Comandos del pipeline añadida (5 comandos clave)
+- [x] ChromaDB re-indexado con 909 chunks (incluye .sqx Build 10, audit-trail, strategies-registry)
 
 ### Pendientes — requieren Capa 2+
 - [ ] N8N instalado y configurado (requiere servidor)
