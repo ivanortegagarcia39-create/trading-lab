@@ -14,6 +14,351 @@
         }
       },
       "version_activa": "v1"
+    },
+    "XAUUSD-B10-28119": {
+      "id": "XAUUSD-B10-28119",
+      "activo": "XAUUSD",
+      "build": "B10",
+      "id_sq": "28119",
+      "versiones": {
+        "v1": {
+          "timestamp": "2026-04-28T10:36:07",
+          "metricas": {},
+          "estado": "standby",
+          "razon_creacion": "build inicial"
+        }
+      },
+      "version_activa": "v1"
+    },
+    "XAUUSD-B10-213144": {
+      "id": "XAUUSD-B10-213144",
+      "activo": "XAUUSD",
+      "build": "B10",
+      "id_sq": "213144",
+      "versiones": {
+        "v1": {
+          "timestamp": "2026-04-28T10:36:07",
+          "metricas": {},
+          "estado": "standby",
+          "razon_creacion": "build inicial"
+        }
+      },
+      "version_activa": "v1"
+    },
+    "XAUUSD-B10-214133": {
+      "id": "XAUUSD-B10-214133",
+      "activo": "XAUUSD",
+      "build": "B10",
+      "id_sq": "214133",
+      "versiones": {
+        "v1": {
+          "timestamp": "2026-04-28T10:36:07",
+          "metricas": {},
+          "estado": "standby",
+          "razon_creacion": "build inicial"
+        }
+      },
+      "version_activa": "v1"
+    },
+    "XAUUSD-B10-215127": {
+      "id": "XAUUSD-B10-215127",
+      "activo": "XAUUSD",
+      "build": "B10",
+      "id_sq": "215127",
+      "versiones": {
+        "v1": {
+          "timestamp": "2026-04-28T10:36:08",
+          "metricas": {},
+          "estado": "standby",
+          "razon_creacion": "build inicial"
+        }
+      },
+      "version_activa": "v1"
+    },
+    "XAUUSD-B10-215153": {
+      "id": "XAUUSD-B10-215153",
+      "activo": "XAUUSD",
+      "build": "B10",
+      "id_sq": "215153",
+      "versiones": {
+        "v1": {
+          "timestamp": "2026-04-28T10:36:08",
+          "metricas": {},
+          "estado": "standby",
+          "razon_creacion": "build inicial"
+        }
+      },
+      "version_activa": "v1"
+    },
+    "XAUUSD-B10-217132": {
+      "id": "XAUUSD-B10-217132",
+      "activo": "XAUUSD",
+      "build": "B10",
+      "id_sq": "217132",
+      "versiones": {
+        "v1": {
+          "timestamp": "2026-04-28T10:36:08",
+          "metricas": {},
+          "estado": "standby",
+          "razon_creacion": "build inicial"
+        }
+      },
+      "version_activa": "v1"
+    },
+    "XAUUSD-B10-230173": {
+      "id": "XAUUSD-B10-230173",
+      "activo": "XAUUSD",
+      "build": "B10",
+      "id_sq": "230173",
+      "versiones": {
+        "v1": {
+          "timestamp": "2026-04-28T10:36:08",
+          "metricas": {},
+          "estado": "standby",
+          "razon_creacion": "build inicial"
+        }
+      },
+      "version_activa": "v1"
+    },
+    "XAUUSD-B10-31114": {
+      "id": "XAUUSD-B10-31114",
+      "activo": "XAUUSD",
+      "build": "B10",
+      "id_sq": "31114",
+      "versiones": {
+        "v1": {
+          "timestamp": "2026-04-28T10:36:08",
+          "metricas": {},
+          "estado": "standby",
+          "razon_creacion": "build inicial"
+        }
+      },
+      "version_activa": "v1"
+    },
+    "XAUUSD-B10-311139": {
+      "id": "XAUUSD-B10-311139",
+      "activo": "XAUUSD",
+      "build": "B10",
+      "id_sq": "311139",
+      "versiones": {
+        "v1": {
+          "timestamp": "2026-04-28T10:36:08",
+          "metricas": {},
+          "estado": "standby",
+          "razon_creacion": "build inicial"
+        }
+      },
+      "version_activa": "v1"
+    },
+    "XAUUSD-B10-312102": {
+      "id": "XAUUSD-B10-312102",
+      "activo": "XAUUSD",
+      "build": "B10",
+      "id_sq": "312102",
+      "versiones": {
+        "v1": {
+          "timestamp": "2026-04-28T10:36:08",
+          "metricas": {},
+          "estado": "standby",
+          "razon_creacion": "build inicial"
+        }
+      },
+      "version_activa": "v1"
+    },
+    "XAUUSD-B10-313142": {
+      "id": "XAUUSD-B10-313142",
+      "activo": "XAUUSD",
+      "build": "B10",
+      "id_sq": "313142",
+      "versiones": {
+        "v1": {
+          "timestamp": "2026-04-28T10:37:44",
+          "metricas": {},
+          "estado": "standby",
+          "razon_creacion": "build inicial"
+        }
+      },
+      "version_activa": "v1"
+    },
+    "XAUUSD-B10-315108": {
+      "id": "XAUUSD-B10-315108",
+      "activo": "XAUUSD",
+      "build": "B10",
+      "id_sq": "315108",
+      "versiones": {
+        "v1": {
+          "timestamp": "2026-04-28T10:37:44",
+          "metricas": {},
+          "estado": "standby",
+          "razon_creacion": "build inicial"
+        }
+      },
+      "version_activa": "v1"
+    },
+    "XAUUSD-B10-315110": {
+      "id": "XAUUSD-B10-315110",
+      "activo": "XAUUSD",
+      "build": "B10",
+      "id_sq": "315110",
+      "versiones": {
+        "v1": {
+          "timestamp": "2026-04-28T10:37:44",
+          "metricas": {},
+          "estado": "standby",
+          "razon_creacion": "build inicial"
+        }
+      },
+      "version_activa": "v1"
+    },
+    "XAUUSD-B10-315159": {
+      "id": "XAUUSD-B10-315159",
+      "activo": "XAUUSD",
+      "build": "B10",
+      "id_sq": "315159",
+      "versiones": {
+        "v1": {
+          "timestamp": "2026-04-28T10:37:44",
+          "metricas": {},
+          "estado": "standby",
+          "razon_creacion": "build inicial"
+        }
+      },
+      "version_activa": "v1"
+    },
+    "XAUUSD-B10-316155": {
+      "id": "XAUUSD-B10-316155",
+      "activo": "XAUUSD",
+      "build": "B10",
+      "id_sq": "316155",
+      "versiones": {
+        "v1": {
+          "timestamp": "2026-04-28T10:37:44",
+          "metricas": {},
+          "estado": "standby",
+          "razon_creacion": "build inicial"
+        }
+      },
+      "version_activa": "v1"
+    },
+    "XAUUSD-B10-320116": {
+      "id": "XAUUSD-B10-320116",
+      "activo": "XAUUSD",
+      "build": "B10",
+      "id_sq": "320116",
+      "versiones": {
+        "v1": {
+          "timestamp": "2026-04-28T10:37:44",
+          "metricas": {},
+          "estado": "standby",
+          "razon_creacion": "build inicial"
+        }
+      },
+      "version_activa": "v1"
+    },
+    "XAUUSD-B10-320140": {
+      "id": "XAUUSD-B10-320140",
+      "activo": "XAUUSD",
+      "build": "B10",
+      "id_sq": "320140",
+      "versiones": {
+        "v1": {
+          "timestamp": "2026-04-28T10:37:44",
+          "metricas": {},
+          "estado": "standby",
+          "razon_creacion": "build inicial"
+        }
+      },
+      "version_activa": "v1"
+    },
+    "XAUUSD-B10-321188": {
+      "id": "XAUUSD-B10-321188",
+      "activo": "XAUUSD",
+      "build": "B10",
+      "id_sq": "321188",
+      "versiones": {
+        "v1": {
+          "timestamp": "2026-04-28T10:37:44",
+          "metricas": {},
+          "estado": "standby",
+          "razon_creacion": "build inicial"
+        }
+      },
+      "version_activa": "v1"
+    },
+    "XAUUSD-B10-327111": {
+      "id": "XAUUSD-B10-327111",
+      "activo": "XAUUSD",
+      "build": "B10",
+      "id_sq": "327111",
+      "versiones": {
+        "v1": {
+          "timestamp": "2026-04-28T10:37:44",
+          "metricas": {},
+          "estado": "standby",
+          "razon_creacion": "build inicial"
+        }
+      },
+      "version_activa": "v1"
+    },
+    "XAUUSD-B10-34177": {
+      "id": "XAUUSD-B10-34177",
+      "activo": "XAUUSD",
+      "build": "B10",
+      "id_sq": "34177",
+      "versiones": {
+        "v1": {
+          "timestamp": "2026-04-28T10:37:44",
+          "metricas": {},
+          "estado": "standby",
+          "razon_creacion": "build inicial"
+        }
+      },
+      "version_activa": "v1"
+    },
+    "XAUUSD-B10-412178": {
+      "id": "XAUUSD-B10-412178",
+      "activo": "XAUUSD",
+      "build": "B10",
+      "id_sq": "412178",
+      "versiones": {
+        "v1": {
+          "timestamp": "2026-04-28T10:37:45",
+          "metricas": {},
+          "estado": "standby",
+          "razon_creacion": "build inicial"
+        }
+      },
+      "version_activa": "v1"
+    },
+    "XAUUSD-B10-425149": {
+      "id": "XAUUSD-B10-425149",
+      "activo": "XAUUSD",
+      "build": "B10",
+      "id_sq": "425149",
+      "versiones": {
+        "v1": {
+          "timestamp": "2026-04-28T10:37:45",
+          "metricas": {},
+          "estado": "standby",
+          "razon_creacion": "build inicial"
+        }
+      },
+      "version_activa": "v1"
+    },
+    "XAUUSD-B10-47186": {
+      "id": "XAUUSD-B10-47186",
+      "activo": "XAUUSD",
+      "build": "B10",
+      "id_sq": "47186",
+      "versiones": {
+        "v1": {
+          "timestamp": "2026-04-28T10:37:45",
+          "metricas": {},
+          "estado": "standby",
+          "razon_creacion": "build inicial"
+        }
+      },
+      "version_activa": "v1"
     }
   }
 }
