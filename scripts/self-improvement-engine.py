@@ -245,6 +245,45 @@ def run_cycle(dry_run: bool = False) -> dict:
         print("      thompson-sampling.py no encontrado — omitido")
     summary["thompson_updates"] = thompson_updates
 
+    # PASO 2g: Pipeline health monitor
+    print("\n[2g/7] Verificando salud del pipeline...")
+    health_mon = ROOT / "scripts" / "pipeline-health-monitor.py"
+    if health_mon.exists():
+        health_out = _run([PYTHON, str(health_mon), "--report"], dry_run=False)
+        if health_out:
+            for line in health_out.split("\n")[:10]:
+                if line.strip():
+                    print(f"      {line.strip()}")
+            if "[ALERT]" in health_out:
+                summary.setdefault("alerts", []).append(
+                    "PIPELINE: metrica(s) en ROJO — revisar pipeline-health-monitor")
+            elif "[WARN]" in health_out:
+                summary.setdefault("alerts", []).append(
+                    "PIPELINE: metrica(s) en AMARILLO — revisar pronto")
+    else:
+        print("      pipeline-health-monitor.py no encontrado — omitido")
+
+    # PASO 2h: Strategy retirement manager
+    print("\n[2h/7] Verificando transiciones de estrategias...")
+    retirement = ROOT / "scripts" / "strategy-retirement-manager.py"
+    retirement_transitions = 0
+    if retirement.exists():
+        ret_out = _run([PYTHON, str(retirement), "--check"], dry_run)
+        if ret_out:
+            for line in ret_out.split("\n")[:6]:
+                if line.strip():
+                    print(f"      {line.strip()}")
+            # Contar transiciones ejecutadas
+            for line in ret_out.split("\n"):
+                if "→" in line and not "[DRY-RUN]" in line:
+                    retirement_transitions += 1
+        if retirement_transitions:
+            summary.setdefault("alerts", []).append(
+                f"{retirement_transitions} transición(es) de estrategias ejecutadas")
+    else:
+        print("      strategy-retirement-manager.py no encontrado — omitido")
+    summary["retirement_transitions"] = retirement_transitions
+
     # PASO 3: Verificar si hay suficientes ejemplos para recompilar
     print("\n[3/7] Verificando estado de compilación DSPy...")
     stats_out = _run([PYTHON, str(dspy_opt), "--stats"], dry_run=False)

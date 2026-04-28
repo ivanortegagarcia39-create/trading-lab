@@ -1,113 +1,146 @@
-Lee CLAUDE.md, docs/roadmap/planning-maestro-status.md
-y scripts/knowledge-graph.py.
+Lee CLAUDE.md y todos los archivos en agents/ y docs/skills/.
 
-Vamos a cerrar los gaps que podemos hacer ahora mismo.
+Continuamos desde ivano. Vamos a implementar las últimas
+mejoras que podemos hacer sin hardware.
 
-TAREA 1 - Arreglar lecciones en el Knowledge Graph
-El kg-importer.py importó las lecciones con estado TENTATIVA
-pero LECCION-001 tiene 4 ocurrencias y LECCION-002 tiene 8.
-Según las reglas del proyecto ambas deben ser ESTRUCTURAL.
-
-En scripts/kg-importer.py, en la función que importa lecciones
-desde lessons-learned.md, corregir el parser para que:
-1. Lea el campo "Ocurrencias confirmadas: N"
-2. Si N >= 3 → estado = "ESTRUCTURAL"
-3. Si N < 3 → estado = "TENTATIVA"
-
-También añadir los nodos Criterion al KG durante el init:
-Los 5 criterios de config/bayesian-criteria.json deben
-crear nodos Criterion en el grafo con su valor actual.
-
-TAREA 2 - Actualizar docs/roadmap/planning-maestro-status.md
-Añadir todas las tareas nuevas completadas hoy como [x]:
-
-NUEVAS TAREAS COMPLETADAS (v8.0):
-- scripts/knowledge-graph.py — KG Kùzu con 7 nodos y 7 aristas
-- scripts/kg-importer.py — importador del historial al KG
-- scripts/model-router.py — router de modelos DeepSeek/Kimi/GPT-5.5
-- config/api-keys.json.template — template claves API
-- scripts/dspy-optimizer.py — auto-optimización de prompts DSPy
-- scripts/bayesian-criteria-updater.py — actualización bayesiana de umbrales
-- scripts/self-improvement-engine.py — ciclo semanal de autoaprendizaje
-- scripts/concept-drift-detector.py — BOCPD + ADDM detección de drift
-- scripts/champion-challenger.py — Shadow Mode champion vs challenger
-- scripts/internal-critic.py — crítico interno automático
-- scripts/thompson-sampling.py — selección óptima de activos
-- scripts/propfirm-monitor.py — monitoreo T&C prop firms
-- config/propfirm-rules.json — reglas FTMO/E8/BrightFunded
-- scripts/challenge-demo-simulator.py — AutoDemoPipeline v3.0
-- agents/challenge-verdict-generator.md — veredicto PASS/FAIL/REVIEW
-- agents/demo-account-factory.md — gestión cuentas demo
-- docs/skills/skill-self-improvement.md — autoaprendizaje documentado
-- docs/skills/skill-concept-drift.md — drift detection documentado
-- docs/skills/skill-thompson-sampling.md — Thompson Sampling documentado
-- docs/skills/skill-model-router.md — router modelos documentado
-- docs/skills/skill-challenge-simulation.md — simulación challenge documentado
-- docs/architecture/knowledge-graph-schema.md — esquema KG documentado
-
-Actualizar el total: debería ser ~185/205 o similar.
-Actualizar el porcentaje.
-
-TAREA 3 - Crear scripts/quarterly-reoptimizer.py
-Protocolo de reoptimización trimestral de estrategias.
+TAREA 1 - Crear scripts/regime-strategy-matcher.py
+Script que conecta el régimen de mercado actual con
+las estrategias más adecuadas para ese régimen.
 
 PROPÓSITO:
-Cada 3 meses verificar si las estrategias activas siguen
-siendo rentables. Si una estrategia muestra decay confirmado,
-lanzar el Improver de SQ para reoptimizar solo parámetros
-(no la lógica de entrada — eso violaría Builder libre).
+No todas las estrategias funcionan igual en todos los regímenes.
+Una estrategia generada en tendencia-altavol puede fallar
+en rango-bajovol. Este script aprende qué estrategias
+funcionan mejor en cada régimen.
 
-PROCESO TRIMESTRAL:
-1. Leer portfolio activo desde results/portfolio-selected.json
-2. Para cada estrategia activa:
-   a. Calcular PF de los últimos 3 meses en producción
-   b. Comparar con PF OOS del backtest original
-   c. Si PF_real < 85% de PF_OOS durante 4+ semanas → DECAY
-3. Para estrategias en DECAY:
-   a. Generar alerta Telegram: "Decay confirmado: [ID]"
-   b. Marcar para reoptimización en strategy-versioning
-   c. Registrar en KG con causa documentada
-4. Generar informe trimestral en results/quarterly-report-[fecha].md
+FUNCIONES:
+record_regime_performance(strategy_id, regime, week_pf):
+  Registra el PF de una estrategia en un régimen específico
+  Guarda en results/regime-performance.json
 
-CRITERIO IMPORTANTE:
-La reoptimización SQ solo puede tocar parámetros numéricos
-(multiplicadores ATR, períodos de indicadores).
-NUNCA cambiar la lógica de entrada — eso es trabajo del Builder.
-Si los parámetros optimizados no mejoran → retirar estrategia
-y lanzar nuevo ciclo de Builder para ese activo.
+get_best_strategies_for_regime(regime):
+  Devuelve las estrategias ordenadas por PF medio
+  en el régimen especificado
+  Útil para decidir qué estrategia priorizar cuando
+  el régimen cambia
+
+get_regime_compatibility(strategy_id):
+  Para una estrategia, muestra su PF medio en cada régimen
+  Identifica en qué régimen funciona mejor y peor
+
+recommend_for_current_regime():
+  Detecta el régimen actual (via market-regime-snapshot)
+  Recomienda las estrategias más adecuadas para ese régimen
+  Si no hay suficientes datos → "Sin datos suficientes"
 
 ARGUMENTOS:
---run: ejecutar revisión trimestral
---dry-run: simular sin aplicar cambios
---report: ver último informe trimestral
+--record STRATEGY_ID REGIME WEEK_PF
+--best-for REGIME
+--compatibility STRATEGY_ID
+--recommend
 
-TAREA 4 - Actualizar CLAUDE.md
-Lee el archivo actual. Actualiza la sección de estado:
+TAREA 2 - Crear scripts/pipeline-health-monitor.py
+Monitor de salud del pipeline completo.
+Detecta si el pipeline está funcionando correctamente
+o si hay señales de degradación.
 
-## Estado Actual (2026-04-29)
-- Fase: Capa 0 activa — Sistema v8.0 completo
-- Build activo: Build 11 PENDIENTE en alber (spread 60 pips)
-- Planning maestro: ~185/205 tareas completadas
-- Scripts Python operativos: 55 (todos probados)
-- Autoaprendizaje: Knowledge Graph + DSPy + Bayesian + Drift + Champion-Challenger
-- Telegram bot: @tradinglab_monitor_bot activo
-- ChromaDB: 909 chunks indexados
-- Próximo hito: Primera estrategia aprobada por WFO (Build 11)
+MÉTRICAS QUE MONITOREA:
+1. Tasa de aprobación por puerta (últimas 4 semanas)
+   Si tasa < 50% de la tasa histórica → WARNING
+2. Tiempo medio de build (últimas 3 builds)
+   Si aumenta > 20% → posible problema de hardware
+3. Número de builds sin resultados consecutivos
+   Si > 2 builds consecutivos sin pasar EvalGate → ALERTA
+4. Deriva de criterios bayesianos
+   Si algún criterio cambió > 15% → revisar
+5. Salud del Knowledge Graph
+   Si no hay actualizaciones en > 7 días → WARNING
 
-TAREA 5 - Ejecutar re-index completo del KG y ChromaDB
-Después de los cambios anteriores:
-1. Borrar .kuzu/ y reiniciar el KG
-2. Ejecutar kg-importer.py para reimportar con correcciones
-3. Ejecutar knowledge-base.py re-index para actualizar ChromaDB
+DASHBOARD EN TEXTO:
+Genera un dashboard ASCII con semáforo por cada métrica
+VERDE: funcionando normal
+AMARILLO: revisar pronto
+ROJO: acción inmediata requerida
 
-Comandos a ejecutar:
-rmdir /s /q .kuzu
-python scripts/knowledge-graph.py --mode init
-python scripts/kg-importer.py
-python scripts/knowledge-base.py re-index
+ARGUMENTOS:
+--report: generar reporte completo
+--watch: modo continuo (actualiza cada hora)
+--fix: intentar autocorrecciones menores
+
+TAREA 3 - Crear scripts/strategy-retirement-manager.py
+Gestiona el ciclo de vida completo de las estrategias
+desde su creación hasta su retiro del portfolio.
+
+ESTADOS DE UNA ESTRATEGIA:
+standby → en espera de ser evaluada
+candidate → pasó EvalGate, en proceso de validación
+shadow → challenger en paper trading
+active → en producción con capital real
+decaying → señales de deterioro detectadas
+retired → retirada del portfolio
+failed_challenge → falló el challenge demo
+
+TRANSICIONES AUTOMÁTICAS:
+standby → candidate: cuando pasa EvalGate
+candidate → shadow: cuando pasa WFO y Forward Test
+shadow → active: cuando es promovida por champion-challenger
+active → decaying: cuando ADDM detecta drift confirmado
+decaying → retired: si no mejora en 4 semanas
+decaying → active: si se recupera (ADDM normal 4 semanas)
+
+FUNCIONES:
+transition_state(strategy_id, new_state, reason):
+  Cambia el estado de una estrategia
+  Registra en KG y audit trail
+  Notifica via Telegram si es un estado importante
+
+get_lifecycle_report():
+  Resumen de todas las estrategias por estado
+  Tiempo medio en cada estado
+  Estrategias que necesitan atención
+
+check_for_transitions():
+  Verifica si alguna estrategia debe transicionar de estado
+  Basado en métricas actuales y criterios bayesianos
+  Ejecutar diariamente
+
+ARGUMENTOS:
+--report: ver ciclo de vida de todas las estrategias
+--check: verificar transiciones pendientes
+--transition STRATEGY_ID NEW_STATE REASON: transición manual
+
+TAREA 4 - Actualizar scripts/self-improvement-engine.py
+Lee el archivo actual. Añadir dos pasos más al ciclo:
+
+Después del paso [2f]:
+  [2g] Ejecutar pipeline-health-monitor --report
+       Si hay métricas en ROJO → incluir en informe urgente
+  [2h] Ejecutar strategy-retirement-manager --check
+       Si hay estrategias que deben transicionar → ejecutar
+       y registrar en el informe del ciclo
+
+TAREA 5 - Crear docs/skills/skill-strategy-lifecycle.md
+Documenta el ciclo de vida completo de una estrategia
+desde que SQ la genera hasta que se retira:
+
+ESTADOS: standby → candidate → shadow → active →
+         decaying → retired / failed_challenge
+
+TIEMPO TÍPICO EN CADA ESTADO:
+standby: 0-2 días (evaluación automática)
+candidate: 1-3 días (Retester + WFO + Stress Test)
+shadow: 4 semanas (Champion-Challenger)
+active: meses o años (en producción)
+decaying: máximo 4 semanas antes de decisión final
+retired: permanente (registro histórico)
+
+MÉTRICAS DE CALIDAD DEL CICLO:
+Tasa de conversión standby → active (objetivo: > 5%)
+Duración media en producción antes de decay
+Causa más frecuente de retiro
 
 Al terminar:
 git add .
-git commit -m "Revisión completa v8.0: KG corregido, planning actualizado 185+, quarterly-reoptimizer, CLAUDE.md v8.0"
+git commit -m "Scripts: regime-strategy-matcher, pipeline-health-monitor, strategy-retirement-manager. Skills: strategy-lifecycle"
 git push origin main
 Confirma con tabla.
