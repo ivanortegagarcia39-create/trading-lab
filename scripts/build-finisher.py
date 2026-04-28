@@ -1,0 +1,205 @@
+#!/usr/bin/env python3
+"""
+build-finisher.py — Coordina todo el pipeline post-build automaticamente.
+Se ejecuta cuando un build termina en SQ y los CSVs han sido exportados.
+
+Uso:
+    python scripts/build-finisher.py --build 11 --activo XAUUSD --results-folder results/
+"""
+
+import argparse
+import json
+import subprocess
+import sys
+from datetime import datetime
+from pathlib import Path
+
+ROOT    = Path(__file__).parent.parent
+SCRIPTS = ROOT / "scripts"
+
+
+def _run_quiet(cmd: list) -> subprocess.CompletedProcess:
+    return subprocess.run(cmd, capture_output=True, text=True)
+
+
+def _notify(level: str, msg: str) -> None:
+    notifier = SCRIPTS / "telegram-notifier.py"
+    if not notifier.exists():
+        return
+    subprocess.run(
+        [sys.executable, str(notifier), "--level", level, "--message", msg],
+        capture_output=True
+    )
+
+
+def _header(text: str) -> None:
+    print(f"\n{'='*60}")
+    print(f"  {text}")
+    print(f"{'='*60}")
+
+
+def _step(n: int, text: str) -> None:
+    print(f"\n[{n}] {text}")
+
+
+def _ok(text: str) -> None:
+    print(f"    OK  {text}")
+
+
+def _warn(text: str) -> None:
+    print(f"    WARN  {text}")
+
+
+def check_csv_files(results_folder: Path) -> list:
+    csvs = sorted(results_folder.rglob("Strategy*.csv"))
+    return csvs
+
+
+def run_evaluator(results_folder: Path) -> dict:
+    evaluator = SCRIPTS / "evaluator-assistant.py"
+    if not evaluator.exists():
+        _warn("evaluator-assistant.py no encontrado")
+        return {}
+    result = _run_quiet([sys.executable, str(evaluator),
+                         "--results-folder", str(results_folder)])
+    # Leer resultados del JSON generado
+    gate_file = ROOT / "results" / "evaluation-gate-results.json"
+    if gate_file.exists():
+        try:
+            return json.loads(gate_file.read_text(encoding="utf-8"))
+        except Exception:
+            pass
+    return {}
+
+
+def run_build_analyzer(build_n: int, activo: str, results_folder: Path) -> None:
+    analyzer = SCRIPTS / "build-analyzer.py"
+    if not analyzer.exists():
+        _warn("build-analyzer.py no encontrado — saltando analisis")
+        return
+    _run_quiet([sys.executable, str(analyzer),
+                "--build", str(build_n),
+                "--activo", activo,
+                "--results-folder", str(results_folder)])
+    _ok(f"Analisis guardado en results/build-{build_n}-analysis.md")
+
+
+def update_queue(activo: str) -> None:
+    qm = SCRIPTS / "build-queue-manager.py"
+    if not qm.exists():
+        _warn("build-queue-manager.py no encontrado")
+        return
+    _run_quiet([sys.executable, str(qm), "complete", activo])
+    _ok(f"Cola actualizada — {activo} marcado como COMPLETADO")
+
+
+def run_strategy_versioning(results_folder: Path) -> None:
+    sv = SCRIPTS / "strategy-versioning.py"
+    if not sv.exists():
+        _warn("strategy-versioning.py no encontrado")
+        return
+    gate_file = ROOT / "results" / "evaluation-gate-results.json"
+    if not gate_file.exists():
+        _warn("evaluation-gate-results.json no encontrado — saltando versioning")
+        return
+    _run_quiet([sys.executable, str(sv), "--register",
+                "--gate-results", str(gate_file)])
+    _ok("Estrategias aprobadas registradas en strategies-registry.json")
+
+
+def run_knowledge_reindex() -> None:
+    kb = SCRIPTS / "knowledge-base.py"
+    if not kb.exists():
+        _warn("knowledge-base.py no encontrado")
+        return
+    _run_quiet([sys.executable, str(kb), "re-index"])
+    _ok("ChromaDB re-indexado con nuevos resultados")
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description="Build Finisher — TradingLab")
+    parser.add_argument("--build",          type=int, required=True, help="Numero del build (ej: 11)")
+    parser.add_argument("--activo",         required=True,           help="Activo (ej: XAUUSD)")
+    parser.add_argument("--results-folder", default="results",       help="Carpeta con los CSVs (default: results/)")
+    args = parser.parse_args()
+
+    activo         = args.activo.upper()
+    results_folder = ROOT / args.results_folder
+
+    _header(f"BUILD FINISHER — Build {args.build} | {activo}")
+
+    # Paso 1: verificar CSVs
+    _step(1, "Verificando archivos CSV exportados desde SQ...")
+    csvs = check_csv_files(results_folder)
+    if not csvs:
+        print(f"\n  No se encontraron archivos Strategy*.csv en {results_folder}")
+        print("  ¿Exportaste los CSVs desde SQ?")
+        print("  SQ → Databank → Seleccionar todo → Export → CSV")
+        return 1
+    _ok(f"{len(csvs)} archivos CSV encontrados")
+
+    # Paso 2: EvalGate
+    _step(3, "Ejecutando EvalGate (evaluator-assistant.py)...")
+    gate = run_evaluator(results_folder)
+    pasan = gate.get("pasan", 0)
+    total = gate.get("total", len(csvs))
+
+    # Paso 3: resumen EvalGate
+    _step(4, "Resumen EvalGate")
+    print(f"    Total estrategias:  {total}")
+    print(f"    Pasan EvalGate:     {pasan}")
+    print(f"    Descartadas:        {total - pasan}")
+    if total > 0:
+        tasa = round(pasan / total * 100, 1)
+        print(f"    Tasa de aprobacion: {tasa}%")
+    if pasan == 0:
+        _warn("Ninguna estrategia paso el EvalGate. Revisar criterios o relanzar build.")
+
+    # Paso 4: build-analyzer
+    _step(5, "Ejecutando build-analyzer.py...")
+    run_build_analyzer(args.build, activo, results_folder)
+
+    # Paso 5: actualizar cola
+    _step(6, "Actualizando build-queue-manager...")
+    update_queue(activo)
+
+    # Paso 6: strategy-versioning
+    _step(7, "Registrando estrategias aprobadas (strategy-versioning.py)...")
+    run_strategy_versioning(results_folder)
+
+    # Paso 7: re-index ChromaDB
+    _step(8, "Re-indexando ChromaDB (knowledge-base.py)...")
+    run_knowledge_reindex()
+
+    # Paso 8: informe Telegram
+    _step(9, "Enviando informe Telegram...")
+    nivel = "INFO" if pasan > 0 else "WARNING"
+    msg = (
+        f"Build {args.build} completado — {activo}. "
+        f"EvalGate: {pasan}/{total} estrategias pasan. "
+        f"{'→ Proceder al Retester.' if pasan > 0 else '→ Revisar criterios.'}"
+    )
+    _notify(nivel, msg)
+    _ok("Telegram notificado")
+
+    # Paso 9: proxima accion
+    _header("Pipeline post-build completado")
+    print(f"  Build     : {args.build}")
+    print(f"  Activo    : {activo}")
+    print(f"  EvalGate  : {pasan}/{total} estrategias")
+    print()
+    if pasan > 0:
+        print(f"  PROXIMA ACCION:")
+        print(f"  Abrir SQ → Retester → cargar las {pasan} estrategias aprobadas")
+        print(f"  Ver resultados en: results/evaluation-gate-results.json")
+        print(f"  Ver analisis en:   results/build-{args.build}-analysis.md")
+    else:
+        print(f"  PROXIMA ACCION:")
+        print(f"  Revisar criterios del EvalGate en config/pipeline-config.json")
+        print(f"  O relanzar Build con diferente configuracion")
+
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

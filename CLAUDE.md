@@ -14,6 +14,23 @@
 - Ver docs/roadmap/planning-maestro-status.md
   para progreso detallado
 
+### Comandos del pipeline
+
+Antes de lanzar un build en alber:
+  python scripts/build-launcher.py --build 11 --activo XAUUSD --spread-real 30
+
+Cuando termina un build en alber:
+  python scripts/build-finisher.py --build 11 --activo XAUUSD --results-folder results/
+
+Ver estado de la cola de builds:
+  python scripts/build-queue-manager.py list
+
+Informe semanal:
+  python scripts/auto-reporter.py --no-ollama
+
+Health check del sistema:
+  python scripts/system-health-check.py
+
 ---
 
 ## Proposito del proyecto
