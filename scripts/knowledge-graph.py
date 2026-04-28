@@ -120,27 +120,91 @@ def init_graph(db_path: Path = DB_PATH) -> None:
     conn.execute("CREATE REL TABLE IF NOT EXISTS HAD_OUTCOME(FROM Strategy TO LiveOutcome)")
     conn.execute("CREATE REL TABLE IF NOT EXISTS UPDATED(FROM LiveOutcome TO Criterion)")
 
+    # Seed de los 4 regímenes de mercado
+    _seed_market_regimes(conn)
+
     print(f"Knowledge Graph inicializado en: {db_path}")
+
+
+def _seed_market_regimes(conn: "kuzu.Connection") -> None:
+    """Inserta los 4 regímenes de mercado estándar si no existen."""
+    regimes = [
+        {
+            "nombre":      "tendencia-altavol",
+            "adx_min":     25.0,
+            "adx_max":     100.0,
+            "atr_ratio":   1.2,
+            "descripcion": "Mercado en tendencia con volatilidad alta. ADX>25, ATR>1.2x promedio.",
+        },
+        {
+            "nombre":      "tendencia-bajovol",
+            "adx_min":     25.0,
+            "adx_max":     100.0,
+            "atr_ratio":   0.8,
+            "descripcion": "Mercado en tendencia con volatilidad baja. ADX>25, ATR<=1.2x promedio.",
+        },
+        {
+            "nombre":      "rango-altavol",
+            "adx_min":     0.0,
+            "adx_max":     25.0,
+            "atr_ratio":   1.2,
+            "descripcion": "Mercado en rango con volatilidad alta. ADX<=25, ATR>1.2x promedio.",
+        },
+        {
+            "nombre":      "rango-bajovol",
+            "adx_min":     0.0,
+            "adx_max":     25.0,
+            "atr_ratio":   0.8,
+            "descripcion": "Mercado en rango con volatilidad baja. ADX<=25, ATR<=1.2x promedio.",
+        },
+    ]
+    for r in regimes:
+        try:
+            conn.execute(
+                "CREATE (:MarketRegime {nombre: $nombre, adx_min: $adx_min, "
+                "adx_max: $adx_max, atr_ratio: $atr_ratio, descripcion: $descripcion})",
+                {"nombre": r["nombre"], "adx_min": r["adx_min"],
+                 "adx_max": r["adx_max"], "atr_ratio": r["atr_ratio"],
+                 "descripcion": r["descripcion"]}
+            )
+        except Exception:
+            pass  # Ya existe, ignorar
 
 
 # ─── Escritura ─────────────────────────────────────────────────────────────────
 
+def _node_exists(conn: "kuzu.Connection", table: str, pk_field: str, pk_value: str) -> bool:
+    r = conn.execute(
+        f"MATCH (n:{table} {{{pk_field}: $val}}) RETURN count(n)",
+        {"val": pk_value}
+    )
+    return r.has_next() and r.get_next()[0] > 0
+
+
 def add_build(build_data: dict, db_path: Path = DB_PATH) -> None:
     db   = _get_db(db_path)
     conn = kuzu.Connection(db)
-    conn.execute(
-        "MERGE (b:Build {build_id: $build_id}) "
-        "SET b.activo=$activo, b.timeframe=$timeframe, "
-        "b.fecha=$fecha, b.spread=$spread, b.estado=$estado",
-        {
-            "build_id":  str(build_data.get("build_id", "")),
-            "activo":    str(build_data.get("activo", "")),
-            "timeframe": str(build_data.get("timeframe", "H1")),
-            "fecha":     str(build_data.get("fecha", datetime.now().strftime("%Y-%m-%d"))),
-            "spread":    float(build_data.get("spread", 0.0)),
-            "estado":    str(build_data.get("estado", "COMPLETADO")),
-        }
-    )
+    params = {
+        "build_id":  str(build_data.get("build_id", "")),
+        "activo":    str(build_data.get("activo", "")),
+        "timeframe": str(build_data.get("timeframe", "H1")),
+        "fecha":     str(build_data.get("fecha", datetime.now().strftime("%Y-%m-%d"))),
+        "spread":    float(build_data.get("spread", 0.0)),
+        "estado":    str(build_data.get("estado", "COMPLETADO")),
+    }
+    try:
+        conn.execute(
+            "CREATE (:Build {build_id: $build_id, activo: $activo, "
+            "timeframe: $timeframe, fecha: $fecha, spread: $spread, estado: $estado})",
+            params
+        )
+    except Exception:
+        conn.execute(
+            "MATCH (b:Build {build_id: $build_id}) "
+            "SET b.activo=$activo, b.timeframe=$timeframe, "
+            "b.fecha=$fecha, b.spread=$spread, b.estado=$estado",
+            params
+        )
 
 
 def add_strategy(strategy_data: dict, db_path: Path = DB_PATH) -> None:
@@ -150,28 +214,40 @@ def add_strategy(strategy_data: dict, db_path: Path = DB_PATH) -> None:
     sid = str(strategy_data.get("strategy_id", ""))
     bid = str(strategy_data.get("build_id", ""))
 
-    conn.execute(
-        "MERGE (s:Strategy {strategy_id: $sid}) "
-        "SET s.build_id=$build_id, s.pf=$pf, s.dd=$dd, "
-        "s.trades=$trades, s.win_rate=$win_rate, s.sharpe=$sharpe, s.estado=$estado",
-        {
-            "sid":      sid,
-            "build_id": bid,
-            "pf":       float(strategy_data.get("pf", 0.0)),
-            "dd":       float(strategy_data.get("dd", 0.0)),
-            "trades":   int(strategy_data.get("trades", 0)),
-            "win_rate": float(strategy_data.get("win_rate", 0.0)),
-            "sharpe":   float(strategy_data.get("sharpe", 0.0)),
-            "estado":   str(strategy_data.get("estado", "APROBADA")),
-        }
-    )
+    params = {
+        "sid":      sid,
+        "build_id": bid,
+        "pf":       float(strategy_data.get("pf", 0.0)),
+        "dd":       float(strategy_data.get("dd", 0.0)),
+        "trades":   int(strategy_data.get("trades", 0)),
+        "win_rate": float(strategy_data.get("win_rate", 0.0)),
+        "sharpe":   float(strategy_data.get("sharpe", 0.0)),
+        "estado":   str(strategy_data.get("estado", "APROBADA")),
+    }
+    try:
+        conn.execute(
+            "CREATE (:Strategy {strategy_id: $sid, build_id: $build_id, "
+            "pf: $pf, dd: $dd, trades: $trades, win_rate: $win_rate, "
+            "sharpe: $sharpe, estado: $estado})",
+            params
+        )
+    except Exception:
+        conn.execute(
+            "MATCH (s:Strategy {strategy_id: $sid}) "
+            "SET s.build_id=$build_id, s.pf=$pf, s.dd=$dd, "
+            "s.trades=$trades, s.win_rate=$win_rate, s.sharpe=$sharpe, s.estado=$estado",
+            params
+        )
 
-    # Conectar Strategy → Build si el Build existe
-    conn.execute(
-        "MATCH (b:Build {build_id: $bid}), (s:Strategy {strategy_id: $sid}) "
-        "MERGE (b)-[:PRODUCED]->(s)",
-        {"bid": bid, "sid": sid}
-    )
+    # Conectar Build → Strategy con CREATE (solo si el Build existe)
+    try:
+        conn.execute(
+            "MATCH (b:Build {build_id: $bid}), (s:Strategy {strategy_id: $sid}) "
+            "CREATE (b)-[:PRODUCED]->(s)",
+            {"bid": bid, "sid": sid}
+        )
+    except Exception:
+        pass  # Edge ya existe o Build no encontrado
 
 
 def add_gate_decision(strategy_id: str, gate_num: int, gate_name: str,
@@ -183,47 +259,66 @@ def add_gate_decision(strategy_id: str, gate_num: int, gate_name: str,
     fecha       = datetime.now().strftime("%Y-%m-%d")
     decision_id = f"{strategy_id}-G{gate_num}-{fecha}"
 
-    conn.execute(
-        "MERGE (g:GateDecision {decision_id: $did}) "
-        "SET g.strategy_id=$sid, g.gate_num=$gnum, g.gate_name=$gname, "
-        "g.resultado=$res, g.criterio=$crit, g.fecha=$fecha",
-        {
-            "did":   decision_id,
-            "sid":   strategy_id,
-            "gnum":  gate_num,
-            "gname": gate_name,
-            "res":   resultado,
-            "crit":  criterio,
-            "fecha": fecha,
-        }
-    )
+    params = {
+        "did":   decision_id,
+        "sid":   strategy_id,
+        "gnum":  gate_num,
+        "gname": gate_name,
+        "res":   resultado,
+        "crit":  criterio,
+        "fecha": fecha,
+    }
+    try:
+        conn.execute(
+            "CREATE (:GateDecision {decision_id: $did, strategy_id: $sid, "
+            "gate_num: $gnum, gate_name: $gname, resultado: $res, "
+            "criterio: $crit, fecha: $fecha})",
+            params
+        )
+    except Exception:
+        conn.execute(
+            "MATCH (g:GateDecision {decision_id: $did}) "
+            "SET g.resultado=$res, g.criterio=$crit",
+            params
+        )
 
     # Conectar Strategy → GateDecision
-    conn.execute(
-        "MATCH (s:Strategy {strategy_id: $sid}), "
-        "(g:GateDecision {decision_id: $did}) "
-        "MERGE (s)-[:VALIDATED_BY]->(g)",
-        {"sid": strategy_id, "did": decision_id}
-    )
+    try:
+        conn.execute(
+            "MATCH (s:Strategy {strategy_id: $sid}), "
+            "(g:GateDecision {decision_id: $did}) "
+            "CREATE (s)-[:VALIDATED_BY]->(g)",
+            {"sid": strategy_id, "did": decision_id}
+        )
+    except Exception:
+        pass
 
 
 def add_lesson(lesson_data: dict, db_path: Path = DB_PATH) -> None:
     db   = _get_db(db_path)
     conn = kuzu.Connection(db)
 
-    lid = str(lesson_data.get("lesson_id", ""))
-    conn.execute(
-        "MERGE (l:Lesson {lesson_id: $lid}) "
-        "SET l.titulo=$titulo, l.estado=$estado, "
-        "l.ocurrencias=$ocurrencias, l.fecha=$fecha",
-        {
-            "lid":        lid,
-            "titulo":     str(lesson_data.get("titulo", "")),
-            "estado":     str(lesson_data.get("estado", "TENTATIVA")),
-            "ocurrencias": int(lesson_data.get("ocurrencias", 1)),
-            "fecha":      str(lesson_data.get("fecha", datetime.now().strftime("%Y-%m-%d"))),
-        }
-    )
+    lid    = str(lesson_data.get("lesson_id", ""))
+    params = {
+        "lid":         lid,
+        "titulo":      str(lesson_data.get("titulo", "")),
+        "estado":      str(lesson_data.get("estado", "TENTATIVA")),
+        "ocurrencias": int(lesson_data.get("ocurrencias", 1)),
+        "fecha":       str(lesson_data.get("fecha", datetime.now().strftime("%Y-%m-%d"))),
+    }
+    try:
+        conn.execute(
+            "CREATE (:Lesson {lesson_id: $lid, titulo: $titulo, "
+            "estado: $estado, ocurrencias: $ocurrencias, fecha: $fecha})",
+            params
+        )
+    except Exception:
+        conn.execute(
+            "MATCH (l:Lesson {lesson_id: $lid}) "
+            "SET l.titulo=$titulo, l.estado=$estado, "
+            "l.ocurrencias=$ocurrencias, l.fecha=$fecha",
+            params
+        )
 
 
 def add_live_outcome(strategy_id: str, outcome_data: dict,
@@ -234,26 +329,38 @@ def add_live_outcome(strategy_id: str, outcome_data: dict,
     fecha      = datetime.now().strftime("%Y-%m-%d")
     outcome_id = f"{strategy_id}-OUT-{fecha}"
 
-    conn.execute(
-        "MERGE (o:LiveOutcome {outcome_id: $oid}) "
-        "SET o.strategy_id=$sid, o.pf_produccion=$pf, "
-        "o.dd_produccion=$dd, o.duracion_dias=$dias, o.veredicto=$ver",
-        {
-            "oid": outcome_id,
-            "sid": strategy_id,
-            "pf":  float(outcome_data.get("pf_produccion", 0.0)),
-            "dd":  float(outcome_data.get("dd_produccion", 0.0)),
-            "dias": int(outcome_data.get("duracion_dias", 0)),
-            "ver": str(outcome_data.get("veredicto", "")),
-        }
-    )
+    params = {
+        "oid":  outcome_id,
+        "sid":  strategy_id,
+        "pf":   float(outcome_data.get("pf_produccion", 0.0)),
+        "dd":   float(outcome_data.get("dd_produccion", 0.0)),
+        "dias": int(outcome_data.get("duracion_dias", 0)),
+        "ver":  str(outcome_data.get("veredicto", "")),
+    }
+    try:
+        conn.execute(
+            "CREATE (:LiveOutcome {outcome_id: $oid, strategy_id: $sid, "
+            "pf_produccion: $pf, dd_produccion: $dd, "
+            "duracion_dias: $dias, veredicto: $ver})",
+            params
+        )
+    except Exception:
+        conn.execute(
+            "MATCH (o:LiveOutcome {outcome_id: $oid}) "
+            "SET o.pf_produccion=$pf, o.dd_produccion=$dd, "
+            "o.duracion_dias=$dias, o.veredicto=$ver",
+            params
+        )
 
-    conn.execute(
-        "MATCH (s:Strategy {strategy_id: $sid}), "
-        "(o:LiveOutcome {outcome_id: $oid}) "
-        "MERGE (s)-[:HAD_OUTCOME]->(o)",
-        {"sid": strategy_id, "oid": outcome_id}
-    )
+    try:
+        conn.execute(
+            "MATCH (s:Strategy {strategy_id: $sid}), "
+            "(o:LiveOutcome {outcome_id: $oid}) "
+            "CREATE (s)-[:HAD_OUTCOME]->(o)",
+            {"sid": strategy_id, "oid": outcome_id}
+        )
+    except Exception:
+        pass
 
 
 # ─── Consultas ─────────────────────────────────────────────────────────────────

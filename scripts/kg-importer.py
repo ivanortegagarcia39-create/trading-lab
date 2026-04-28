@@ -214,6 +214,9 @@ def main() -> int:
             if not isinstance(raw, dict):
                 print(f"  WARN: formato inesperado en registry — se esperaba dict, got {type(raw).__name__}")
                 raw = {}
+            # Desenvolver envelope {"strategies": {...}} si existe
+            if "strategies" in raw and isinstance(raw["strategies"], dict):
+                raw = raw["strategies"]
             strategies = parse_strategies_from_registry(raw)
             for s in strategies:
                 try:
