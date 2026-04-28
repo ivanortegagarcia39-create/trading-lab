@@ -116,6 +116,72 @@ def run_knowledge_reindex() -> None:
     _ok("ChromaDB re-indexado con nuevos resultados")
 
 
+def run_kg_integration(build_n: int, activo: str, gate_results: dict) -> None:
+    """Inserta build y estrategias aprobadas en el Knowledge Graph."""
+    kg_script = SCRIPTS / "knowledge-graph.py"
+    if not kg_script.exists():
+        _warn("knowledge-graph.py no encontrado — saltando KG")
+        return
+
+    # Inicializar KG si no existe
+    _run_quiet([sys.executable, str(kg_script), "--mode", "init"])
+
+    # Insertar el build
+    build_data = json.dumps({
+        "build_id":  f"B{str(build_n).zfill(2)}",
+        "activo":    activo,
+        "timeframe": "H1",
+        "fecha":     datetime.now().strftime("%Y-%m-%d"),
+        "spread":    0.0,
+        "estado":    "COMPLETADO",
+    })
+    _run_quiet([sys.executable, str(kg_script), "--mode", "add-build", "--data", build_data])
+
+    # Insertar estrategias que pasaron el EvalGate
+    strategies = gate_results.get("strategies", [])
+    inserted = 0
+    for s in strategies:
+        if str(s.get("resultado", "")).upper() != "PASA":
+            continue
+        sid = str(s.get("id", s.get("strategy_id", "")))
+        if not sid:
+            continue
+        s_data = json.dumps({
+            "strategy_id": sid,
+            "build_id":    f"B{str(build_n).zfill(2)}",
+            "pf":          float(s.get("pf", 0.0)),
+            "dd":          float(s.get("dd", 0.0)),
+            "trades":      int(s.get("trades", 0)),
+            "win_rate":    float(s.get("win_rate", 0.0)),
+            "sharpe":      float(s.get("sharpe", 0.0)),
+            "estado":      "APROBADA",
+        })
+        _run_quiet([sys.executable, str(kg_script), "--mode", "add-strategy", "--data", s_data])
+
+        # Registrar decisión de EvalGate
+        gate_args = [
+            sys.executable, str(kg_script), "--mode", "add-build",  # reused via python import
+        ]
+        # Llamar directamente via import para la gate decision
+        try:
+            import importlib.util
+            spec = importlib.util.spec_from_file_location("knowledge_graph", str(kg_script))
+            kg_mod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(kg_mod)
+            kg_mod.add_gate_decision(
+                strategy_id=sid,
+                gate_num=1,
+                gate_name="EvalGate",
+                resultado="PASA",
+                criterio=str(s.get("criterio", "")),
+            )
+        except Exception:
+            pass
+        inserted += 1
+
+    _ok(f"KG: build B{str(build_n).zfill(2)} y {inserted} estrategias insertados")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Build Finisher — TradingLab")
     parser.add_argument("--build",          type=int, required=True, help="Numero del build (ej: 11)")
@@ -170,6 +236,10 @@ def main() -> int:
     # Paso 7: re-index ChromaDB
     _step(8, "Re-indexando ChromaDB (knowledge-base.py)...")
     run_knowledge_reindex()
+
+    # Paso 7b: Knowledge Graph
+    _step(8, "Insertando en Knowledge Graph (knowledge-graph.py)...")
+    run_kg_integration(args.build, activo, gate)
 
     # Paso 8: informe Telegram
     _step(9, "Enviando informe Telegram...")

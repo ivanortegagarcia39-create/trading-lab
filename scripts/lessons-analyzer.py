@@ -333,7 +333,42 @@ def main() -> int:
         print(f"  {lid}: valida={valid}, confianza={conf}")
         print(f"    {adj}")
 
+    # Insertar lecciones ESTRUCTURALES en el Knowledge Graph
+    _insert_structural_lessons_to_kg(structural)
+
     return 0
+
+
+def _insert_structural_lessons_to_kg(structural: list[dict]) -> None:
+    """Inserta lecciones ESTRUCTURALES en el Knowledge Graph via subprocess."""
+    import subprocess
+    kg_script = Path(__file__).parent / "knowledge-graph.py"
+    if not kg_script.exists():
+        print("[WARN] knowledge-graph.py no encontrado — saltando KG")
+        return
+    if not structural:
+        return
+
+    print(f"\n[KG] Insertando {len(structural)} lecciones ESTRUCTURALES en el Knowledge Graph...")
+    inserted = 0
+    for l in structural:
+        data = json.dumps({
+            "lesson_id":   l["id"],
+            "titulo":      l["titulo"],
+            "estado":      l["estado"],
+            "ocurrencias": l["ocurrencias"],
+            "fecha":       datetime.now().strftime("%Y-%m-%d"),
+        })
+        result = subprocess.run(
+            [sys.executable, str(kg_script), "--mode", "add-lesson", "--data", data],
+            capture_output=True, text=True
+        )
+        if result.returncode == 0:
+            inserted += 1
+        else:
+            print(f"  WARN: {l['id']}: {result.stderr.strip()[:80]}")
+
+    print(f"  {inserted}/{len(structural)} lecciones insertadas en el KG.")
 
 
 if __name__ == "__main__":

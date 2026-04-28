@@ -1,6 +1,9 @@
 # Knowledge base ChromaDB (local, no versionar)
 .chromadb/
 
+# Knowledge Graph Kùzu (local, no versionar)
+.kuzu/
+
 # Python compilados
 *.pyc
 __pycache__/
