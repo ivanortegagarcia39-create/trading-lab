@@ -5,10 +5,10 @@
 | Campo | Valor |
 |-------|-------|
 | Fase actual | Capa 0 |
-| Build activo | Build 10 — XAUUSD H1 |
+| Build activo | Build 11 — XAUUSD H1 (pendiente lanzar en alber) |
 | Estrategias en producción | 0 |
-| Estrategias en databank | 2 (en curso) |
-| Última actualización | 2026-04-22 |
+| Estrategias en databank | 2 (Build 10 completado) |
+| Última actualización | 2026-04-27 |
 
 ---
 
@@ -83,10 +83,11 @@ SORT file.mtime DESC
 
 ## Builds Históricos
 
-| Build | Activo | TF | Estado | Databank | Mejor PF |
-|-------|--------|----|--------|----------|----------|
-| 1-8 | Varios | M15/H1 | DESCARTADOS | 0 | < 1.3 |
-| 10 | XAUUSD | H1 | EN CURSO | 2 | 1.31 |
+| Build | Activo | TF | Estado | Databank | Mejor PF | Notas |
+|-------|--------|----|--------|----------|----------|-------|
+| 1-8 | Varios | M15/H1 | DESCARTADOS | 0 | < 1.3 | — |
+| 10 | XAUUSD | H1 | COMPLETADO | 2 estrategias | 1.31 | Spread 30 pips — incorrecto, debería ser 60 |
+| 11 | XAUUSD | H1 | PENDIENTE | — | — | Spread 60 pips — pendiente lanzar en alber |
 
 ---
 
@@ -111,14 +112,98 @@ WHERE file.name = "lessons-learned"
 
 ---
 
+## Archivos de Configuracion
+
+| Archivo | Proposito |
+|---------|-----------|
+| config/build-defaults.json | Spreads, slippage, swaps por activo |
+| config/pipeline-config.json | Umbrales numericos de todas las puertas |
+| config/telegram-config.json | Credenciales Telegram (no en git) |
+
+---
+
+## Templates Disponibles
+
+| Template | Uso |
+|----------|-----|
+| templates/build-report.md | Resultado de cada build SQ |
+| templates/strategy-evaluation.md | Evaluacion individual de estrategia |
+| templates/daily-review.md | Revision diaria del sistema |
+| templates/challenge-daily-log.md | Log diario de challenge FTMO |
+| templates/weekly-pipeline-review.md | Revision semanal del pipeline |
+
+---
+
+## Estado de Scripts Python
+Todos los scripts probados y operativos en ivano (2026-04-27):
+
+| Script | Estado | Dependencias |
+|--------|--------|-------------|
+| pre-build-checklist.py | OK | pandas, pytz |
+| evaluator-assistant.py | OK | pandas |
+| portfolio-builder.py | OK | pandas, numpy |
+| pipeline-runner.py | OK | pandas |
+| build-analyzer.py | OK | pandas |
+| hash-logger.py | OK | hashlib |
+| strategy-versioning.py | OK | json |
+| knowledge-base.py | OK | chromadb |
+| telegram-notifier.py | OK | requests |
+| lessons-analyzer.py | OK | re |
+| hrp-portfolio.py | OK | numpy |
+| strategy-fingerprint.py | OK | xml, hashlib |
+| inflation-diagnostic.py | OK | pandas |
+| coordination-detector.py | OK | json |
+| sqx-build-config.py | OK | json, pytz |
+| market-regime-snapshot.py | OK | pandas, numpy |
+| validate-sqx-folder.py | OK | pandas |
+| mql5-auditor.py | OK | re |
+| sq-watchdog.py | OK | subprocess |
+| vps-health-monitor.py | OK | subprocess |
+| ftmo-dd-calculator.py | OK | pandas, pytz |
+| strategy-analyzer.py | OK | pandas |
+| portfolio-monitor.py | OK | pandas |
+| system-health-check.py | OK | subprocess |
+| session-starter.py | OK | subprocess |
+| data-quality-checker.py | OK | pandas |
+| challenge-simulator.py | OK | json |
+| portfolio-rebalancer.py | OK | pandas, numpy |
+| auto-reporter.py | OK | subprocess |
+| build-comparator.py | OK | pandas |
+| risk-calculator.py | OK | json |
+
+---
+
+## Telegram Bot
+
+- Bot: @tradinglab_monitor_bot
+- Estado: Activo
+- Notificaciones: INFO / WARNING / CRITICAL
+
+---
+
+## 📊 Métricas del Sistema (2026-04-27)
+
+| Métrica | Valor |
+|---------|-------|
+| Planning maestro | 152/172 tareas (88%) |
+| Scripts Python operativos | 31 |
+| Agentes documentados | 19 |
+| Skills documentadas | 42+ |
+| ChromaDB chunks | 90 |
+| Telegram bot | @tradinglab_monitor_bot ✅ |
+| Audit trail entradas | 2 |
+| Estrategias registradas | 1 (XAUUSD-B10-1114-v1) |
+| Builds completados | 1 (Build 10) |
+| Estrategias en producción | 0 |
+
+---
+
 ## Pendiente de Hardware
 
-| Tarea | Requiere | Fase |
-|-------|----------|------|
-| Instalar Ollama | alber encendido | Fase 3 |
-| Instalar ChromaDB | alber encendido | Fase 3 |
-| Relanzar Build 10 con spread 60 pips | SQ en alber | Inmediato |
-| Reparar repo alber | alber encendido | Inmediato |
-| Contratar VPS MT5 | Tarjeta de crédito | Fase 5 |
-| Crear bot Telegram | Cuenta Telegram | Fase 4 |
+| Tarea | Requiere | Prioridad |
+|-------|----------|-----------|
+| Lanzar Build 11 con spread 60 pips | SQ en alber | PRÓXIMA ACCIÓN |
+| Exportar resultados Build 10 | alber encendido | PRÓXIMA ACCIÓN |
+| Instalar Ollama en alber | alber encendido | PENDIENTE |
+| Contratar VPS MT5 | Tarjeta de credito | Fase 5 |
 | Instalar N8N | alber + 5 estrategias | Fase 6 |

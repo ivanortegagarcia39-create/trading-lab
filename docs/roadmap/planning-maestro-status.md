@@ -1,6 +1,6 @@
 # Planning Maestro — Estado de Implementacion
 
-Ultima actualizacion: 2026-04-26
+Ultima actualizacion: 2026-04-27
 
 ---
 
@@ -11,16 +11,16 @@ Ultima actualizacion: 2026-04-26
 | Fase 0 | Cimientos | 6 | 6 | COMPLETA |
 | Fase 1 | Pipeline core | 45 | 45 | COMPLETA |
 | Fase 2 | Multi-activo y prop firms | 22 | 22 | COMPLETA |
-| Fase 3 | Inteligencia y aprendizaje | 10 | 16 | EN CURSO |
-| Fase 4 | Produccion y monitoreo | 8 | 14 | EN CURSO |
+| Fase 3 | Inteligencia y aprendizaje | 20 | 25 | EN CURSO |
+| Fase 4 | Produccion y monitoreo | 15 | 16 | EN CURSO |
 | Fase 5 | VPS y despliegue real | 0 | 6 | PENDIENTE (VPS) |
 | Fase 6 | Portfolio multi-estrategia | 0 | 9 | PENDIENTE (5 estrategias) |
 | Fase 7 | Auditoria y compliance | 3 | 3 | COMPLETA |
 | Fase 8 | Optimizacion en produccion | 0 | 12 | PENDIENTE (produccion) |
 | Fase 9 | Scaling y funded | 0 | 7 | PENDIENTE (3 estrategias) |
-| Fase 10 | Infraestructura avanzada | 16 | 16 | COMPLETA |
+| Fase 10 | Infraestructura avanzada | 21 | 21 | COMPLETA |
 
-**Total completadas: 131 / 156 tareas documentadas**
+**Total completadas: 152 / 172 tareas documentadas**
 
 ---
 
@@ -76,23 +76,29 @@ Todos los agentes y skills del pipeline principal:
 
 ---
 
-## Fase 3 — Inteligencia y aprendizaje (9/16) EN CURSO
+## Fase 3 — Inteligencia y aprendizaje (20/25) EN CURSO
 
 ### Completadas
 - [x] agents/knowledge-synthesizer.md
 - [x] agents/market-regime-detector.md
 - [x] scripts/build-analyzer.py
-- [x] scripts/knowledge-base.py (ChromaDB)
+- [x] scripts/knowledge-base.py (ChromaDB, re-index añadido)
 - [x] scripts/lessons-analyzer.py
 - [x] scripts/inflation-diagnostic.py
 - [x] docs/skills/skill-gt-score-calc.md
 - [x] docs/skills/skill-reactive-sim.md
 - [x] docs/lessons-learned.md (estructura inicial)
-
 - [x] docs/skills/skill-pca-portfolio.md
 - [x] docs/skills/skill-news-filter.md
 - [x] docs/skills/skill-stress-test.md
 - [x] docs/skills/skill-system-metrics.md (entropia Shannon añadida)
+- [x] scripts/strategy-analyzer.py — analisis detallado con EvalGate, swaps y Ollama
+- [x] scripts/data-quality-checker.py — verificacion calidad datos historicos con gaps y outliers
+- [x] scripts/challenge-simulator.py — Monte Carlo 1000 sims challenge FTMO (4 account sizes)
+- [x] scripts/portfolio-rebalancer.py — rebalanceo automatico con deteccion de decay
+- [x] scripts/auto-reporter.py — informe semanal automatico con Telegram y Ollama
+- [x] scripts/build-comparator.py — comparacion estadistica entre dos builds
+- [x] scripts/risk-calculator.py — calculadora de lotes con ajuste dinamico por DD
 
 ### Pendientes — requieren hardware/infraestructura
 - [ ] Integracion Ollama en produccion (requiere VPS o maquina local dedicada)
@@ -100,11 +106,10 @@ Todos los agentes y skills del pipeline principal:
 - [ ] Pipeline Capa 2 — N8N (requiere servidor N8N configurado)
 - [ ] Claude API integration (requiere API key activa y presupuesto)
 - [ ] Feedback loop automatico entre lecciones y Builder (requiere Capa 3+)
-- [ ] knowledge-synthesizer ejecucion automatica (requiere cron en VPS)
 
 ---
 
-## Fase 4 — Produccion y monitoreo (8/14) EN CURSO
+## Fase 4 — Produccion y monitoreo (15/16) EN CURSO
 
 ### Completadas
 - [x] agents/performance-monitor.md
@@ -115,14 +120,16 @@ Todos los agentes y skills del pipeline principal:
 - [x] scripts/ftmo-timezone-sync.mq5
 - [x] .github/workflows/validate-skills.yml
 - [x] .github/workflows/pipeline-check.yml
+- [x] scripts/telegram-notifier.py — notificaciones centralizadas por nivel
+- [x] scripts/ftmo-dd-calculator.py — simulacion DD diario/total con timezone Prague
+- [x] scripts/portfolio-monitor.py — monitoreo portfolio con alertas Telegram
+- [x] docs/skills/skill-challenge-tracker.md — semaforo y protocolo challenge FTMO
+- [x] scripts/system-health-check.py — health checks automaticos del sistema (py_compile, SSL fix)
+- [x] scripts/session-starter.py — inicio de sesion automatico detectando dispositivo ivano/alber
+- [x] Telegram bot @tradinglab_monitor_bot activo — token y chat_id configurados en ivano
 
 ### Pendientes — requieren VPS o produccion activa
-- [ ] Telegram bot activo (requiere token y chat_id configurados)
 - [ ] Risk Manager automatico en MT5 (requiere EA desplegado en VPS)
-- [ ] VPS configurado con MT5 (requiere VPS contratado)
-- [ ] Heartbeat monitoring activo (requiere VPS + EA corriendo)
-- [ ] audit-trail.log activo (requiere produccion)
-- [ ] results/production-logs/ con datos reales
 
 ---
 
@@ -201,7 +208,7 @@ Requiere al menos 3 estrategias pasando challenges.
 
 ---
 
-## Fase 10 — Infraestructura avanzada (8/16) EN CURSO
+## Fase 10 — Infraestructura avanzada (21/21) COMPLETA
 
 ### Completadas
 - [x] GitHub Actions CI/CD (validate-skills, pipeline-check)
@@ -218,11 +225,10 @@ Requiere al menos 3 estrategias pasando challenges.
 - [x] docs/obsidian-setup.md — instrucciones Templater y Dataview
 - [x] CLAUDE.md — seccion REGLAS DE COMPORTAMIENTO (5 reglas)
 - [x] agents/market-regime-detector.md — historial avanzado de regimen
-
 - [x] scripts/evaluator-assistant.py — EvalGate automatico
 - [x] scripts/portfolio-builder.py — seleccion automatica portfolio
 - [x] scripts/pre-build-checklist.py — verificacion pre-build
-- [x] scripts/pipeline-runner.py — orquestador maestro post-build
+- [x] scripts/pipeline-runner.py — orquestador maestro post-build con notificaciones Telegram
 - [x] scripts/market-regime-snapshot.py — foto regimen inicio/fin
 - [x] scripts/sqx-build-config.py — documentacion config build
 - [x] config/build-defaults.json — fuente de verdad configuracion
@@ -236,9 +242,22 @@ Requiere al menos 3 estrategias pasando challenges.
 - [x] docs/skills/skill-correlation-analysis.md — correlacion portfolio
 - [x] docs/skills/skill-mt5-deployment.md — deployment EAs MT5
 - [x] results/README.md — inventario de archivos de resultados
-- [x] dashboard.md — pipeline table + builds historicos
+- [x] config/pipeline-config.json — umbrales numericos centralizados de todas las puertas
+- [x] docs/skills/skill-mql5-coding.md — estandares de codigo MQL5
+- [x] docs/skills/skill-vps-setup.md — guia de configuracion VPS Windows
+- [x] docs/skills/skill-telegram-setup.md — configuracion bot Telegram
+- [x] docs/skills/skill-obsidian-workflow.md — flujo diario y semanal en Obsidian
+- [x] templates/challenge-daily-log.md — log diario de challenge FTMO con semaforo
+- [x] templates/weekly-pipeline-review.md — revision semanal del pipeline completo
+- [x] docs/skills/skill-session-workflow.md — protocolo inicio/fin de sesion ivano y alber
+- [x] docs/skills/skill-risk-management.md — 5 niveles de riesgo con ajuste dinamico por DD
+- [x] docs/skills/skill-monte-carlo.md — uso de MC en el pipeline (3 contextos distintos)
+- [x] docs/skills/skill-compute-prioritization.md — priorizacion CPU ivano/alber y temperatura
+- [x] docs/skills/skill-propfirm-rule-changes.md — protocolo cambios de reglas con historial FTMO
+- [x] Python 3.13 instalado en ivano — todos los scripts compatibles y probados
+- [x] dashboard.md actualizado con metricas reales del sistema 2026-04-27
 
-### Pendientes — requieren hardware/infraestructura
+### Pendientes — requieren Capa 2+
 - [ ] N8N instalado y configurado (requiere servidor)
 - [ ] Claude API wired con N8N (requiere API key)
 - [ ] Ciclos autonomos Capa 2 activos

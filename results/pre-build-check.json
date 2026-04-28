@@ -1,0 +1,28 @@
+{
+  "timestamp": "2026-04-27T10:11:13.518784Z",
+  "activo": "XAUUSD",
+  "spread_configurado": 60.0,
+  "resultado_global": "WARN",
+  "checks": [
+    {
+      "check": "Spread 2x configurado",
+      "status": "PASS",
+      "message": "Spread 60.0 pips >= 60.0 pips (OK)"
+    },
+    {
+      "check": "OOS date reciente",
+      "status": "WARN",
+      "message": "Fecha OOS no especificada. Verificar que OOS termina en fecha reciente (< 30 dias)."
+    },
+    {
+      "check": "Datos M1 disponibles",
+      "status": "WARN",
+      "message": "Ruta de datos no especificada para XAUUSD. Verificar manualmente que los datos M1 estan disponibles en SQ."
+    },
+    {
+      "check": "Sin pipeline.lock activo",
+      "status": "PASS",
+      "message": "No hay pipeline.lock activo"
+    }
+  ]
+}

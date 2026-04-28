@@ -1,0 +1,53 @@
+{
+  "build_num": 10,
+  "fecha": "2026-04-27",
+  "activo": "XAUUSD",
+  "simbolo_sq": "XAUUSD_M1_dukas",
+  "instrumento": "XAUUSD_ftmo",
+  "timeframe": "H1",
+  "periodo_is": "2003-2020",
+  "periodo_oos": "2021-actual",
+  "spread_real_ftmo": 30.0,
+  "spread_backtest_sucio": 60.0,
+  "spread_2x_correcto": true,
+  "slippage_configurado": 2,
+  "comision_usd_lote": 7,
+  "riesgo_por_trade_pct": 1,
+  "capital_inicial": 25000,
+  "max_trades_dia": 2,
+  "sesion_inicio": "08:00",
+  "sesion_fin": "20:00",
+  "sl_atr_multiplicador": {
+    "min": 1.5,
+    "max": 3.0
+  },
+  "tp_atr_multiplicador": {
+    "min": 3.0,
+    "max": 6.0
+  },
+  "ratio_tp_sl_minimo_pct": 200,
+  "genetica": {
+    "generaciones": 30,
+    "poblacion_por_isla": 100,
+    "islas": 4,
+    "modo_continuo": true,
+    "max_estrategias": 1000
+  },
+  "filtros_sq": {
+    "pf_minimo": 1.3,
+    "trades_mes_minimo": 6,
+    "ret_dd_minimo": 0.8
+  },
+  "filtros_python": {
+    "total_trades": 120,
+    "win_rate": 38,
+    "dd_max": 7
+  },
+  "comprobaciones_cruzadas": true,
+  "swaps_ftmo": {
+    "largo": -50.63,
+    "corto": 17.67
+  },
+  "notas": "Spread incorrecto - 30 pips en lugar de 60. Primer build con datos corregidos Fase 0.",
+  "advertencias": []
+}

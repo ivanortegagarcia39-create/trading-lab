@@ -1,0 +1,125 @@
+{
+  "timestamp": "2026-04-27T14:10:17.804288",
+  "checks": [
+    {
+      "check": "  pandas",
+      "status": "OK",
+      "detail": ""
+    },
+    {
+      "check": "  numpy",
+      "status": "OK",
+      "detail": ""
+    },
+    {
+      "check": "  pytz",
+      "status": "OK",
+      "detail": ""
+    },
+    {
+      "check": "  requests",
+      "status": "OK",
+      "detail": ""
+    },
+    {
+      "check": "  chromadb (opcional)",
+      "status": "OK",
+      "detail": ""
+    },
+    {
+      "check": "  agents/",
+      "status": "OK",
+      "detail": ""
+    },
+    {
+      "check": "  docs/skills/",
+      "status": "OK",
+      "detail": ""
+    },
+    {
+      "check": "  scripts/",
+      "status": "OK",
+      "detail": ""
+    },
+    {
+      "check": "  config/",
+      "status": "OK",
+      "detail": ""
+    },
+    {
+      "check": "  results/",
+      "status": "OK",
+      "detail": ""
+    },
+    {
+      "check": "  templates/",
+      "status": "OK",
+      "detail": ""
+    },
+    {
+      "check": "  CLAUDE.md",
+      "status": "OK",
+      "detail": ""
+    },
+    {
+      "check": "  config/pipeline-config.json",
+      "status": "OK",
+      "detail": ""
+    },
+    {
+      "check": "  config/build-defaults.json",
+      "status": "OK",
+      "detail": ""
+    },
+    {
+      "check": "  config/telegram-config.json",
+      "status": "OK",
+      "detail": ""
+    },
+    {
+      "check": "  bot responde ping",
+      "status": "OK",
+      "detail": "@tradinglab_monitor_bot"
+    },
+    {
+      "check": "  .chromadb/",
+      "status": "OK",
+      "detail": ""
+    },
+    {
+      "check": "  datos indexados",
+      "status": "OK",
+      "detail": "90 chunks en 1 colecciones"
+    },
+    {
+      "check": "  results/pipeline.lock",
+      "status": "OK",
+      "detail": "sin lock activo"
+    },
+    {
+      "check": "  git repo",
+      "status": "OK",
+      "detail": ""
+    },
+    {
+      "check": "  working tree",
+      "status": "WARN",
+      "detail": "1 archivo(s) sin commitear"
+    },
+    {
+      "check": "  sincronizado con origin/main",
+      "status": "OK",
+      "detail": ""
+    },
+    {
+      "check": "  30 scripts",
+      "status": "OK",
+      "detail": "sin errores de sintaxis"
+    }
+  ],
+  "summary": {
+    "ok": 22,
+    "warn": 1,
+    "fail": 0
+  }
+}

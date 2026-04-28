@@ -1,0 +1,69 @@
+{
+    "pipeline": {
+        "version": "1.0",
+        "fecha": "2026-04-26",
+        "capa_actual": 0
+    },
+    "eval_gate": {
+        "H1": {
+            "pf_minimo": 1.5,
+            "dd_maximo_pct": 7,
+            "trades_minimos": 120,
+            "win_rate_minimo": 38,
+            "sharpe_minimo": 0.5,
+            "trades_mes_minimo": 8,
+            "dd_anno_maximo": 8,
+            "pf_postswaps_ratio_minimo": 0.80,
+            "triple_swap_maximo_pct": 15
+        },
+        "H4": {
+            "pf_minimo": 1.5,
+            "dd_maximo_pct": 7,
+            "trades_minimos": 50,
+            "win_rate_minimo": 38,
+            "sharpe_minimo": 0.5,
+            "trades_mes_minimo": 3
+        }
+    },
+    "retester_12b": {
+        "pf_oos_minimo": 1.3,
+        "caida_pf_maxima_pct": 20,
+        "dd_oos_maximo": 6.5,
+        "trades_mes_oos_minimo": 6
+    },
+    "wfo": {
+        "wfe_minimo": 50,
+        "configuraciones_minimas": 3,
+        "total_configuraciones": 5,
+        "catastrophic_veto_pf": 0.8,
+        "catastrophic_veto_dd": 10
+    },
+    "portfolio": {
+        "correlacion_maxima": 0.5,
+        "dd_combinado_maximo": 12,
+        "estrategias_minimas": 3,
+        "estrategias_maximas": 8,
+        "max_activos_factor_dolar": 2,
+        "max_estrategias_por_propfirm": 3
+    },
+    "forward_test": {
+        "trades_minimos": 20,
+        "pf_minimo_ratio_oos": 0.70,
+        "dd_maximo_ratio_oos": 1.30
+    },
+    "risk_manager": {
+        "riesgo_normal_pct": 1.0,
+        "dd_warning_pct": 3.0,
+        "dd_reduccion_pct": 4.0,
+        "riesgo_reducido_pct": 0.5,
+        "dd_critico_pct": 6.0,
+        "riesgo_minimo_pct": 0.25,
+        "dd_stop_pct": 4.8,
+        "dd_total_stop_pct": 9.5
+    },
+    "meta_monitor": {
+        "tasa_aprobacion_minima_semana": 0.5,
+        "semanas_alerta": 2,
+        "build_sin_databank_horas": 72
+    }
+}

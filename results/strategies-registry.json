@@ -1,0 +1,19 @@
+{
+  "strategies": {
+    "XAUUSD-B10-1114": {
+      "id": "XAUUSD-B10-1114",
+      "activo": "XAUUSD",
+      "build": "B10",
+      "id_sq": "1114",
+      "versiones": {
+        "v1": {
+          "timestamp": "2026-04-27T12:43:55",
+          "metricas": {},
+          "estado": "standby",
+          "razon_creacion": "build inicial"
+        }
+      },
+      "version_activa": "v1"
+    }
+  }
+}
