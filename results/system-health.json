@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-04-29T00:28:00.486877",
+  "timestamp": "2026-04-29T00:53:31.620564",
   "checks": [
     {
       "check": "  pandas",
@@ -89,7 +89,7 @@
     {
       "check": "  datos indexados",
       "status": "OK",
-      "detail": "909 chunks en 1 colecciones"
+      "detail": "1005 chunks en 1 colecciones"
     },
     {
       "check": "  results/pipeline.lock",
@@ -104,7 +104,7 @@
     {
       "check": "  working tree",
       "status": "WARN",
-      "detail": "1 archivo(s) sin commitear"
+      "detail": "2 archivo(s) sin commitear"
     },
     {
       "check": "  sincronizado con origin/main",
@@ -112,7 +112,7 @@
       "detail": ""
     },
     {
-      "check": "  55 scripts",
+      "check": "  56 scripts",
       "status": "OK",
       "detail": "sin errores de sintaxis"
     }
