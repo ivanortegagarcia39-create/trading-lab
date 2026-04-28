@@ -2,89 +2,121 @@ Lee CLAUDE.md y todos los archivos en agents/ y docs/skills/.
 
 Continuamos desde ivano. Crea los siguientes archivos.
 
-TAREA 1 - Crear scripts/retester-helper.py
-Script que ayuda a gestionar el proceso del Retester en SQ
-después de que el EvalGate aprueba estrategias.
+TAREA 1 - Crear scripts/news-filter-checker.py
+Script que verifica si hay noticias de alto impacto próximas
+antes de abrir una operación o lanzar un build.
 
-FLUJO:
-1. Lee results/evaluation-gate-results.json
-2. Muestra la lista de estrategias que pasan el EvalGate
-3. Para cada estrategia muestra instrucciones exactas para el Retester en SQ:
-   - Nombre exacto del archivo .sqx
-   - Configuración del Retester recomendada
-   - Fechas IS y OOS a usar
-   - Si debe ejecutar Monte Carlo: Sí (200 simulaciones, 95% confianza)
-4. Después del Retester muestra criterios del Paso 12b para verificar
-5. Genera checklist de resultados que el usuario debe rellenar manualmente
-6. Guarda checklist en results/retester-checklist-[fecha].md
+FUNCIONES:
+- Consultar ForexFactory calendar API (si disponible)
+- Si no hay API disponible: usar lista hardcodeada de horarios típicos
+  de noticias de alto impacto por día de la semana
+- Verificar si hay evento en los próximos 30 minutos
+- Verificar si hay evento NFP o FOMC en los próximos 30 minutos
+  (ventana extendida de 30 minutos en lugar de 15)
+- Output: SAFE / WARNING / DANGER
+  SAFE: sin noticias en próximos 30 minutos
+  WARNING: noticia de impacto medio en próximos 15 minutos
+  DANGER: noticia de alto impacto en próximos 30 minutos
 
-ARGUMENTOS: --eval-results (default: results/evaluation-gate-results.json)
+Horarios típicos hardcodeados (UTC):
+Lunes: sin noticias críticas típicas
+Martes: 09:00 (datos europeos), 13:30 (datos EEUU)
+Miércoles: 13:30 (datos EEUU), 18:00 (FOMC si aplica)
+Jueves: 07:00 (BCE si aplica), 13:30 (NFP jueves previo)
+Viernes: 13:30 (NFP primer viernes del mes)
 
-TAREA 2 - Crear scripts/wfo-helper.py  
-Script que ayuda a gestionar el proceso WFO después del Retester.
+Argumento: --check-now (verificar estado actual)
+           --activo (para filtrar noticias relevantes)
 
-FLUJO:
-1. Lee results/retester-checklist-[fecha].md más reciente
-2. Muestra estrategias que pasan el Paso 12b
-3. Para cada estrategia muestra instrucciones exactas para el WFO en SQ:
-   - Configuración WFO recomendada: IS 70%, OOS 30%, 5 ventanas
-   - Activar WF Matrix: Sí
-   - Catastrophic Veto: activado
-4. Después del WFO muestra criterios de aprobación:
-   - WFE >= 50%
-   - >= 3/5 configuraciones pasadas
-   - Catastrophic Veto: ninguna ventana PF < 0.8
-5. Genera checklist WFO en results/wfo-checklist-[fecha].md
+TAREA 2 - Crear scripts/spread-monitor.py
+Script que monitorea el spread actual de los activos
+para detectar condiciones anómalas antes de operar.
 
-TAREA 3 - Crear scripts/stress-tester.py
-Script que guía el stress test histórico de las 5 épocas críticas.
+FUNCIONES:
+- Leer spread actual desde MT5 si está disponible
+- Si MT5 no disponible: usar spread de referencia de config/build-defaults.json
+- Comparar spread actual vs spread promedio del activo
+- Calcular factor de spread: spread_actual / spread_promedio
+- Output por activo:
+  NORMAL: factor < 1.5x
+  ELEVATED: factor 1.5x - 3x (operar con precaución)
+  EXTREME: factor > 3x (no operar — Dynamic Spread Protection)
 
-FLUJO:
-1. Lee results/wfo-checklist más reciente
-2. Muestra estrategias que pasan el WFO
-3. Para cada estrategia y cada época crítica muestra:
-   - Nombre del período: Crisis 2008, Flash CHF 2015, COVID 2020, Inflación 2022, SVB 2023
-   - Fechas exactas a configurar en el Retester de SQ
-   - Criterio: DD < 8% en cada período
-4. Genera tabla de resultados a rellenar manualmente
-5. Guarda en results/stress-test-results-[fecha].md
-6. Calcula score final por estrategia (cuántos períodos pasa)
+Argumentos: --activo, --check-interval (default 60s), --watch
 
-TAREA 4 - Crear docs/skills/skill-pipeline-execution-guide.md
-Guía práctica de ejecución del pipeline completo.
-Esta es la guía que se usa durante una sesión real de trabajo.
+TAREA 3 - Crear docs/skills/skill-ea-parameters.md
+Documenta todos los parámetros que debe tener cada EA exportado
+desde SQ para TradingLab:
 
-ESTRUCTURA:
-1. Antes de empezar (comandos de inicio de sesión)
-2. Fase Builder (build-launcher.py + SQ manual)
-3. Fase EvalGate (build-finisher.py automático)
-4. Fase Retester (retester-helper.py + SQ manual)
-5. Fase WFO (wfo-helper.py + SQ manual)
-6. Fase Stress Test (stress-tester.py + SQ manual)
-7. Fase Portfolio (portfolio-builder.py automático)
-8. Fase Forward Test (MT5 demo automático)
-9. Autorización del Challenge (Telegram → SI humano)
-10. Comandos de fin de sesión
+PARÁMETROS OBLIGATORIOS:
+- Risk: porcentaje de riesgo por trade (default 1.0)
+- MagicNumber: identificador único del EA
+- MaxSlippagePips: límite de slippage por activo
+- UseNewsFilter: activar filtro de noticias (default true)
+- NewsFilterMinutes: ventana de protección (default 15)
+- UseDynamicSpreadProtection: activar si spread > 3x (default true)
+- MaxSpreadMultiplier: factor máximo de spread permitido (default 3.0)
+- CloseOnFriday: cerrar posiciones viernes 22:00 CEST (default true)
+- FridayCloseHour: hora de cierre viernes en UTC (default 20)
+- UseHeartbeat: activar heartbeat para vps-health-monitor (default true)
+- HeartbeatFile: ruta al archivo de heartbeat
 
-Para cada fase: comando exacto + qué hace el humano + qué hace el sistema.
+PARÁMETROS OPCIONALES:
+- MaxDailyTrades: máximo trades por día (default 2)
+- TradingStartHour: hora inicio sesión UTC (default 6)
+- TradingEndHour: hora fin sesión UTC (default 18)
+- UseAntiSync: activar delay aleatorio anti-sincronización (default true)
+- AntiSyncMinMs: delay mínimo en ms (default 500)
+- AntiSyncMaxMs: delay máximo en ms (default 3500)
 
-TAREA 5 - Actualizar docs/roadmap/planning-maestro-status.md
-Añadir como completadas las últimas tareas:
-- scripts/build-launcher.py
-- scripts/build-finisher.py
-- scripts/build-queue-manager.py
-- scripts/retester-helper.py
-- scripts/wfo-helper.py
-- scripts/stress-tester.py
-- docs/skills/skill-pipeline-gates-checklist.md
-- docs/skills/skill-pipeline-execution-guide.md
-- docs/architecture/pipeline-diagram.md
-- ChromaDB re-indexado con 909 chunks
+VALORES POR ACTIVO:
+XAUUSD: MaxSlippagePips=50, Risk=1.0
+EURUSD: MaxSlippagePips=5, Risk=1.0
+GBPUSD: MaxSlippagePips=5, Risk=1.0
+USDJPY: MaxSlippagePips=5, Risk=1.0
 
-Actualizar total: debería llegar a ~158/172 o más.
+TAREA 4 - Crear docs/skills/skill-forward-test-protocol.md
+Documenta el protocolo completo del forward test en MT5 demo:
+
+CONFIGURACIÓN INICIAL:
+1. Abrir cuenta demo FTMO (válida 45 días)
+2. Capital demo = capital del challenge objetivo (10k, 25k, etc.)
+3. Desplegar EA en VPS con parámetros de producción
+4. Configurar Risk = 1% (o ajustado por portfolio)
+5. Verificar que EA abre trades correctamente en las primeras 24h
+
+MONITOREO DIARIO:
+- Verificar que el EA sigue conectado (heartbeat activo)
+- Registrar balance diario en ftmo-account-tracker.py
+- Si DD > 3% → alerta, revisar si es normal o señal de problema
+- Si 5 días sin trades → verificar configuración del EA
+
+CRITERIOS DE APROBACIÓN AUTOMÁTICA:
+Los 3 deben cumplirse simultáneamente:
+1. Mínimo 20 trades ejecutados
+2. PF producción >= 70% del PF OOS del backtest
+3. DD máximo <= DD OOS del backtest * 1.30
+
+CRITERIO DE FALLA AUTOMÁTICA:
+Si cualquiera falla → estrategia a cola de reemplazo
+Sin segunda oportunidad en el mismo ciclo
+
+TRAS APROBAR:
+orchestrator genera notificación Telegram con todos los datos
+Humano responde SI para autorizar compra del challenge
+Sistema registra la autorización en audit trail
+
+TAREA 5 - Actualizar docs/project-status.md
+Fecha: 2026-04-28
+Estado completo actualizado:
+- Scripts Python: 41 operativos
+- Planning: 163/183 tareas (89%)
+- Próxima acción inmediata: ir a alber, git pull, lanzar Build 11
+- Comando exacto para mañana:
+  python scripts/build-launcher.py --build 11 --activo XAUUSD --spread-real 30
 
 Al terminar:
 git add .
-git commit -m "Scripts: retester-helper, wfo-helper, stress-tester. Skills: pipeline-execution-guide. Planning actualizado ~158/172"
+git commit -m "Scripts: news-filter-checker, spread-monitor. Skills: ea-parameters, forward-test-protocol. Project-status actualizado 2026-04-28"
 git push origin main
 Confirma con tabla.
