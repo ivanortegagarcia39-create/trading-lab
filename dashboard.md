@@ -81,6 +81,32 @@ SORT file.mtime DESC
 
 ---
 
+## 🔄 Scripts del Pipeline (orden de ejecución)
+
+### Fase Builder
+| Paso | Script | Cuándo |
+|------|--------|--------|
+| 1 | build-launcher.py | Antes de lanzar SQ |
+| 2 | SQ Builder (manual) | 24-48h corriendo |
+| 3 | build-finisher.py | Al exportar CSVs de SQ |
+
+### Fase Validación
+| Paso | Script | Cuándo |
+|------|--------|--------|
+| 4 | retester-helper.py | Antes del Retester en SQ |
+| 5 | SQ Retester (manual) | Después de EvalGate |
+| 6 | wfo-helper.py | Antes del WFO en SQ |
+| 7 | SQ WFO (manual) | Después del Retester |
+| 8 | stress-tester.py | Después del WFO |
+
+### Fase Portfolio
+| Paso | Script | Cuándo |
+|------|--------|--------|
+| 9 | portfolio-builder.py | Automático |
+| 10 | portfolio-monitor.py | Continuo en producción |
+
+---
+
 ## Builds Históricos
 
 | Build | Activo | TF | Estado | Databank | Mejor PF | Notas |
