@@ -25,3 +25,10 @@ config/api-keys.json
 config/*.secret
 *.env
 heartbeat.txt
+
+# Self-improvement system (datos locales, no versionar)
+config/dspy-compiled/
+config/dspy-training/
+config/bayesian-criteria.json
+config/bayesian-audit-trail.jsonl
+config/self-improvement-log.jsonl

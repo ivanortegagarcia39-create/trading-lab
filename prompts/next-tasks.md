@@ -1,122 +1,212 @@
 Lee CLAUDE.md y todos los archivos en agents/ y docs/skills/.
 
-Continuamos desde ivano. Crea los siguientes archivos.
+Vamos a implementar P2.1 DSPy y P2.2 Bayesian Updating.
+Estos dos sistemas hacen que TradingLab aprenda solo
+y mejore continuamente sin intervención humana.
 
-TAREA 1 - Crear scripts/news-filter-checker.py
-Script que verifica si hay noticias de alto impacto próximas
-antes de abrir una operación o lanzar un build.
+TAREA 1 - Crear scripts/dspy-optimizer.py
+Sistema de auto-optimización de prompts con DSPy.
+DSPy compila prompts automáticamente basándose en
+ejemplos reales de input/output del sistema.
 
-FUNCIONES:
-- Consultar ForexFactory calendar API (si disponible)
-- Si no hay API disponible: usar lista hardcodeada de horarios típicos
-  de noticias de alto impacto por día de la semana
-- Verificar si hay evento en los próximos 30 minutos
-- Verificar si hay evento NFP o FOMC en los próximos 30 minutos
-  (ventana extendida de 30 minutos en lugar de 15)
-- Output: SAFE / WARNING / DANGER
-  SAFE: sin noticias en próximos 30 minutos
-  WARNING: noticia de impacto medio en próximos 15 minutos
-  DANGER: noticia de alto impacto en próximos 30 minutos
+INSTALACIÓN: pip install dspy-ai
 
-Horarios típicos hardcodeados (UTC):
-Lunes: sin noticias críticas típicas
-Martes: 09:00 (datos europeos), 13:30 (datos EEUU)
-Miércoles: 13:30 (datos EEUU), 18:00 (FOMC si aplica)
-Jueves: 07:00 (BCE si aplica), 13:30 (NFP jueves previo)
-Viernes: 13:30 (NFP primer viernes del mes)
+PROPÓSITO:
+En lugar de prompts escritos a mano que nunca cambian,
+DSPy aprende de los resultados reales del pipeline
+y reescribe los prompts para que sean más efectivos.
 
-Argumento: --check-now (verificar estado actual)
-           --activo (para filtrar noticias relevantes)
+MÓDULOS DSPy A IMPLEMENTAR:
 
-TAREA 2 - Crear scripts/spread-monitor.py
-Script que monitorea el spread actual de los activos
-para detectar condiciones anómalas antes de operar.
+Módulo 1 — StrategyEvaluator:
+  Signature: strategy_metrics -> evaluation_verdict
+  Input: PF, DD, trades, win_rate, sharpe, regime
+  Output: PASA/DESCARTAR + justificación
+  Optimizar contra: resultados reales del EvalGate
 
-FUNCIONES:
-- Leer spread actual desde MT5 si está disponible
-- Si MT5 no disponible: usar spread de referencia de config/build-defaults.json
-- Comparar spread actual vs spread promedio del activo
-- Calcular factor de spread: spread_actual / spread_promedio
-- Output por activo:
-  NORMAL: factor < 1.5x
-  ELEVATED: factor 1.5x - 3x (operar con precaución)
-  EXTREME: factor > 3x (no operar — Dynamic Spread Protection)
+Módulo 2 — LessonSynthesizer:
+  Signature: build_failures -> structural_lesson
+  Input: lista de fallos con contexto
+  Output: lección estructural con recomendación
+  Optimizar contra: lecciones que resultaron válidas
 
-Argumentos: --activo, --check-interval (default 60s), --watch
+Módulo 3 — BuildAnalyzer:
+  Signature: build_stats -> analysis_report
+  Input: estadísticas del build
+  Output: análisis ejecutivo + próximos pasos
+  Optimizar contra: análisis que fueron más útiles
 
-TAREA 3 - Crear docs/skills/skill-ea-parameters.md
-Documenta todos los parámetros que debe tener cada EA exportado
-desde SQ para TradingLab:
+FUNCIONES PRINCIPALES:
 
-PARÁMETROS OBLIGATORIOS:
-- Risk: porcentaje de riesgo por trade (default 1.0)
-- MagicNumber: identificador único del EA
-- MaxSlippagePips: límite de slippage por activo
-- UseNewsFilter: activar filtro de noticias (default true)
-- NewsFilterMinutes: ventana de protección (default 15)
-- UseDynamicSpreadProtection: activar si spread > 3x (default true)
-- MaxSpreadMultiplier: factor máximo de spread permitido (default 3.0)
-- CloseOnFriday: cerrar posiciones viernes 22:00 CEST (default true)
-- FridayCloseHour: hora de cierre viernes en UTC (default 20)
-- UseHeartbeat: activar heartbeat para vps-health-monitor (default true)
-- HeartbeatFile: ruta al archivo de heartbeat
+compile_module(module_name, training_examples):
+  Carga el módulo DSPy correspondiente
+  Usa los ejemplos de entrenamiento para compilar
+  Guarda el prompt compilado en config/dspy-compiled/
+  Requiere mínimo 10 ejemplos para compilar
 
-PARÁMETROS OPCIONALES:
-- MaxDailyTrades: máximo trades por día (default 2)
-- TradingStartHour: hora inicio sesión UTC (default 6)
-- TradingEndHour: hora fin sesión UTC (default 18)
-- UseAntiSync: activar delay aleatorio anti-sincronización (default true)
-- AntiSyncMinMs: delay mínimo en ms (default 500)
-- AntiSyncMaxMs: delay máximo en ms (default 3500)
+load_compiled_module(module_name):
+  Carga el prompt compilado si existe
+  Si no existe → usa el prompt base por defecto
 
-VALORES POR ACTIVO:
-XAUUSD: MaxSlippagePips=50, Risk=1.0
-EURUSD: MaxSlippagePips=5, Risk=1.0
-GBPUSD: MaxSlippagePips=5, Risk=1.0
-USDJPY: MaxSlippagePips=5, Risk=1.0
+add_training_example(module_name, input_data, output_data, score):
+  Añade un ejemplo al dataset de entrenamiento
+  score: 0.0-1.0 (qué tan bueno fue el output real)
+  Guarda en config/dspy-training/[module_name].jsonl
 
-TAREA 4 - Crear docs/skills/skill-forward-test-protocol.md
-Documenta el protocolo completo del forward test en MT5 demo:
+get_training_stats():
+  Muestra cuántos ejemplos tiene cada módulo
+  Cuándo fue la última compilación
+  Si hay suficientes ejemplos para recompilar (>=10)
 
-CONFIGURACIÓN INICIAL:
-1. Abrir cuenta demo FTMO (válida 45 días)
-2. Capital demo = capital del challenge objetivo (10k, 25k, etc.)
-3. Desplegar EA en VPS con parámetros de producción
-4. Configurar Risk = 1% (o ajustado por portfolio)
-5. Verificar que EA abre trades correctamente en las primeras 24h
+ARGUMENTOS CLI:
+--compile MODULE_NAME: compilar un módulo
+--stats: ver estado de entrenamiento
+--add-example: añadir ejemplo manualmente
+--list: listar módulos disponibles
 
-MONITOREO DIARIO:
-- Verificar que el EA sigue conectado (heartbeat activo)
-- Registrar balance diario en ftmo-account-tracker.py
-- Si DD > 3% → alerta, revisar si es normal o señal de problema
-- Si 5 días sin trades → verificar configuración del EA
+TAREA 2 - Crear scripts/bayesian-criteria-updater.py
+Sistema de actualización bayesiana de criterios del pipeline.
+Cada umbral del pipeline se trata como una variable
+con un prior y se actualiza con resultados reales.
 
-CRITERIOS DE APROBACIÓN AUTOMÁTICA:
-Los 3 deben cumplirse simultáneamente:
-1. Mínimo 20 trades ejecutados
-2. PF producción >= 70% del PF OOS del backtest
-3. DD máximo <= DD OOS del backtest * 1.30
+MODELO BAYESIANO:
+Para cada criterio del pipeline:
+  Prior: distribución Beta(α, β) sobre la efectividad
+  α = número de veces que el criterio acertó (verdadero positivo)
+  β = número de veces que el criterio falló (falso positivo/negativo)
+  Umbral operativo = percentil 25 del posterior (conservador)
 
-CRITERIO DE FALLA AUTOMÁTICA:
-Si cualquiera falla → estrategia a cola de reemplazo
-Sin segunda oportunidad en el mismo ciclo
+CRITERIOS MODELADOS:
+{
+  "pf_minimo_evalgate": {
+    "valor_inicial": 1.5,
+    "alpha": 1, "beta": 1,
+    "min_absoluto": 1.3,
+    "max_absoluto": 2.0,
+    "descripcion": "PF mínimo en EvalGate"
+  },
+  "dd_maximo_evalgate": {
+    "valor_inicial": 7.0,
+    "alpha": 1, "beta": 1,
+    "min_absoluto": 5.0,
+    "max_absoluto": 10.0,
+    "descripcion": "DD máximo en EvalGate"
+  },
+  "sharpe_minimo_oos": {
+    "valor_inicial": 0.5,
+    "alpha": 1, "beta": 1,
+    "min_absoluto": 0.3,
+    "max_absoluto": 1.5,
+    "descripcion": "Sharpe mínimo en OOS"
+  },
+  "wfe_minimo": {
+    "valor_inicial": 50.0,
+    "alpha": 1, "beta": 1,
+    "min_absoluto": 40.0,
+    "max_absoluto": 70.0,
+    "descripcion": "WFE mínimo en WFO"
+  },
+  "pf_forward_test_ratio": {
+    "valor_inicial": 0.70,
+    "alpha": 1, "beta": 1,
+    "min_absoluto": 0.50,
+    "max_absoluto": 0.90,
+    "descripcion": "Ratio PF forward test vs backtest"
+  }
+}
 
-TRAS APROBAR:
-orchestrator genera notificación Telegram con todos los datos
-Humano responde SI para autorizar compra del challenge
-Sistema registra la autorización en audit trail
+FUNCIONES PRINCIPALES:
 
-TAREA 5 - Actualizar docs/project-status.md
-Fecha: 2026-04-28
-Estado completo actualizado:
-- Scripts Python: 41 operativos
-- Planning: 163/183 tareas (89%)
-- Próxima acción inmediata: ir a alber, git pull, lanzar Build 11
-- Comando exacto para mañana:
-  python scripts/build-launcher.py --build 11 --activo XAUUSD --spread-real 30
+update_criterion(criterion_name, outcome):
+  outcome: "true_positive", "false_positive",
+           "true_negative", "false_negative"
+  Actualiza α o β según el outcome
+  Recalcula el umbral operativo
+  Registra el cambio en el audit trail
+
+get_current_thresholds():
+  Devuelve los umbrales actuales de todos los criterios
+  Incluye: valor actual, valor inicial, confianza (α+β)
+
+check_for_recalibration():
+  Si algún criterio tiene confianza baja (α+β < 10):
+    No recalibrar — poco datos
+  Si tiene confianza media (10-50):
+    Recalibrar si el cambio propuesto es > 5%
+  Si tiene confianza alta (>50):
+    Recalibrar si el cambio propuesto es > 2%
+
+generate_calibration_report():
+  Para cada criterio mostrar:
+  - Valor inicial vs valor actual
+  - Número de observaciones
+  - Confianza en el nuevo valor
+  - Dirección del cambio (más estricto/más permisivo)
+
+REGLAS DE SEGURIDAD INVARIABLES:
+Nunca recalibrar fuera de [min_absoluto, max_absoluto]
+Nunca recalibrar con menos de 5 observaciones
+Nunca recalibrar más de 10% en una sola actualización
+Registrar TODOS los cambios en el audit trail
+
+Guardar estado en config/bayesian-criteria.json
+
+ARGUMENTOS CLI:
+--update CRITERIO OUTCOME: actualizar un criterio
+--report: ver reporte de calibración
+--thresholds: ver umbrales actuales
+--reset CRITERIO: resetear al valor inicial
+
+TAREA 3 - Crear scripts/self-improvement-engine.py
+Script orquestador que coordina DSPy y Bayesian updating
+para ejecutar el ciclo completo de autoaprendizaje.
+
+CICLO DE AUTOAPRENDIZAJE (ejecutar semanalmente):
+1. Leer resultados del audit trail de la última semana
+2. Para cada decisión del pipeline con outcome conocido:
+   a. Actualizar criterio bayesiano correspondiente
+   b. Añadir ejemplo de entrenamiento a DSPy
+3. Verificar si hay suficientes ejemplos para recompilar
+4. Si sí: recompilar módulos DSPy
+5. Verificar si hay criterios que necesitan recalibración
+6. Generar informe de mejoras aplicadas
+7. Enviar resumen via Telegram
+8. Registrar ciclo en Knowledge Graph
+
+ARGUMENTOS:
+--run: ejecutar ciclo completo
+--dry-run: simular sin aplicar cambios
+--report: solo ver informe sin ejecutar
+
+TAREA 4 - Crear docs/skills/skill-self-improvement.md
+Documenta el sistema de autoaprendizaje:
+
+COMPONENTES:
+1. DSPy: optimiza cómo el sistema comunica y razona
+2. Bayesian Updating: optimiza qué umbrales usa el sistema
+3. Self-Improvement Engine: orquesta ambos semanalmente
+
+CICLO COMPLETO:
+Resultado real → Actualización bayesiana → Recompilación DSPy
+→ Pipeline mejorado → Mejor resultado → ...
+
+GARANTÍAS DE SEGURIDAD:
+- Nunca cambia criterios críticos sin suficiente evidencia
+- Siempre registra cada cambio en el audit trail
+- Siempre puede hacer rollback al estado anterior
+- Nunca relaja: PF mínimo, DD máximo, Catastrophic Veto WFO
+
+TAREA 5 - Actualizar .gitignore y config
+Añadir al .gitignore:
+  config/dspy-compiled/
+  config/dspy-training/
+  config/bayesian-criteria.json
+
+Crear config/bayesian-criteria.json con los valores
+iniciales de todos los criterios documentados arriba.
 
 Al terminar:
 git add .
-git commit -m "Scripts: news-filter-checker, spread-monitor. Skills: ea-parameters, forward-test-protocol. Project-status actualizado 2026-04-28"
+git commit -m "Autoaprendizaje: DSPy optimizer, Bayesian criteria updater, Self-improvement engine, documentación"
 git push origin main
 Confirma con tabla.
