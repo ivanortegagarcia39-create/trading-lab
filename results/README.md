@@ -17,12 +17,12 @@ y agentes del sistema. No editar manualmente.
 | `evaluation-gate-results.json` | evaluator-assistant.py | Estrategias que pasan / descartan |
 | `portfolio-selected.json` | portfolio-builder.py | Portfolio seleccionado con pesos HRP |
 | `portfolio-weights.json` | hrp-portfolio.py | Pesos HRP del portfolio |
-| `audit-trail.log` | hash-logger.py | Decisiones con SHA-256 inmutable |
+| `audit-trail.log` | hash-logger.py | Decisiones con SHA-256 inmutable (3 entradas activas) |
 | `build-regime-snapshot.json` | market-regime-snapshot.py | Foto de regimen inicio/fin del build |
 | `pre-build-check.json` | pre-build-checklist.py | Verificacion pre-build |
 | `pipeline-report-[fecha].md` | pipeline-runner.py | Informe completo del pipeline |
 | `criteria-proposals.json` | lessons-analyzer.py | Propuestas de ajuste de criterios |
-| `strategies-registry.json` | strategy-versioning.py | Registro de versiones de estrategias |
+| `strategies-registry.json` | strategy-versioning.py | Registro de 24 estrategias con metadata y hashes |
 | `accounts-inventory.json` | multi-account-orchestrator | Inventario de cuentas activas |
 | `scaling-history.json` | scaling-manager | Historial de scaling de cuentas |
 | `session-memory.json` | orchestrator | Memoria de corto plazo (se borra en inicio) |
@@ -30,6 +30,10 @@ y agentes del sistema. No editar manualmente.
 | `recovery-log.json` | account-recovery-manager | Log de activaciones de recuperacion |
 | `health-dashboard.md` | orchestrator (semanal) | Dashboard de salud del sistema |
 | `pipeline-metrics.md` | orchestrator (por ciclo) | Metricas de aprobacion por puerta |
+| `weekly-report-[fecha].md` | auto-reporter.py | Informe semanal automatico del proyecto |
+| `build-queue.json` | build-queue-manager.py | Cola de builds con activos, scores y estado |
+| `session-log.json` | session-starter.py | Log de sesiones iniciadas por dispositivo |
+| `system-health.json` | system-health-check.py | Resultado de los 8 health checks del sistema |
 
 ---
 
@@ -42,6 +46,8 @@ y agentes del sistema. No editar manualmente.
 | `reviewed/` | Estrategias en revision intermedia (post-retester) |
 | `production-logs/` | Logs de EAs en produccion real |
 | `compliance/` | Hashes de T&C de prop firms |
+| `build-10-sqx/` | 23 archivos .sqx del Build 10 (XAUUSD H1) — binarios irremplazables |
+| `raw/` | CSVs exportados del databank de SQ antes del pipeline |
 
 ---
 
@@ -51,6 +57,8 @@ y agentes del sistema. No editar manualmente.
 - `*.log` — pueden contener datos sensibles de cuentas
 - `backups/sq_configs/` — binarios grandes de SQ
 - `production-logs/` — datos de produccion en tiempo real
+
+**Excepcion:** `build-10-sqx/*.sqx` SI va al repo — son irremplazables y no contienen datos sensibles.
 
 ---
 

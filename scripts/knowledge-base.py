@@ -50,6 +50,8 @@ INDEX_PATHS = [
     "config/pipeline-config.json",
     "results/build-10-report.md",
     "results/criteria-proposals.json",
+    "results/strategies-registry.json",
+    "results/audit-trail.log",
 ]
 
 # Patrones para buscar en subcarpetas
@@ -60,6 +62,11 @@ INDEX_PATTERNS = [
     ("results",     "*.csv"),
 ]
 
+# Carpetas con archivos binarios — registrar solo existencia con metadata
+SQX_FOLDERS = [
+    ("results/build-10-sqx", 10, "XAUUSD"),
+]
+
 # Metadata por tipo de archivo
 TYPE_MAP = {
     "lessons-learned.md":       "leccion",
@@ -68,6 +75,8 @@ TYPE_MAP = {
     "pipeline-config.json":     "configuracion",
     "build-10-report.md":       "resultado",
     "criteria-proposals.json":  "propuesta",
+    "strategies-registry.json": "registry",
+    "audit-trail.log":          "audit",
 }
 
 
@@ -139,6 +148,39 @@ def chunk_text(text: str, size: int = CHUNK_SIZE, overlap: int = CHUNK_OVERLAP) 
 
 # ─── Carga de documentos ──────────────────────────────────────────────────────
 
+def load_sqx_documents(repo_path: Path) -> list[tuple[str, dict, Path]]:
+    """
+    Registra archivos .sqx como documentos con metadata.
+    Los binarios no se leen — se genera texto descriptivo con nombre y contexto.
+    """
+    docs = []
+    for folder_rel, build_num, activo in SQX_FOLDERS:
+        folder = repo_path / folder_rel
+        if not folder.exists():
+            continue
+        sqx_files = sorted(folder.glob("*.sqx"))
+        for fp in sqx_files:
+            text = (
+                f"Estrategia SQ exportada: {fp.name}\n"
+                f"Build: {build_num}\n"
+                f"Activo: {activo}\n"
+                f"Temporalidad: H1\n"
+                f"Tipo de archivo: SQX (StrategyQuant exportado, binario)\n"
+                f"Ruta: {fp}\n"
+            )
+            meta = {
+                "tipo":          "estrategia",
+                "activo":        activo,
+                "build":         str(build_num),
+                "fase":          "0",
+                "fecha":         datetime.now().isoformat(timespec="seconds"),
+                "fuente":        str(fp),
+                "peso_temporal": str(round(temporal_weight(fp), 4)),
+            }
+            docs.append((text, meta, fp))
+    return docs
+
+
 def load_documents(repo_path: Path) -> list[tuple[str, dict, Path]]:
     """
     Devuelve lista de (texto_chunk, metadata, file_path).
@@ -146,7 +188,12 @@ def load_documents(repo_path: Path) -> list[tuple[str, dict, Path]]:
     docs = []
 
     # Documentos fijos (omitir silenciosamente si no existen — son opcionales)
-    optional_paths = {"results/build-10-report.md", "results/criteria-proposals.json"}
+    optional_paths = {
+        "results/build-10-report.md",
+        "results/criteria-proposals.json",
+        "results/strategies-registry.json",
+        "results/audit-trail.log",
+    }
     for rel_path in INDEX_PATHS:
         fp = repo_path / rel_path
         if fp.exists():
@@ -172,6 +219,9 @@ def load_documents(repo_path: Path) -> list[tuple[str, dict, Path]]:
                     docs.append((chunk, meta.copy(), fp))
             except Exception as e:
                 print(f"  [WARN] No se pudo leer {fp}: {e}")
+
+    # Archivos SQX binarios — registrar existencia con metadata
+    docs.extend(load_sqx_documents(repo_path))
 
     return docs
 
