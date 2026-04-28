@@ -15,6 +15,7 @@ Uso:
 
 import argparse
 import csv
+import importlib.util
 import json
 import sys
 import urllib.request
@@ -22,6 +23,15 @@ import urllib.error
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
+
+# Importación dinámica del model-router (nombre con guión)
+_router_path = Path(__file__).parent / "model-router.py"
+if _router_path.exists():
+    _router_spec = importlib.util.spec_from_file_location("model_router", _router_path)
+    _model_router = importlib.util.module_from_spec(_router_spec)
+    _router_spec.loader.exec_module(_model_router)
+else:
+    _model_router = None
 
 
 # ─── Estructuras de datos ─────────────────────────────────────────────────────
@@ -204,7 +214,7 @@ def ollama_available(base_url: str = OLLAMA_URL) -> bool:
 
 
 def ollama_analyze_build(summary: BuildSummary, base_url: str = OLLAMA_URL) -> str:
-    """Envia estadisticas del build a Ollama y devuelve el analisis."""
+    """Analiza el build usando el model-router (con fallback a Ollama directo)."""
     dist = summary.pf_distribution()
     top5 = sorted(summary.strategies, key=lambda s: s.pf, reverse=True)[:5]
     top5_text = "\n".join(
@@ -213,37 +223,37 @@ def ollama_analyze_build(summary: BuildSummary, base_url: str = OLLAMA_URL) -> s
         for s in top5
     )
 
-    stats_text = f"""
-Build numero: {summary.build_num}
-Total generadas: {summary.total_generated}
-Total en databank: {summary.total_in_databank}
-Tasa de aprobacion: {summary.approval_rate:.1f}%
-PF maximo: {summary.pf_max:.2f}
-PF minimo: {summary.pf_min:.2f}
-PF promedio: {summary.pf_avg:.2f}
-Distribucion PF:
-  <1.3:    {dist['<1.3']} estrategias
-  1.3-1.5: {dist['1.3-1.5']} estrategias
-  1.5-1.8: {dist['1.5-1.8']} estrategias
-  1.8-2.0: {dist['1.8-2.0']} estrategias
-  >=2.0:   {dist['>=2.0']} estrategias
-
-Top 5 estrategias por PF:
-{top5_text}
-"""
+    build_stats = {
+        "build_num":        summary.build_num,
+        "total_generated":  summary.total_generated,
+        "total_in_databank": summary.total_in_databank,
+        "approval_rate":    round(summary.approval_rate, 1),
+        "pf_max":           round(summary.pf_max, 2),
+        "pf_min":           round(summary.pf_min, 2),
+        "pf_avg":           round(summary.pf_avg, 2),
+        "pf_distribution":  dist,
+        "top5":             top5_text,
+    }
 
     prompt = (
         "Eres el build-analyzer de TradingLab. "
         "Analiza estas metricas del build y genera un resumen ejecutivo "
         "en espanol de maximo 200 palabras. "
         "Destaca: calidad general, estrategias mas prometedoras, "
-        "patrones detectados, recomendacion para siguiente paso.\n\n"
-        + stats_text
+        "patrones detectados, recomendacion para siguiente paso."
     )
 
+    # Usar model-router si está disponible
+    if _model_router is not None:
+        try:
+            return _model_router.route("build_analysis", prompt, context=build_stats)
+        except Exception as e:
+            pass  # Fallback a Ollama directo
+
+    # Fallback: llamada directa a Ollama
     payload = json.dumps({
         "model": OLLAMA_MODEL,
-        "prompt": prompt,
+        "prompt": prompt + "\n\n" + json.dumps(build_stats, ensure_ascii=False),
         "stream": False,
     }).encode()
 
@@ -253,13 +263,12 @@ Top 5 estrategias por PF:
         headers={"Content-Type": "application/json"},
         method="POST",
     )
-
     try:
         with urllib.request.urlopen(req, timeout=OLLAMA_TIMEOUT) as resp:
             data = json.loads(resp.read())
             return data.get("response", "").strip()
     except Exception as e:
-        return f"[Error Ollama: {e}]"
+        return f"[Error LLM: {e}]"
 
 
 # ─── Generacion de informe ────────────────────────────────────────────────────

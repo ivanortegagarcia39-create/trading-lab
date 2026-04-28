@@ -18,6 +18,7 @@ Uso:
 """
 
 import argparse
+import importlib.util
 import json
 import re
 import sys
@@ -30,6 +31,15 @@ try:
     HAS_URLLIB = True
 except ImportError:
     HAS_URLLIB = False
+
+# Importación dinámica del model-router (nombre con guión)
+_router_path = Path(__file__).parent / "model-router.py"
+if _router_path.exists():
+    _router_spec = importlib.util.spec_from_file_location("model_router", _router_path)
+    _model_router = importlib.util.module_from_spec(_router_spec)
+    _router_spec.loader.exec_module(_model_router)
+else:
+    _model_router = None
 
 
 # ─── Estructuras de datos ─────────────────────────────────────────────────────
@@ -376,15 +386,30 @@ Codigo MQL5 a analizar:
 
 def query_ollama(code: str, ollama_url: str, model: str = "deepseek-coder") -> dict | None:
     """
-    Envia el codigo a Ollama local y devuelve el resultado JSON.
-    Devuelve None si Ollama no esta disponible o hay un error.
+    Envia el codigo al model-router (task: mql5_audit) y devuelve resultado JSON.
+    Fallback a Ollama directo si el router no está disponible.
     """
+    prompt = OLLAMA_PROMPT + code[:8000]
+
+    # Usar model-router si está disponible
+    if _model_router is not None:
+        try:
+            response_text = _model_router.route("mql5_audit", prompt)
+            # Intentar extraer JSON de la respuesta
+            start = response_text.find("{")
+            if start != -1:
+                end = response_text.rfind("}") + 1
+                return json.loads(response_text[start:end])
+        except Exception:
+            pass  # Fallback a Ollama directo
+
+    # Fallback: llamada directa a Ollama
     if not HAS_URLLIB:
         return None
 
     payload = {
         "model": model,
-        "prompt": OLLAMA_PROMPT + code[:8000],  # Limitar a 8k chars
+        "prompt": prompt,
         "stream": False,
         "format": "json",
     }
@@ -400,9 +425,7 @@ def query_ollama(code: str, ollama_url: str, model: str = "deepseek-coder") -> d
         with urllib.request.urlopen(req, timeout=120) as resp:
             result = json.loads(resp.read().decode("utf-8"))
             response_text = result.get("response", "")
-            # Parsear el JSON dentro de la respuesta
-            parsed = json.loads(response_text)
-            return parsed
+            return json.loads(response_text)
     except (urllib.error.URLError, json.JSONDecodeError, KeyError, TimeoutError):
         return None
 

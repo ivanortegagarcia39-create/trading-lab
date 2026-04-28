@@ -1,0 +1,5 @@
+{
+  "openai_api_key": "sk-...",
+  "moonshot_api_key": "sk-...",
+  "firecrawl_api_key": "fc-..."
+}

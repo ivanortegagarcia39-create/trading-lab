@@ -21,6 +21,7 @@ backups/sq_configs/
 
 # Credenciales y configs sensibles
 config/telegram-config.json
+config/api-keys.json
 config/*.secret
 *.env
 heartbeat.txt
