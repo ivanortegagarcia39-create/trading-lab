@@ -41,24 +41,25 @@ Con el enfoque actual SQ decide la logica. Los numeros deciden que avanza.
 
 ## 2. ESTADO ACTUAL
 
-**Fecha:** 2026-04-27
+**Fecha:** 2026-04-28
 **Situacion:** Capa 0 activa. Sistema completamente construido en ivano.
 Build 10 completado (spread 30 pips — incorrecto, pendiente exportar resultados).
 Build 11 pendiente de lanzar en alber con spread corregido a 60 pips.
-31 scripts Python operativos y probados en ivano.
+41 scripts Python operativos y probados en ivano.
 Telegram bot activo (@tradinglab_monitor_bot).
-ChromaDB indexado con 90 chunks.
+ChromaDB indexado con 909 chunks.
 Python 3.13 instalado en ivano.
-Planning maestro: ~152/172 tareas completadas.
+Planning maestro: 163/183 tareas completadas (89%).
 Pendiente solo de hardware: Ollama en alber, Build 11, VPS.
-Proxima sesion: ir a alber, git pull, lanzar Build 11 con spread 60 pips.
+Proxima accion inmediata: ir a alber, git pull, lanzar Build 11.
+Comando exacto: python scripts/build-launcher.py --build 11 --activo XAUUSD --spread-real 30
 
 ### Planning Maestro
 
 | Metrica | Valor |
 |---------|-------|
-| Total tareas | 172 |
-| Completadas | ~152 |
+| Total tareas | 183 |
+| Completadas | 163 (89%) |
 | Fase 0 | COMPLETA |
 | Fases 1-2 | COMPLETAS |
 | Fases 3-4 | EN CURSO (pendiente solo hardware) |
@@ -78,8 +79,8 @@ Proxima sesion: ir a alber, git pull, lanzar Build 11 con spread 60 pips.
 | docs\project-status.md | Este archivo |
 
 **Agentes activos:** 19
-**Skills operativas:** 42+ en docs\skills\
-**Scripts Python operativos:** 31 en scripts\
+**Skills operativas:** 44+ en docs\skills\
+**Scripts Python operativos:** 41 en scripts\
 **Tickets activos:** 1 — TICKET-002-BUILD-9-XAUUSD en fase build-pending
 **Portfolio actual:** 0 estrategias (objetivo minimo: 3)
 
@@ -552,9 +553,14 @@ Detalle en: docs\roadmap-v2.md
 
 ## 14. SIGUIENTE ACCION CONCRETA
 
-**Estado:** Sistema Capa 0 completamente construido en ivano (152/172 tareas).
+**Estado:** Sistema Capa 0 completamente construido en ivano (163/183 tareas).
 Build 10 completado. Build 11 pendiente con spread corregido a 60 pips.
 **Proximo hito:** Ir a alber, git pull, lanzar Build 11 (XAUUSD H1, spread 60 pips). Dejar correr 48 horas.
+
+**Comando exacto para la proxima sesion en alber:**
+```
+python scripts/build-launcher.py --build 11 --activo XAUUSD --spread-real 30
+```
 
 ### Paso 1 — Verificar datos disponibles en SQ
 1. data-manager verifica que activos tienen datos M1 disponibles en SQ
