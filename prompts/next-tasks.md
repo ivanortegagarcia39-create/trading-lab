@@ -1,212 +1,181 @@
 Lee CLAUDE.md y todos los archivos en agents/ y docs/skills/.
 
-Vamos a implementar P2.1 DSPy y P2.2 Bayesian Updating.
-Estos dos sistemas hacen que TradingLab aprenda solo
-y mejore continuamente sin intervención humana.
+Vamos a implementar P2.3 BOCPD+ADDM y P2.4 Champion-Challenger.
 
-TAREA 1 - Crear scripts/dspy-optimizer.py
-Sistema de auto-optimización de prompts con DSPy.
-DSPy compila prompts automáticamente basándose en
-ejemplos reales de input/output del sistema.
+TAREA 1 - Crear scripts/concept-drift-detector.py
+Sistema de detección de cambios de régimen y drift del mercado.
+Implementa BOCPD (Bayesian Online Change-Point Detection)
+y ADDM (Autoregressive Drift Detection Method).
 
-INSTALACIÓN: pip install dspy-ai
+BOCPD:
+Detecta cuándo el mercado cambia de régimen de forma abrupta.
+Útil para: detectar cuándo las estrategias actuales pueden
+dejar de funcionar porque el mercado cambió.
 
-PROPÓSITO:
-En lugar de prompts escritos a mano que nunca cambian,
-DSPy aprende de los resultados reales del pipeline
-y reescribe los prompts para que sean más efectivos.
+Implementación simplificada (sin librerías externas):
+- Mantener una ventana deslizante de los últimos 50 retornos
+- Calcular la probabilidad de cambio de punto usando
+  distribución Normal conjugada
+- Si la probabilidad posterior de cambio > 0.7 → CHANGE_POINT
+- Si > 0.5 → WARNING
 
-MÓDULOS DSPy A IMPLEMENTAR:
+ADDM:
+Detecta drift gradual en los errores del sistema.
+El "error" se define como: PF_esperado - PF_real
+Si este error aumenta consistentemente → el sistema
+está derivando de sus predicciones.
 
-Módulo 1 — StrategyEvaluator:
-  Signature: strategy_metrics -> evaluation_verdict
-  Input: PF, DD, trades, win_rate, sharpe, regime
-  Output: PASA/DESCARTAR + justificación
-  Optimizar contra: resultados reales del EvalGate
-
-Módulo 2 — LessonSynthesizer:
-  Signature: build_failures -> structural_lesson
-  Input: lista de fallos con contexto
-  Output: lección estructural con recomendación
-  Optimizar contra: lecciones que resultaron válidas
-
-Módulo 3 — BuildAnalyzer:
-  Signature: build_stats -> analysis_report
-  Input: estadísticas del build
-  Output: análisis ejecutivo + próximos pasos
-  Optimizar contra: análisis que fueron más útiles
+Implementación:
+- Mantener historial de (PF_esperado, PF_real) por estrategia
+- Calcular residual = PF_esperado - PF_real
+- Si la media móvil del residual supera 2 desviaciones estándar
+  durante 3 periodos consecutivos → DRIFT_DETECTED
 
 FUNCIONES PRINCIPALES:
 
-compile_module(module_name, training_examples):
-  Carga el módulo DSPy correspondiente
-  Usa los ejemplos de entrenamiento para compilar
-  Guarda el prompt compilado en config/dspy-compiled/
-  Requiere mínimo 10 ejemplos para compilar
+update_bocpd(returns_series, timestamp):
+  Actualiza el modelo BOCPD con nuevos retornos
+  Devuelve: probabilidad de cambio de punto actual
+  Si > 0.7: registrar CHANGE_POINT en KG
 
-load_compiled_module(module_name):
-  Carga el prompt compilado si existe
-  Si no existe → usa el prompt base por defecto
+update_addm(expected_pf, actual_pf, strategy_id, timestamp):
+  Actualiza el modelo ADDM con nueva observación
+  Devuelve: nivel de drift (NONE/WARNING/CRITICAL)
+  Si CRITICAL: activar alerta en Telegram
 
-add_training_example(module_name, input_data, output_data, score):
-  Añade un ejemplo al dataset de entrenamiento
-  score: 0.0-1.0 (qué tan bueno fue el output real)
-  Guarda en config/dspy-training/[module_name].jsonl
+get_drift_report():
+  Estado actual de todos los detectores
+  Cambios de punto detectados en los últimos 30 días
+  Estrategias con drift detectado
 
-get_training_stats():
-  Muestra cuántos ejemplos tiene cada módulo
-  Cuándo fue la última compilación
-  Si hay suficientes ejemplos para recompilar (>=10)
+check_regime_stability():
+  Compara régimen actual con régimen de los últimos 30 días
+  Si hubo cambio de punto reciente → recomendar re-validación
+  de estrategias activas
+
+Guardar estado en results/drift-detection.json
 
 ARGUMENTOS CLI:
---compile MODULE_NAME: compilar un módulo
---stats: ver estado de entrenamiento
---add-example: añadir ejemplo manualmente
---list: listar módulos disponibles
+--update-bocpd: actualizar con nuevos datos
+--update-addm: actualizar con nuevo par esperado/real
+--report: ver reporte de drift
+--check: verificar estabilidad actual
 
-TAREA 2 - Crear scripts/bayesian-criteria-updater.py
-Sistema de actualización bayesiana de criterios del pipeline.
-Cada umbral del pipeline se trata como una variable
-con un prior y se actualiza con resultados reales.
+TAREA 2 - Crear scripts/champion-challenger.py
+Sistema Champion-Challenger con Shadow Mode.
+Permite probar nuevas estrategias en paralelo con las activas
+sin arriesgar capital real.
 
-MODELO BAYESIANO:
-Para cada criterio del pipeline:
-  Prior: distribución Beta(α, β) sobre la efectividad
-  α = número de veces que el criterio acertó (verdadero positivo)
-  β = número de veces que el criterio falló (falso positivo/negativo)
-  Umbral operativo = percentil 25 del posterior (conservador)
+CONCEPTO:
+Champion: estrategia activa con capital real en producción
+Challenger: estrategia nueva corriendo en paper trading
+  en paralelo para comparar métricas
 
-CRITERIOS MODELADOS:
-{
-  "pf_minimo_evalgate": {
-    "valor_inicial": 1.5,
-    "alpha": 1, "beta": 1,
-    "min_absoluto": 1.3,
-    "max_absoluto": 2.0,
-    "descripcion": "PF mínimo en EvalGate"
-  },
-  "dd_maximo_evalgate": {
-    "valor_inicial": 7.0,
-    "alpha": 1, "beta": 1,
-    "min_absoluto": 5.0,
-    "max_absoluto": 10.0,
-    "descripcion": "DD máximo en EvalGate"
-  },
-  "sharpe_minimo_oos": {
-    "valor_inicial": 0.5,
-    "alpha": 1, "beta": 1,
-    "min_absoluto": 0.3,
-    "max_absoluto": 1.5,
-    "descripcion": "Sharpe mínimo en OOS"
-  },
-  "wfe_minimo": {
-    "valor_inicial": 50.0,
-    "alpha": 1, "beta": 1,
-    "min_absoluto": 40.0,
-    "max_absoluto": 70.0,
-    "descripcion": "WFE mínimo en WFO"
-  },
-  "pf_forward_test_ratio": {
-    "valor_inicial": 0.70,
-    "alpha": 1, "beta": 1,
-    "min_absoluto": 0.50,
-    "max_absoluto": 0.90,
-    "descripcion": "Ratio PF forward test vs backtest"
-  }
-}
+FLUJO:
+1. Cuando una nueva estrategia pasa el WFO:
+   Si no hay champion → se convierte en champion directo
+   Si ya hay champion → se convierte en challenger (shadow)
+2. El challenger corre en paper trading durante 4 semanas
+3. Al final de las 4 semanas comparar métricas:
+   PF challenger vs PF champion
+   DD challenger vs DD champion
+   Sharpe challenger vs Sharpe champion
+4. Si challenger supera al champion en 2 de 3 métricas
+   con significancia estadística → PROMOTION
+   Champion se retira → Challenger se convierte en champion
+5. Si challenger no supera → REJECTED
+   Se documenta por qué y se añade al KG
 
 FUNCIONES PRINCIPALES:
 
-update_criterion(criterion_name, outcome):
-  outcome: "true_positive", "false_positive",
-           "true_negative", "false_negative"
-  Actualiza α o β según el outcome
-  Recalcula el umbral operativo
-  Registra el cambio en el audit trail
+register_champion(strategy_id, metrics):
+  Registra una estrategia como champion activo
+  Guarda en results/champion-challenger.json
 
-get_current_thresholds():
-  Devuelve los umbrales actuales de todos los criterios
-  Incluye: valor actual, valor inicial, confianza (α+β)
+register_challenger(strategy_id, metrics):
+  Registra una estrategia como challenger
+  Estado inicial: SHADOW (paper trading)
 
-check_for_recalibration():
-  Si algún criterio tiene confianza baja (α+β < 10):
-    No recalibrar — poco datos
-  Si tiene confianza media (10-50):
-    Recalibrar si el cambio propuesto es > 5%
-  Si tiene confianza alta (>50):
-    Recalibrar si el cambio propuesto es > 2%
+update_challenger_metrics(strategy_id, new_metrics):
+  Actualiza métricas del challenger con datos recientes
 
-generate_calibration_report():
-  Para cada criterio mostrar:
-  - Valor inicial vs valor actual
-  - Número de observaciones
-  - Confianza en el nuevo valor
-  - Dirección del cambio (más estricto/más permisivo)
+evaluate_challenger(strategy_id):
+  Compara challenger vs champion actual
+  Test estadístico simple: t-test sobre retornos
+  Veredicto: PROMOTE / REJECT / CONTINUE (más datos)
 
-REGLAS DE SEGURIDAD INVARIABLES:
-Nunca recalibrar fuera de [min_absoluto, max_absoluto]
-Nunca recalibrar con menos de 5 observaciones
-Nunca recalibrar más de 10% en una sola actualización
-Registrar TODOS los cambios en el audit trail
+promote_challenger(strategy_id):
+  El challenger se convierte en champion
+  El champion anterior pasa a RETIRED
+  Registrar en KG y audit trail
+  Notificar via Telegram
 
-Guardar estado en config/bayesian-criteria.json
+get_status():
+  Estado actual de todos los champions y challengers
+  Por activo: quien es el champion, cuántos challengers
+
+Guardar estado en results/champion-challenger.json
 
 ARGUMENTOS CLI:
---update CRITERIO OUTCOME: actualizar un criterio
---report: ver reporte de calibración
---thresholds: ver umbrales actuales
---reset CRITERIO: resetear al valor inicial
+--register-champion: registrar champion
+--register-challenger: registrar challenger
+--evaluate: evaluar un challenger
+--status: ver estado actual
+--promote: promover manualmente un challenger
 
-TAREA 3 - Crear scripts/self-improvement-engine.py
-Script orquestador que coordina DSPy y Bayesian updating
-para ejecutar el ciclo completo de autoaprendizaje.
+TAREA 3 - Crear scripts/internal-critic.py
+El Crítico Interno automático (P2.5).
+Revisa las decisiones del pipeline retrospectivamente
+y propone mejoras concretas.
 
-CICLO DE AUTOAPRENDIZAJE (ejecutar semanalmente):
-1. Leer resultados del audit trail de la última semana
-2. Para cada decisión del pipeline con outcome conocido:
-   a. Actualizar criterio bayesiano correspondiente
-   b. Añadir ejemplo de entrenamiento a DSPy
-3. Verificar si hay suficientes ejemplos para recompilar
-4. Si sí: recompilar módulos DSPy
-5. Verificar si hay criterios que necesitan recalibración
-6. Generar informe de mejoras aplicadas
-7. Enviar resumen via Telegram
-8. Registrar ciclo en Knowledge Graph
+EJECUCIÓN: semanal automática via self-improvement-engine
+
+PROCESO:
+1. Leer últimas 20 decisiones del audit trail
+2. Para cada decisión con outcome conocido:
+   ¿El pipeline acertó o falló?
+   ¿Qué criterio tomó la decisión correcta/incorrecta?
+3. Identificar los 3 errores más costosos del período
+4. Para cada error generar hipótesis de causa:
+   Si modelos disponibles: usar model-router (deepseek local)
+   Si no: análisis estadístico básico
+5. Proponer ajuste concreto al criterio responsable
+6. Verificar si el ajuste habría funcionado en datos históricos
+7. Si pasa la verificación: enviar propuesta al bayesian-updater
+8. Registrar todo en KG y lessons-learned.md
+
+MÉTRICAS QUE REVISA:
+- Tasa de falsos positivos por puerta del pipeline
+- Tasa de falsos negativos por puerta del pipeline
+- Correlación entre criterios y outcomes reales
+- Drift de criterios vs resultados (ADDM)
 
 ARGUMENTOS:
---run: ejecutar ciclo completo
+--run: ejecutar revisión completa
 --dry-run: simular sin aplicar cambios
---report: solo ver informe sin ejecutar
+--report: ver último informe del crítico
 
-TAREA 4 - Crear docs/skills/skill-self-improvement.md
-Documenta el sistema de autoaprendizaje:
+TAREA 4 - Actualizar scripts/self-improvement-engine.py
+Lee el archivo actual. Añadir al ciclo de autoaprendizaje:
 
-COMPONENTES:
-1. DSPy: optimiza cómo el sistema comunica y razona
-2. Bayesian Updating: optimiza qué umbrales usa el sistema
-3. Self-Improvement Engine: orquesta ambos semanalmente
+Después del paso [2/7]:
+  [2b] Ejecutar concept-drift-detector --check
+       Si hay drift → añadir alerta al informe
+  [2c] Ejecutar champion-challenger --evaluate para cada challenger
+       Si alguno listo para promoción → incluir en informe
+  [2d] Ejecutar internal-critic --dry-run
+       Incluir propuestas del crítico en el informe final
 
-CICLO COMPLETO:
-Resultado real → Actualización bayesiana → Recompilación DSPy
-→ Pipeline mejorado → Mejor resultado → ...
+TAREA 5 - Crear docs/skills/skill-concept-drift.md
+Documenta el sistema de detección de drift:
 
-GARANTÍAS DE SEGURIDAD:
-- Nunca cambia criterios críticos sin suficiente evidencia
-- Siempre registra cada cambio en el audit trail
-- Siempre puede hacer rollback al estado anterior
-- Nunca relaja: PF mínimo, DD máximo, Catastrophic Veto WFO
-
-TAREA 5 - Actualizar .gitignore y config
-Añadir al .gitignore:
-  config/dspy-compiled/
-  config/dspy-training/
-  config/bayesian-criteria.json
-
-Crear config/bayesian-criteria.json con los valores
-iniciales de todos los criterios documentados arriba.
+BOCPD: para cambios abruptos de régimen de mercado
+ADDM: para degradación gradual de las estrategias
+Cuándo actuar vs cuándo ignorar señales de drift
+Integración con el ciclo de autoaprendizaje semanal
 
 Al terminar:
 git add .
-git commit -m "Autoaprendizaje: DSPy optimizer, Bayesian criteria updater, Self-improvement engine, documentación"
+git commit -m "P2.3+P2.4+P2.5: concept-drift-detector, champion-challenger, internal-critic, self-improvement actualizado"
 git push origin main
 Confirma con tabla.

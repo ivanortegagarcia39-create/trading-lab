@@ -148,6 +148,57 @@ def run_cycle(dry_run: bool = False) -> dict:
                 _run([PYTHON, str(dspy_opt), "--add-example", module, inp, out, score], dry_run)
                 summary["dspy_examples_added"] += 1
 
+    # PASO 2b: Concept drift check
+    print("\n[2b/7] Verificando drift y cambios de régimen...")
+    drift_detector = ROOT / "scripts" / "concept-drift-detector.py"
+    if drift_detector.exists():
+        drift_out = _run([PYTHON, str(drift_detector), "--check"], dry_run=False)
+        if drift_out:
+            print(f"      {drift_out[:200]}")
+            if "CHANGE_POINT" in drift_out or "DRIFT_DETECTED" in drift_out:
+                summary["drift_alert"] = drift_out[:200]
+                summary.setdefault("alerts", []).append("DRIFT detectado — ver concept-drift-detector")
+    else:
+        print("      concept-drift-detector.py no encontrado — omitido")
+
+    # PASO 2c: Champion-Challenger evaluation
+    print("\n[2c/7] Evaluando challengers activos...")
+    cc_script = ROOT / "scripts" / "champion-challenger.py"
+    cc_state  = ROOT / "results" / "champion-challenger.json"
+    promotions = []
+    if cc_script.exists() and cc_state.exists():
+        import json as _json
+        with open(cc_state) as f:
+            cc_data = _json.load(f)
+        challengers = list(cc_data.get("challengers", {}).keys())
+        if challengers:
+            for sid in challengers:
+                eval_out = _run([PYTHON, str(cc_script), "--evaluate", sid], dry_run=False)
+                if eval_out:
+                    print(f"      {sid}: {eval_out[-100:].strip()}")
+                if "PROMOTE" in eval_out:
+                    promotions.append(sid)
+                    summary.setdefault("alerts", []).append(f"Challenger {sid} listo para PROMOTION")
+        else:
+            print("      Sin challengers activos")
+    else:
+        print("      champion-challenger.py o estado no encontrado — omitido")
+    summary["challengers_ready_to_promote"] = promotions
+
+    # PASO 2d: Internal Critic (dry-run siempre, para no modificar criterios dos veces)
+    print("\n[2d/7] Ejecutando Crítico Interno...")
+    critic = ROOT / "scripts" / "internal-critic.py"
+    if critic.exists():
+        critic_out = _run([PYTHON, str(critic), "--dry-run"], dry_run=False)
+        if critic_out:
+            # Incluir resumen del crítico en el informe final
+            lines = [l for l in critic_out.split("\n") if l.strip()]
+            summary["critic_summary"] = lines[-5:] if len(lines) >= 5 else lines
+            for line in summary["critic_summary"]:
+                print(f"      {line}")
+    else:
+        print("      internal-critic.py no encontrado — omitido")
+
     # PASO 3: Verificar si hay suficientes ejemplos para recompilar
     print("\n[3/7] Verificando estado de compilación DSPy...")
     stats_out = _run([PYTHON, str(dspy_opt), "--stats"], dry_run=False)
@@ -183,6 +234,13 @@ def run_cycle(dry_run: bool = False) -> dict:
         f"- Ejemplos DSPy añadidos: {summary['dspy_examples_added']}",
         f"- Compilaciones DSPy: {summary['dspy_compilations']}",
     ]
+    if summary.get("drift_alert"):
+        report_lines.append(f"- ALERTA DRIFT: {summary['drift_alert'][:60]}")
+    if summary.get("challengers_ready_to_promote"):
+        report_lines.append(f"- Challengers para promover: {summary['challengers_ready_to_promote']}")
+    if summary.get("alerts"):
+        for alert in summary["alerts"]:
+            report_lines.append(f"- ALERTA: {alert}")
     report = "\n".join(report_lines)
     print("\n" + report)
 
