@@ -16,10 +16,14 @@ Config requerida: config/telegram-config.json
 """
 
 import argparse
+import io
 import json
 import sys
 from datetime import datetime
 from pathlib import Path
+
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
+sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8", errors="replace")
 
 CONFIG_PATH = Path(__file__).parent.parent / "config" / "telegram-config.json"
 
