@@ -1,0 +1,94 @@
+{
+  "ftmo_2step": {
+    "name": "FTMO 2-Step",
+    "challenge": {
+      "profit_target_pct": 10.0,
+      "daily_dd_limit_pct": 5.0,
+      "max_dd_limit_pct": 10.0,
+      "dd_type": "dynamic",
+      "min_trading_days": 4,
+      "max_duration_days": null,
+      "simulation_timeout_days": 56
+    },
+    "verification": {
+      "profit_target_pct": 5.0,
+      "daily_dd_limit_pct": 5.0,
+      "max_dd_limit_pct": 10.0,
+      "dd_type": "dynamic",
+      "min_trading_days": 4,
+      "max_duration_days": null,
+      "simulation_timeout_days": 56
+    },
+    "trading_rules": {
+      "weekend_holding_allowed": false,
+      "close_all_friday_utc": "20:00",
+      "news_filter_minutes": 15,
+      "min_holding_time_seconds": 60,
+      "prohibited_practices": ["HFT", "martingale", "grid", "arbitrage", "latency_exploitation"]
+    },
+    "account_sizes": [10000, 25000, 50000, 100000, 200000],
+    "profit_split_pct": 80,
+    "scaling_every_months": 4,
+    "scaling_pct": 25
+  },
+  "e8_funding": {
+    "name": "E8 Funding",
+    "challenge": {
+      "profit_target_pct": 8.0,
+      "daily_dd_limit_pct": 5.0,
+      "max_dd_limit_pct": 8.0,
+      "dd_type": "fixed",
+      "min_trading_days": 5,
+      "max_duration_days": null,
+      "simulation_timeout_days": 56
+    },
+    "verification": {
+      "profit_target_pct": 5.0,
+      "daily_dd_limit_pct": 5.0,
+      "max_dd_limit_pct": 8.0,
+      "dd_type": "fixed",
+      "min_trading_days": 5,
+      "max_duration_days": null,
+      "simulation_timeout_days": 56
+    },
+    "trading_rules": {
+      "weekend_holding_allowed": false,
+      "close_all_friday_utc": "21:00",
+      "news_filter_minutes": 15,
+      "min_holding_time_seconds": 60,
+      "prohibited_practices": ["HFT", "martingale", "grid", "arbitrage"]
+    },
+    "account_sizes": [10000, 25000, 50000],
+    "profit_split_pct": 80
+  },
+  "brightfunded": {
+    "name": "BrightFunded",
+    "challenge": {
+      "profit_target_pct": 10.0,
+      "daily_dd_limit_pct": 5.0,
+      "max_dd_limit_pct": 10.0,
+      "dd_type": "dynamic",
+      "min_trading_days": 0,
+      "max_duration_days": null,
+      "simulation_timeout_days": 56
+    },
+    "verification": {
+      "profit_target_pct": 5.0,
+      "daily_dd_limit_pct": 5.0,
+      "max_dd_limit_pct": 10.0,
+      "dd_type": "dynamic",
+      "min_trading_days": 0,
+      "max_duration_days": null,
+      "simulation_timeout_days": 56
+    },
+    "trading_rules": {
+      "weekend_holding_allowed": false,
+      "close_all_friday_utc": "21:00",
+      "news_filter_minutes": 15,
+      "min_holding_time_seconds": 0,
+      "prohibited_practices": ["HFT", "martingale", "grid", "arbitrage"]
+    },
+    "account_sizes": [10000, 25000, 50000],
+    "profit_split_pct": 90
+  }
+}
