@@ -2,113 +2,89 @@ Lee CLAUDE.md y todos los archivos en agents/ y docs/skills/.
 
 Continuamos desde ivano. Crea los siguientes archivos.
 
-TAREA 1 - Crear scripts/system-health-check.py
-Script que verifica el estado completo del sistema TradingLab en un solo comando. Útil para ejecutar al inicio de cada sesión de trabajo.
+TAREA 1 - Crear scripts/retester-helper.py
+Script que ayuda a gestionar el proceso del Retester en SQ
+después de que el EvalGate aprueba estrategias.
 
-Verificaciones que realiza:
-1. Python y dependencias: verificar que pandas, numpy, pytz, chromadb, requests están instalados
-2. Estructura del repo: verificar que existen las carpetas agents/, docs/skills/, scripts/, config/, results/, templates/
-3. Archivos críticos: verificar que existen CLAUDE.md, config/pipeline-config.json, config/build-defaults.json
-4. Telegram: verificar que existe config/telegram-config.json y que el bot responde (test ping)
-5. ChromaDB: verificar que .chromadb/ existe y tiene datos indexados
-6. Pipeline lock: verificar que no hay results/pipeline.lock activo
-7. Git status: verificar que el repo está sincronizado con origin/main
-8. Scripts: verificar que todos los scripts en scripts/ son importables sin error
+FLUJO:
+1. Lee results/evaluation-gate-results.json
+2. Muestra la lista de estrategias que pasan el EvalGate
+3. Para cada estrategia muestra instrucciones exactas para el Retester en SQ:
+   - Nombre exacto del archivo .sqx
+   - Configuración del Retester recomendada
+   - Fechas IS y OOS a usar
+   - Si debe ejecutar Monte Carlo: Sí (200 simulaciones, 95% confianza)
+4. Después del Retester muestra criterios del Paso 12b para verificar
+5. Genera checklist de resultados que el usuario debe rellenar manualmente
+6. Guarda checklist en results/retester-checklist-[fecha].md
 
-Output: tabla de estado con OK/WARN/FAIL por cada verificación
-Resultado final: SISTEMA LISTO / ADVERTENCIAS / SISTEMA CON ERRORES
-Guardar en results/system-health.json
-Argumento: --fix (intenta corregir problemas menores automáticamente)
+ARGUMENTOS: --eval-results (default: results/evaluation-gate-results.json)
 
-TAREA 2 - Crear scripts/session-starter.py
-Script que se ejecuta al inicio de cada sesión de trabajo para preparar el entorno.
+TAREA 2 - Crear scripts/wfo-helper.py  
+Script que ayuda a gestionar el proceso WFO después del Retester.
 
-Acciones que realiza:
-1. Ejecutar system-health-check.py automáticamente
-2. Mostrar estado del Build activo (si hay results/pipeline.lock)
-3. Mostrar número de estrategias en results/ (Strategy*.csv)
-4. Mostrar última entrada del audit trail (hash-logger)
-5. Mostrar las 2 lecciones estructurales del proyecto
-6. Recordar la próxima acción según docs/project-status.md
-7. Enviar notificación Telegram: "Sesión iniciada en [dispositivo]. Sistema: [estado]"
-8. Crear entrada en results/session-log.json con timestamp de inicio
+FLUJO:
+1. Lee results/retester-checklist-[fecha].md más reciente
+2. Muestra estrategias que pasan el Paso 12b
+3. Para cada estrategia muestra instrucciones exactas para el WFO en SQ:
+   - Configuración WFO recomendada: IS 70%, OOS 30%, 5 ventanas
+   - Activar WF Matrix: Sí
+   - Catastrophic Veto: activado
+4. Después del WFO muestra criterios de aprobación:
+   - WFE >= 50%
+   - >= 3/5 configuraciones pasadas
+   - Catastrophic Veto: ninguna ventana PF < 0.8
+5. Genera checklist WFO en results/wfo-checklist-[fecha].md
 
-Argumento: --device (ivano o alber, default: auto-detectar por hostname)
+TAREA 3 - Crear scripts/stress-tester.py
+Script que guía el stress test histórico de las 5 épocas críticas.
 
-TAREA 3 - Actualizar docs/project-status.md
-Actualizar con estado real actual:
-- Fecha: 2026-04-27
-- Build activo: Build 10 completado (4+ días). Build 11 pendiente de lanzar en alber con spread 60 pips.
-- Scripts Python: todos operativos y probados en ivano
-- Telegram bot: activo (@tradinglab_monitor_bot)
-- ChromaDB: indexado con 90 chunks
-- Planning maestro: ~145/156 tareas completadas
-- Próxima acción: lanzar Build 11 en alber con spread corregido a 60 pips
+FLUJO:
+1. Lee results/wfo-checklist más reciente
+2. Muestra estrategias que pasan el WFO
+3. Para cada estrategia y cada época crítica muestra:
+   - Nombre del período: Crisis 2008, Flash CHF 2015, COVID 2020, Inflación 2022, SVB 2023
+   - Fechas exactas a configurar en el Retester de SQ
+   - Criterio: DD < 8% en cada período
+4. Genera tabla de resultados a rellenar manualmente
+5. Guarda en results/stress-test-results-[fecha].md
+6. Calcula score final por estrategia (cuántos períodos pasa)
 
-TAREA 4 - Actualizar dashboard.md
-Añadir sección al final:
+TAREA 4 - Crear docs/skills/skill-pipeline-execution-guide.md
+Guía práctica de ejecución del pipeline completo.
+Esta es la guía que se usa durante una sesión real de trabajo.
 
-## ✅ Estado de Scripts Python
-Todos los scripts probados y operativos en ivano (2026-04-27):
-| Script | Estado | Dependencias |
-|--------|--------|-------------|
-| pre-build-checklist.py | ✅ OK | pandas, pytz |
-| evaluator-assistant.py | ✅ OK | pandas |
-| portfolio-builder.py | ✅ OK | pandas, numpy |
-| pipeline-runner.py | ✅ OK | pandas |
-| build-analyzer.py | ✅ OK | pandas |
-| hash-logger.py | ✅ OK | hashlib |
-| strategy-versioning.py | ✅ OK | json |
-| knowledge-base.py | ✅ OK | chromadb |
-| telegram-notifier.py | ✅ OK | requests |
-| lessons-analyzer.py | ✅ OK | re |
-| hrp-portfolio.py | ✅ OK | numpy |
-| strategy-fingerprint.py | ✅ OK | xml, hashlib |
-| inflation-diagnostic.py | ✅ OK | pandas |
-| coordination-detector.py | ✅ OK | json |
-| sqx-build-config.py | ✅ OK | json, pytz |
-| market-regime-snapshot.py | ✅ OK | pandas, numpy |
-| validate-sqx-folder.py | ✅ OK | pandas |
-| mql5-auditor.py | ✅ OK | re |
-| sq-watchdog.py | ✅ OK | subprocess |
-| vps-health-monitor.py | ✅ OK | subprocess |
-| ftmo-dd-calculator.py | ✅ OK | pandas, pytz |
-| strategy-analyzer.py | ✅ OK | pandas |
-| portfolio-monitor.py | ✅ OK | pandas |
+ESTRUCTURA:
+1. Antes de empezar (comandos de inicio de sesión)
+2. Fase Builder (build-launcher.py + SQ manual)
+3. Fase EvalGate (build-finisher.py automático)
+4. Fase Retester (retester-helper.py + SQ manual)
+5. Fase WFO (wfo-helper.py + SQ manual)
+6. Fase Stress Test (stress-tester.py + SQ manual)
+7. Fase Portfolio (portfolio-builder.py automático)
+8. Fase Forward Test (MT5 demo automático)
+9. Autorización del Challenge (Telegram → SI humano)
+10. Comandos de fin de sesión
 
-## 🤖 Telegram Bot
-- Bot: @tradinglab_monitor_bot
-- Estado: ✅ Activo
-- Notificaciones: INFO / WARNING / CRITICAL
+Para cada fase: comando exacto + qué hace el humano + qué hace el sistema.
 
-TAREA 5 - Crear docs/skills/skill-session-workflow.md
-Documenta el flujo de trabajo estándar de cada sesión:
+TAREA 5 - Actualizar docs/roadmap/planning-maestro-status.md
+Añadir como completadas las últimas tareas:
+- scripts/build-launcher.py
+- scripts/build-finisher.py
+- scripts/build-queue-manager.py
+- scripts/retester-helper.py
+- scripts/wfo-helper.py
+- scripts/stress-tester.py
+- docs/skills/skill-pipeline-gates-checklist.md
+- docs/skills/skill-pipeline-execution-guide.md
+- docs/architecture/pipeline-diagram.md
+- ChromaDB re-indexado con 909 chunks
 
-INICIO DE SESIÓN (siempre):
-1. python scripts/session-starter.py --device ivano (o alber)
-2. git pull origin main
-3. Revisar dashboard.md en Obsidian
-4. Ver próxima acción en project-status.md
-
-DURANTE LA SESIÓN:
-- Si hay build corriendo en alber: revisar progreso en SQ cada 2-4 horas
-- Usar prompts/next-tasks.md para tareas largas de Claude Code
-- Commitear al final de cada bloque de trabajo completado
-- No cerrar sin commitear
-
-FIN DE SESIÓN (siempre):
-1. git add . && git commit -m "descripción" && git push
-2. python scripts/telegram-notifier.py --level INFO --message "Sesión cerrada. Commits: X"
-3. Si hay build corriendo: anotar estado en results/build-10-report.md
-
-REGLAS DE TRABAJO EN PARALELO (ivano + alber):
-- Siempre git pull antes de empezar en cualquier dispositivo
-- Nunca editar el mismo archivo en los dos dispositivos sin sincronizar
-- alber: solo SQ, scripts de análisis y git pull/push
-- ivano: documentación, Claude Code, scripts Python y git
+Actualizar total: debería llegar a ~158/172 o más.
 
 Al terminar:
 git add .
-git commit -m "Scripts: system-health-check, session-starter. Docs: project-status actualizado, dashboard scripts, session-workflow"
+git commit -m "Scripts: retester-helper, wfo-helper, stress-tester. Skills: pipeline-execution-guide. Planning actualizado ~158/172"
 git push origin main
-Confirma con tabla de archivos creados.
+Confirma con tabla.
