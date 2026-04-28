@@ -16,7 +16,7 @@ from datetime import datetime
 from pathlib import Path
 
 ROOT    = Path(__file__).parent.parent
-DB_PATH = ROOT / ".kuzu"
+DB_PATH = ROOT / ".kuzu" / "tradinglab.db"
 
 try:
     import kuzu
@@ -30,7 +30,7 @@ except ImportError:
 def _get_db(db_path: Path = DB_PATH) -> "kuzu.Database":
     if not KUZU_AVAILABLE:
         raise RuntimeError("kuzu no instalado. Ejecuta: pip install kuzu")
-    db_path.mkdir(parents=True, exist_ok=True)
+    db_path.parent.mkdir(parents=True, exist_ok=True)
     return kuzu.Database(str(db_path))
 
 

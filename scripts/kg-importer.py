@@ -21,9 +21,14 @@ from datetime import datetime
 from pathlib import Path
 
 ROOT = Path(__file__).parent.parent
-sys.path.insert(0, str(Path(__file__).parent))
 
-import knowledge_graph as kg
+import importlib.util as _ilu
+_kg_spec = _ilu.spec_from_file_location(
+    "knowledge_graph",
+    Path(__file__).parent / "knowledge-graph.py"
+)
+kg = _ilu.module_from_spec(_kg_spec)
+_kg_spec.loader.exec_module(kg)
 
 
 # ─── Parsers ───────────────────────────────────────────────────────────────────
@@ -154,7 +159,7 @@ def main() -> int:
     args = parser.parse_args()
 
     repo = Path(args.repo_path).resolve()
-    db_path = repo / ".kuzu"
+    db_path = repo / ".kuzu" / "tradinglab.db"
 
     print("\nKG Importer — TradingLab")
     print("=" * 50)
