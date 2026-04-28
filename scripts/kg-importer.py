@@ -76,23 +76,38 @@ def parse_builds_from_project_status(text: str) -> list[dict]:
     return builds
 
 
-def parse_strategies_from_registry(registry: list[dict]) -> list[dict]:
-    """Transforma el registry al formato del KG."""
+def parse_strategies_from_registry(registry: dict) -> list[dict]:
+    """Transforma el registry al formato del KG.
+
+    Formato real de strategies-registry.json:
+    {
+      "XAUUSD-B10-1114": {
+        "versiones": {"v1": {"metricas": {}, "estado": "standby", ...}},
+        "version_activa": "v1"
+      }, ...
+    }
+    """
     strategies = []
-    for entry in registry:
-        sid = str(entry.get("id", entry.get("strategy_id", "")))
-        bid_raw = str(entry.get("build", entry.get("build_id", "0")))
-        bid = f"B{bid_raw.zfill(2)}" if bid_raw.isdigit() else bid_raw
+    for strategy_id, strategy_data in registry.items():
+        version_activa = strategy_data.get("version_activa", "v1")
+        versiones = strategy_data.get("versiones", {})
+        version_data = versiones.get(version_activa, {})
+        estado   = version_data.get("estado", "standby")
+        metricas = version_data.get("metricas", {})
+
+        # Inferir build_id desde el nombre (ej: XAUUSD-B10-1114 → B10)
+        bid_match = re.search(r"-B(\d+)-", strategy_id)
+        bid = f"B{bid_match.group(1).zfill(2)}" if bid_match else "B00"
 
         strategies.append({
-            "strategy_id": sid,
+            "strategy_id": strategy_id,
             "build_id":    bid,
-            "pf":          float(entry.get("pf", entry.get("pf_oos", 0.0))),
-            "dd":          float(entry.get("dd", entry.get("dd_oos", 0.0))),
-            "trades":      int(entry.get("trades", 0)),
-            "win_rate":    float(entry.get("win_rate", 0.0)),
-            "sharpe":      float(entry.get("sharpe", 0.0)),
-            "estado":      str(entry.get("estado", "APROBADA")),
+            "pf":          float(metricas.get("pf", 0.0)),
+            "dd":          float(metricas.get("dd", 0.0)),
+            "trades":      int(metricas.get("trades", 0)),
+            "win_rate":    float(metricas.get("win_rate", 0.0)),
+            "sharpe":      float(metricas.get("sharpe", 0.0)),
+            "estado":      str(estado).upper(),
         })
     return strategies
 
@@ -196,8 +211,9 @@ def main() -> int:
     if registry_file.exists():
         try:
             raw = json.loads(registry_file.read_text(encoding="utf-8"))
-            if isinstance(raw, dict):
-                raw = raw.get("strategies", [raw])
+            if not isinstance(raw, dict):
+                print(f"  WARN: formato inesperado en registry — se esperaba dict, got {type(raw).__name__}")
+                raw = {}
             strategies = parse_strategies_from_registry(raw)
             for s in strategies:
                 try:
