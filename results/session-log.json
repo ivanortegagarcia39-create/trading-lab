@@ -4,5 +4,11 @@
     "device": "ivano",
     "health": "ADVERTENCIAS",
     "type": "start"
+  },
+  {
+    "timestamp": "2026-04-29T10:44:43.735734",
+    "device": "ivano",
+    "health": "ADVERTENCIAS",
+    "type": "start"
   }
 ]

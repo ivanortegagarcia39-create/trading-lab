@@ -11,7 +11,7 @@ Generado: 2026-04-29
 | Estrategias en databank | 0 |
 | EvalGate: pasan | 0 / 0 |
 | Portfolio | 0 estrategias (N/A) |
-| Ultima sesion | 2026-04-27T13:41:51 |
+| Ultima sesion | 2026-04-29T10:44:43 |
 
 ---
 
@@ -25,15 +25,15 @@ Generado: 2026-04-29
 
 ## Estado del Sistema
 
-OK:22 WARN:1 FAIL:0 — 2026-04-29T00:28:00
+OK:24 WARN:4 FAIL:0 — 2026-04-29T10:44:53
 
-Health checks: OK:22 — WARN:1 — FAIL:0
+Health checks: OK:24 — WARN:4 — FAIL:0
 
 ---
 
 ## Planning Maestro
 
-**163 / 183 tareas completadas (89.1%)**
+**195 / 215 tareas completadas (90.7%)**
 
 ---
 
@@ -50,6 +50,20 @@ Comando exacto: python scripts/build-launcher.py --build 11 --activo XAUUSD --sp
 ### Planning Maestro
 | Metrica | Valor |
 |---------|-------|
+
+## Sistema de Autoaprendizaje
+
+| Componente | Estado | Última actualización |
+|------------|--------|---------------------|
+| Knowledge Graph | 0 builds, 0 estrategias | 2026-04-29 |
+| Bayesian Criteria | 5 criterios | 2026-04-28 |
+| DSPy Optimizer | 0 módulos compilados | — |
+| Thompson Sampling | no inicializado | — |
+| Concept Drift | sin datos | — |
+| Champion-Challenger | sin datos | — |
+| Self-improvement | Último ciclo:  |  |
+
+---
 
 ---
 *Generado por auto-reporter.py — TradingLab*

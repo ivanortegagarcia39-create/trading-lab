@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-04-29T01:11:22.593625",
+  "timestamp": "2026-04-29T10:44:53.937401",
   "checks": [
     {
       "check": "  pandas",
@@ -104,7 +104,7 @@
     {
       "check": "  working tree",
       "status": "WARN",
-      "detail": "1 archivo(s) sin commitear"
+      "detail": "3 archivo(s) sin commitear"
     },
     {
       "check": "  sincronizado con origin/main",
@@ -112,14 +112,39 @@
       "detail": ""
     },
     {
-      "check": "  59 scripts",
+      "check": "  60 scripts",
       "status": "OK",
       "detail": "sin errores de sintaxis"
+    },
+    {
+      "check": "  .kuzu/tradinglab.db",
+      "status": "OK",
+      "detail": ""
+    },
+    {
+      "check": "  KG datos",
+      "status": "WARN",
+      "detail": "KG vacio — ejecutar: python scripts/kg-importer.py"
+    },
+    {
+      "check": "  config/bayesian-criteria.json",
+      "status": "OK",
+      "detail": ""
+    },
+    {
+      "check": "  results/thompson-state.json",
+      "status": "WARN",
+      "detail": "ejecutar: python scripts/thompson-sampling.py --show"
+    },
+    {
+      "check": "  results/drift-detection.json",
+      "status": "WARN",
+      "detail": "ejecutar: python scripts/concept-drift-detector.py --show"
     }
   ],
   "summary": {
-    "ok": 22,
-    "warn": 1,
+    "ok": 24,
+    "warn": 4,
     "fail": 0
   }
 }
