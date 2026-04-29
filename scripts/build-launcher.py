@@ -56,6 +56,29 @@ def _warn(text: str) -> None:
     print(f"    WARN  {text}")
 
 
+def run_data_validator(activo: str, dry_run: bool) -> bool:
+    """PASO 0 — Verifica datos SQ disponibles antes de cualquier otra comprobacion."""
+    _step(0, f"Verificando datos disponibles en SQ para {activo}...")
+    validator = SCRIPTS / "sq-data-validator.py"
+    if not validator.exists():
+        _warn("sq-data-validator.py no encontrado — saltando verificacion")
+        return True
+    if dry_run:
+        print(f"  [DRY-RUN] sq-data-validator.py --activo {activo}")
+        return True
+    rc = _run([sys.executable, str(validator), "--activo", activo])
+    if rc == 1:
+        print(f"\n  FAIL — datos insuficientes para {activo}.")
+        print("  Completar la descarga en SQ Data Manager antes de continuar.")
+        return False
+    if rc == 2:
+        _warn(f"datos con advertencias para {activo}.")
+        resp = input("  ¿Continuar de todas formas? (s/n): ").strip().lower()
+        return resp in ("s", "si", "y", "yes")
+    _ok(f"datos verificados para {activo}")
+    return True
+
+
 def run_pre_build_checklist(activo: str, spread: float) -> bool:
     _step(1, "Ejecutando pre-build-checklist.py...")
     checklist = SCRIPTS / "pre-build-checklist.py"
@@ -181,6 +204,10 @@ def main() -> int:
     _header(f"BUILD LAUNCHER — Build {args.build} | {activo}")
     if args.dry_run:
         print("  [MODO DRY-RUN — sin cambios reales]")
+
+    # Paso 0: verificar datos SQ
+    if not run_data_validator(activo, args.dry_run):
+        return 1
 
     # Paso 1: pre-build-checklist
     if not run_pre_build_checklist(activo, spread_sq):

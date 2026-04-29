@@ -15,9 +15,9 @@
     "EURAUD": {"real": 1.5, "backtest_sucio": 3.0},
     "GBPAUD": {"real": 1.5, "backtest_sucio": 3.0},
     "AUDJPY": {"real": 1.0, "backtest_sucio": 2.0},
-    "US30":   {"real": 5,   "backtest_sucio": 10},
-    "US500":  {"real": 1,   "backtest_sucio": 2},
-    "NAS100": {"real": 5,   "backtest_sucio": 10},
+    "US30":   {"real": 2.0, "backtest_sucio": 4.0},
+    "US500":  {"real": 0.5, "backtest_sucio": 1.0},
+    "NAS100": {"real": 1.5, "backtest_sucio": 3.0},
     "DE40":   {"real": 3,   "backtest_sucio": 6}
   },
   "slippage_pips": {
