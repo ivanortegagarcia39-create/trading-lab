@@ -1,6 +1,6 @@
 # Planning Maestro — Estado de Implementacion
 
-Ultima actualizacion: 2026-04-29
+Ultima actualizacion: 2026-04-29 (v8.0 completo)
 
 ---
 
@@ -11,8 +11,8 @@ Ultima actualizacion: 2026-04-29
 | Fase 0 | Cimientos | 6 | 6 | COMPLETA |
 | Fase 1 | Pipeline core | 45 | 45 | COMPLETA |
 | Fase 2 | Multi-activo y prop firms | 22 | 22 | COMPLETA |
-| Fase 3 | Inteligencia y aprendizaje | 46 | 51 | EN CURSO |
-| Fase 4 | Produccion y monitoreo | 18 | 19 | EN CURSO |
+| Fase 3 | Inteligencia y aprendizaje | 56 | 61 | EN CURSO |
+| Fase 4 | Produccion y monitoreo | 19 | 20 | EN CURSO |
 | Fase 5 | VPS y despliegue real | 0 | 6 | PENDIENTE (VPS) |
 | Fase 6 | Portfolio multi-estrategia | 0 | 9 | PENDIENTE (5 estrategias) |
 | Fase 7 | Auditoria y compliance | 3 | 3 | COMPLETA |
@@ -20,7 +20,7 @@ Ultima actualizacion: 2026-04-29
 | Fase 9 | Scaling y funded | 0 | 7 | PENDIENTE (3 estrategias) |
 | Fase 10 | Infraestructura avanzada | 26 | 26 | COMPLETA |
 
-**Total completadas: 185 / 205 tareas documentadas**
+**Total completadas: 195 / 215 tareas documentadas**
 
 ---
 
@@ -76,7 +76,7 @@ Todos los agentes y skills del pipeline principal:
 
 ---
 
-## Fase 3 — Inteligencia y aprendizaje (24/29) EN CURSO
+## Fase 3 — Inteligencia y aprendizaje (56/61) EN CURSO
 
 ### Completadas
 - [x] agents/knowledge-synthesizer.md
@@ -129,6 +129,19 @@ Todos los agentes y skills del pipeline principal:
 - [x] docs/skills/skill-challenge-simulation.md — simulacion challenge documentado
 - [x] docs/architecture/knowledge-graph-schema.md — esquema KG documentado
 
+### Completadas v8.0 final (2026-04-29)
+- [x] scripts/regime-strategy-matcher.py — recomendador por régimen de mercado
+- [x] scripts/pipeline-health-monitor.py — semáforo 5 métricas, modo watch, autofix
+- [x] scripts/strategy-retirement-manager.py — ciclo de vida 7 estados con transiciones automáticas
+- [x] scripts/quarterly-reoptimizer.py — protocolo trimestral detección decay y reoptimización
+- [x] scripts/system-backup.py — backup completo KG+ChromaDB+configs+results, retención 7 backups
+- [x] templates/challenge-simulation-log.md — template simulación challenge con frontmatter 19 campos
+- [x] dashboard.md — sección v8.0 con 15 componentes y ciclo semanal
+- [x] scripts/session-starter.py — bloque autoaprendizaje: KG, Thompson, CC, Retirement, Drift
+- [x] scripts/auto-reporter.py — sección autoaprendizaje con tabla 7 componentes
+- [x] scripts/system-health-check.py — checks [9] KG y [10] self-improvement engine
+- [x] docs/skills/skill-strategy-lifecycle.md — ciclo de vida documentado
+
 ### Pendientes — requieren hardware/infraestructura
 - [ ] Integracion Ollama en produccion (requiere VPS o maquina local dedicada)
 - [ ] ChromaDB en produccion (requiere instalacion pip en entorno activo)
@@ -138,7 +151,7 @@ Todos los agentes y skills del pipeline principal:
 
 ---
 
-## Fase 4 — Produccion y monitoreo (17/18) EN CURSO
+## Fase 4 — Produccion y monitoreo (19/20) EN CURSO
 
 ### Completadas
 - [x] agents/performance-monitor.md
@@ -158,6 +171,7 @@ Todos los agentes y skills del pipeline principal:
 - [x] Telegram bot @tradinglab_monitor_bot activo — token y chat_id configurados en ivano
 - [x] scripts/build-launcher.py — checklist interactivo pre-build con confirmacion y audit trail
 - [x] scripts/build-finisher.py — pipeline post-build: EvalGate→analyzer→cola→versioning→re-index
+- [x] scripts/system-backup.py — backup completo con retención 7 copias y restauración
 
 ### Pendientes — requieren VPS o produccion activa
 - [ ] Risk Manager automatico en MT5 (requiere EA desplegado en VPS)

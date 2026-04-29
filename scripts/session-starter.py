@@ -116,6 +116,112 @@ def _next_action() -> str:
     return "Ver docs/project-status.md para proxima accion"
 
 
+def _kg_status() -> dict:
+    kg_script = ROOT / "scripts" / "knowledge-graph.py"
+    kg_db = ROOT / ".kuzu" / "tradinglab.db"
+    if not kg_db.exists() or not kg_script.exists():
+        return {"builds": 0, "strategies": 0, "lessons": 0, "ok": False}
+    try:
+        import re as _re
+        result = subprocess.run(
+            [sys.executable, str(kg_script), "stats"],
+            capture_output=True, text=True, cwd=ROOT, timeout=15
+        )
+        output = result.stdout + result.stderr
+        builds = strategies = lessons = 0
+        for line in output.splitlines():
+            m = _re.search(r"build\w*\s*[:\-]?\s*(\d+)", line, _re.IGNORECASE)
+            if m:
+                builds = int(m.group(1))
+            m = _re.search(r"strateg\w*\s*[:\-]?\s*(\d+)", line, _re.IGNORECASE)
+            if m:
+                strategies = int(m.group(1))
+            m = _re.search(r"lesson\w*\s*[:\-]?\s*(\d+)", line, _re.IGNORECASE)
+            if m:
+                lessons = int(m.group(1))
+        return {"builds": builds, "strategies": strategies, "lessons": lessons, "ok": True}
+    except Exception:
+        return {"builds": 0, "strategies": 0, "lessons": 0, "ok": False}
+
+
+def _thompson_next() -> str:
+    thompson_script = ROOT / "scripts" / "thompson-sampling.py"
+    if not thompson_script.exists():
+        return "sin datos"
+    try:
+        result = subprocess.run(
+            [sys.executable, str(thompson_script), "--next-asset"],
+            capture_output=True, text=True, cwd=ROOT, timeout=10
+        )
+        for line in result.stdout.splitlines():
+            if line.strip():
+                return line.strip()[:60]
+        return "sin datos"
+    except Exception:
+        return "error"
+
+
+def _cc_status() -> dict:
+    cc_path = RESULTS_DIR / "champion-challenger.json"
+    if not cc_path.exists():
+        return {"champions": 0, "challengers": 0}
+    try:
+        data = json.loads(cc_path.read_text(encoding="utf-8"))
+        return {
+            "champions":   len(data.get("champions", {})),
+            "challengers": len(data.get("challengers", {})),
+        }
+    except Exception:
+        return {"champions": 0, "challengers": 0}
+
+
+def _retirement_counts() -> dict:
+    registry_path = RESULTS_DIR / "strategies-registry.json"
+    if not registry_path.exists():
+        return {}
+    try:
+        data = json.loads(registry_path.read_text(encoding="utf-8"))
+        strategies = data.get("strategies", data) if "strategies" in data else data
+        counts: dict[str, int] = {}
+        for s in strategies.values():
+            version = s.get("version_activa", "v1")
+            state = str(s.get("versiones", {}).get(version, {})
+                        .get("estado", "standby")).lower()
+            counts[state] = counts.get(state, 0) + 1
+        return counts
+    except Exception:
+        return {}
+
+
+def _drift_status() -> dict:
+    drift_path = RESULTS_DIR / "drift-detection.json"
+    if not drift_path.exists():
+        return {"bocpd_prob": None, "addm_critical": 0}
+    try:
+        data = json.loads(drift_path.read_text(encoding="utf-8"))
+        prob = data.get("bocpd", {}).get("last_prob", 0.0)
+        critical = sum(1 for d in data.get("addm", {}).values()
+                       if d.get("level") == "CRITICAL")
+        return {"bocpd_prob": round(float(prob), 3), "addm_critical": critical}
+    except Exception:
+        return {"bocpd_prob": None, "addm_critical": 0}
+
+
+def _last_improvement_cycle() -> str:
+    log_path = ROOT / "config" / "self-improvement-log.jsonl"
+    if not log_path.exists():
+        return "nunca ejecutado"
+    try:
+        lines = [l.strip() for l in log_path.read_text(encoding="utf-8").splitlines()
+                 if l.strip()]
+        if not lines:
+            return "sin registros"
+        last = json.loads(lines[-1])
+        return last.get("timestamp", "")[:19] or "sin fecha"
+    except Exception:
+        return "error leyendo log"
+
+
 def _send_telegram(device: str, health: str):
     """Notifica inicio de sesion via telegram-notifier.py."""
     notifier = ROOT / "scripts" / "telegram-notifier.py"
@@ -192,8 +298,30 @@ def main():
     action = _next_action()
     print(f"  → {action}")
 
-    # 7. Telegram + log
-    print("\n[7/7] Notificacion Telegram y log de sesion")
+    # 7. Autoaprendizaje
+    print("\n[7/8] Estado del sistema de autoaprendizaje")
+    kg = _kg_status()
+    if kg["ok"]:
+        print(f"  KG              : {kg['builds']} builds, {kg['strategies']} estrategias, {kg['lessons']} lecciones")
+    else:
+        print("  KG              : no inicializado (.kuzu/tradinglab.db ausente)")
+    print(f"  Thompson next   : {_thompson_next()}")
+    cc = _cc_status()
+    print(f"  Champion-Chal.  : {cc['champions']} champions, {cc['challengers']} challengers")
+    ret = _retirement_counts()
+    standby = ret.get("standby", 0)
+    active  = ret.get("active", 0)
+    retired = ret.get("retired", 0)
+    print(f"  Retirement      : {standby} standby, {active} activas, {retired} retired")
+    drift = _drift_status()
+    if drift["bocpd_prob"] is not None:
+        print(f"  Drift           : BOCPD prob={drift['bocpd_prob']}, ADDM CRITICAL={drift['addm_critical']}")
+    else:
+        print("  Drift           : sin datos (normal si no hay produccion activa)")
+    print(f"  Ultimo ciclo    : {_last_improvement_cycle()}")
+
+    # 8. Telegram + log
+    print("\n[8/8] Notificacion Telegram y log de sesion")
     _send_telegram(device, health)
     _log_session(device, health)
     print(f"  Sesion registrada en results/session-log.json")

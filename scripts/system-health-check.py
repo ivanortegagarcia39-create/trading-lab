@@ -245,6 +245,66 @@ def check_scripts():
         _record(f"  {len(py_files)} scripts", "OK", "sin errores de sintaxis")
 
 
+# ─── 9. Knowledge Graph ────────────────────────────────────────────────────
+
+def check_knowledge_graph():
+    print("\n[9] Knowledge Graph (Kùzu)")
+    kg_db = ROOT / ".kuzu" / "tradinglab.db"
+    if not kg_db.exists():
+        _record("  .kuzu/tradinglab.db", "WARN",
+                "KG no existe — ejecutar: python scripts/kg-importer.py")
+        return
+    _record("  .kuzu/tradinglab.db", "OK")
+
+    kg_script = ROOT / "scripts" / "knowledge-graph.py"
+    if not kg_script.exists():
+        _record("  KG datos", "WARN", "knowledge-graph.py no encontrado")
+        return
+    try:
+        import re as _re
+        result = subprocess.run(
+            [sys.executable, str(kg_script), "stats"],
+            capture_output=True, text=True, cwd=ROOT, timeout=15
+        )
+        output = result.stdout + result.stderr
+        build_count = strategy_count = 0
+        for line in output.splitlines():
+            m = _re.search(r"build\w*\s*[:\-]?\s*(\d+)", line, _re.IGNORECASE)
+            if m:
+                build_count = int(m.group(1))
+            m = _re.search(r"strateg\w*\s*[:\-]?\s*(\d+)", line, _re.IGNORECASE)
+            if m:
+                strategy_count = int(m.group(1))
+        if build_count == 0 and strategy_count == 0:
+            _record("  KG datos", "WARN",
+                    "KG vacio — ejecutar: python scripts/kg-importer.py")
+        else:
+            _record("  KG datos", "OK",
+                    f"{build_count} builds, {strategy_count} estrategias")
+    except Exception as e:
+        _record("  KG accesible", "WARN", str(e)[:60])
+
+
+# ─── 10. Self-improvement engine ───────────────────────────────────────────
+
+def check_self_improvement():
+    print("\n[10] Self-improvement engine")
+    checks = {
+        "config/bayesian-criteria.json":
+            "bayesian-criteria-updater.py --thresholds",
+        "results/thompson-state.json":
+            "thompson-sampling.py --show",
+        "results/drift-detection.json":
+            "concept-drift-detector.py --show",
+    }
+    for rel, fix_script in checks.items():
+        path = ROOT / rel
+        if path.exists():
+            _record(f"  {rel}", "OK")
+        else:
+            _record(f"  {rel}", "WARN", f"ejecutar: python scripts/{fix_script}")
+
+
 # ─── Resultado final ───────────────────────────────────────────────────────
 
 def _save_results():
@@ -297,6 +357,8 @@ def main():
     check_pipeline_lock()
     check_git()
     check_scripts()
+    check_knowledge_graph()
+    check_self_improvement()
 
     summary = _save_results()
     verdict = _final_verdict(summary)

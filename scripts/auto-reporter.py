@@ -164,7 +164,148 @@ def _next_actions() -> str:
     return "\n".join(lines) if lines else "Ver docs/project-status.md"
 
 
-# ── 6. Estado del sistema ──────────────────────────────────────────────────
+# ── 6. Sistema de Autoaprendizaje ─────────────────────────────────────────
+
+def _autoaprendizaje_status() -> dict:
+    """Recopila estado de todos los componentes de autoaprendizaje."""
+    result = {}
+
+    # Knowledge Graph
+    kg_db = ROOT / ".kuzu" / "tradinglab.db"
+    result["kg_ok"] = kg_db.exists()
+    if kg_db.exists():
+        import os
+        import re as _re
+        mtime_str = datetime.fromtimestamp(os.path.getmtime(str(kg_db))).strftime("%Y-%m-%d")
+        kg_script = ROOT / "scripts" / "knowledge-graph.py"
+        builds = strategies = 0
+        if kg_script.exists():
+            try:
+                r = subprocess.run(
+                    [sys.executable, str(kg_script), "stats"],
+                    capture_output=True, text=True, cwd=ROOT, timeout=15
+                )
+                for line in (r.stdout + r.stderr).splitlines():
+                    m = _re.search(r"build\w*\s*[:\-]?\s*(\d+)", line, _re.IGNORECASE)
+                    if m:
+                        builds = int(m.group(1))
+                    m = _re.search(r"strateg\w*\s*[:\-]?\s*(\d+)", line, _re.IGNORECASE)
+                    if m:
+                        strategies = int(m.group(1))
+            except Exception:
+                pass
+        result["kg_label"] = f"{builds} builds, {strategies} estrategias"
+        result["kg_date"]  = mtime_str
+    else:
+        result["kg_label"] = "no inicializado"
+        result["kg_date"]  = "—"
+
+    # Bayesian Criteria
+    bc_path = ROOT / "config" / "bayesian-criteria.json"
+    if bc_path.exists():
+        import os
+        try:
+            criteria = json.loads(bc_path.read_text(encoding="utf-8"))
+            result["bayesian_label"] = f"{len(criteria)} criterios"
+            result["bayesian_date"]  = datetime.fromtimestamp(
+                os.path.getmtime(str(bc_path))).strftime("%Y-%m-%d")
+        except Exception:
+            result["bayesian_label"] = "error"
+            result["bayesian_date"]  = "—"
+    else:
+        result["bayesian_label"] = "no inicializado"
+        result["bayesian_date"]  = "—"
+
+    # DSPy Optimizer
+    dspy_dir = ROOT / "config" / "dspy-compiled"
+    if dspy_dir.exists():
+        compiled = list(dspy_dir.glob("*.json"))
+        result["dspy_label"] = f"{len(compiled)} módulos compilados"
+    else:
+        result["dspy_label"] = "sin compilaciones"
+    result["dspy_date"] = "—"
+
+    # Thompson Sampling
+    ts_path = ROOT / "results" / "thompson-state.json"
+    if ts_path.exists():
+        import os
+        try:
+            ts = json.loads(ts_path.read_text(encoding="utf-8"))
+            assets = ts.get("assets", {})
+            result["thompson_label"] = f"{len(assets)} activos registrados"
+            result["thompson_date"]  = datetime.fromtimestamp(
+                os.path.getmtime(str(ts_path))).strftime("%Y-%m-%d")
+        except Exception:
+            result["thompson_label"] = "error"
+            result["thompson_date"]  = "—"
+    else:
+        result["thompson_label"] = "no inicializado"
+        result["thompson_date"]  = "—"
+
+    # Concept Drift
+    drift_path = ROOT / "results" / "drift-detection.json"
+    if drift_path.exists():
+        import os
+        try:
+            drift = json.loads(drift_path.read_text(encoding="utf-8"))
+            prob = drift.get("bocpd", {}).get("last_prob", 0.0)
+            crit = sum(1 for d in drift.get("addm", {}).values()
+                       if d.get("level") == "CRITICAL")
+            result["drift_label"] = f"BOCPD: {float(prob):.3f}, ADDM crit: {crit}"
+            result["drift_date"]  = datetime.fromtimestamp(
+                os.path.getmtime(str(drift_path))).strftime("%Y-%m-%d")
+        except Exception:
+            result["drift_label"] = "error"
+            result["drift_date"]  = "—"
+    else:
+        result["drift_label"] = "sin datos"
+        result["drift_date"]  = "—"
+
+    # Champion-Challenger
+    cc_path = ROOT / "results" / "champion-challenger.json"
+    if cc_path.exists():
+        import os
+        try:
+            cc = json.loads(cc_path.read_text(encoding="utf-8"))
+            champions   = len(cc.get("champions", {}))
+            challengers = len(cc.get("challengers", {}))
+            result["cc_label"] = f"{champions} champions, {challengers} challengers"
+            result["cc_date"]  = datetime.fromtimestamp(
+                os.path.getmtime(str(cc_path))).strftime("%Y-%m-%d")
+        except Exception:
+            result["cc_label"] = "error"
+            result["cc_date"]  = "—"
+    else:
+        result["cc_label"] = "sin datos"
+        result["cc_date"]  = "—"
+
+    # Self-improvement last cycle
+    log_path = ROOT / "config" / "self-improvement-log.jsonl"
+    if log_path.exists():
+        try:
+            lines = [l.strip() for l in log_path.read_text(encoding="utf-8").splitlines()
+                     if l.strip()]
+            if lines:
+                last = json.loads(lines[-1])
+                result["si_label"] = f"Último ciclo: {last.get('timestamp','')[:10]}"
+                result["si_date"]  = last.get("timestamp", "")[:10]
+            else:
+                result["si_label"] = "sin registros"
+                result["si_date"]  = "—"
+        except Exception:
+            result["si_label"] = "error"
+            result["si_date"]  = "—"
+    else:
+        result["si_label"] = "nunca ejecutado"
+        result["si_date"]  = "—"
+
+    warns = [k for k in ("kg_label", "bayesian_label", "thompson_label")
+             if "no inicializado" in result.get(k, "")]
+    result["overall"] = "WARN" if warns else "OK"
+    return result
+
+
+# ── 7. Estado del sistema ──────────────────────────────────────────────────
 
 def _system_status() -> str:
     health = _load_json(RESULTS / "system-health.json")
@@ -206,7 +347,8 @@ def _ollama_summary(pipeline: dict, planning: dict) -> str | None:
 
 def _generate_md(pipeline: dict, portfolio: dict, lessons: list[str],
                  planning: dict, next_actions: str, sys_status: str,
-                 ollama_text: str | None, week_str: str) -> str:
+                 ollama_text: str | None, week_str: str,
+                 auto_status: dict | None = None) -> str:
     date_str = datetime.now().strftime("%Y-%m-%d")
 
     strat_rows = ""
@@ -220,6 +362,25 @@ def _generate_md(pipeline: dict, portfolio: dict, lessons: list[str],
     ollama_section = ""
     if ollama_text:
         ollama_section = f"\n## Resumen Ejecutivo (deepseek-r1:7b)\n\n{ollama_text}\n"
+
+    auto_section = ""
+    if auto_status:
+        a = auto_status
+        auto_section = f"""
+## Sistema de Autoaprendizaje
+
+| Componente | Estado | Última actualización |
+|------------|--------|---------------------|
+| Knowledge Graph | {a.get('kg_label', '—')} | {a.get('kg_date', '—')} |
+| Bayesian Criteria | {a.get('bayesian_label', '—')} | {a.get('bayesian_date', '—')} |
+| DSPy Optimizer | {a.get('dspy_label', '—')} | {a.get('dspy_date', '—')} |
+| Thompson Sampling | {a.get('thompson_label', '—')} | {a.get('thompson_date', '—')} |
+| Concept Drift | {a.get('drift_label', '—')} | {a.get('drift_date', '—')} |
+| Champion-Challenger | {a.get('cc_label', '—')} | {a.get('cc_date', '—')} |
+| Self-improvement | {a.get('si_label', '—')} | {a.get('si_date', '—')} |
+
+---
+"""
 
     return f"""# Informe Semanal — {week_str}
 Generado: {date_str}
@@ -268,7 +429,7 @@ Health checks: OK:{portfolio['health_ok']} — WARN:{portfolio['health_warn']} �
 ## Proximas Acciones
 
 {next_actions}
-{ollama_section}
+{auto_section}{ollama_section}
 ---
 *Generado por auto-reporter.py — TradingLab*
 """
@@ -317,6 +478,7 @@ def main():
     planning     = _planning_progress()
     next_actions = _next_actions()
     sys_status   = _system_status()
+    auto_status  = _autoaprendizaje_status()
 
     ollama_text = None
     if not args.no_ollama:
@@ -325,7 +487,8 @@ def main():
             print("  Resumen Ollama generado.")
 
     report_md = _generate_md(pipeline, portfolio, lessons, planning,
-                             next_actions, sys_status, ollama_text, week_str)
+                             next_actions, sys_status, ollama_text, week_str,
+                             auto_status)
 
     out_path = output_dir / f"weekly-report-{date_str}.md"
     out_path.write_text(report_md, encoding="utf-8")
@@ -334,10 +497,11 @@ def main():
     _send_telegram(pipeline, planning, args.no_telegram)
 
     print(f"\nResumen:")
-    print(f"  Planning   : {planning['completadas']}/{planning['total']} ({planning['pct']}%)")
-    print(f"  Build      : {pipeline['build_activo']}")
-    print(f"  Portfolio  : {pipeline['portfolio_size']} estrategias")
-    print(f"  Sistema    : {sys_status}")
+    print(f"  Planning       : {planning['completadas']}/{planning['total']} ({planning['pct']}%)")
+    print(f"  Build          : {pipeline['build_activo']}")
+    print(f"  Portfolio      : {pipeline['portfolio_size']} estrategias")
+    print(f"  Sistema        : {sys_status}")
+    print(f"  Autoaprendizaje: [{auto_status.get('overall', 'OK')}]")
 
 
 if __name__ == "__main__":

@@ -224,6 +224,39 @@ Todos los scripts probados y operativos en ivano (2026-04-27):
 
 ---
 
+## 🧠 Sistema de Autoaprendizaje v8.0
+
+| Componente | Archivo | Estado |
+|------------|---------|--------|
+| Knowledge Graph | scripts/knowledge-graph.py | ✅ Operativo |
+| Router de Modelos | scripts/model-router.py | ✅ Operativo |
+| DSPy Optimizer | scripts/dspy-optimizer.py | ✅ Operativo |
+| Bayesian Criteria | scripts/bayesian-criteria-updater.py | ✅ Operativo |
+| Concept Drift | scripts/concept-drift-detector.py | ✅ Operativo |
+| Champion-Challenger | scripts/champion-challenger.py | ✅ Operativo |
+| Crítico Interno | scripts/internal-critic.py | ✅ Operativo |
+| Thompson Sampling | scripts/thompson-sampling.py | ✅ Operativo |
+| Self-improvement | scripts/self-improvement-engine.py | ✅ Operativo |
+| AutoDemoPipeline | scripts/challenge-demo-simulator.py | ✅ Operativo |
+| PropFirm Monitor | scripts/propfirm-monitor.py | ✅ Operativo |
+| Pipeline Health | scripts/pipeline-health-monitor.py | ✅ Operativo |
+| Regime Matcher | scripts/regime-strategy-matcher.py | ✅ Operativo |
+| Retirement Manager | scripts/strategy-retirement-manager.py | ✅ Operativo |
+| Quarterly Optimizer | scripts/quarterly-reoptimizer.py | ✅ Operativo |
+
+---
+
+## 💾 Ciclo Semanal de Autoaprendizaje
+Ejecutar cada lunes:
+```
+python scripts/self-improvement-engine.py --run
+```
+
+El ciclo actualiza automáticamente:
+DSPy → Bayesian → Drift → Champion → Critic → PropFirm → Health → Retirement
+
+---
+
 ## Pendiente de Hardware
 
 | Tarea | Requiere | Prioridad |
