@@ -301,6 +301,17 @@ def main():
     # 7. Autoaprendizaje
     print("\n[7/8] Estado del sistema de autoaprendizaje")
     kg = _kg_status()
+    if kg["ok"] and kg["builds"] == 0 and kg["strategies"] == 0:
+        print("  KG vacío detectado — reimportando historial...")
+        importer = ROOT / "scripts" / "kg-importer.py"
+        if importer.exists():
+            subprocess.run(
+                [sys.executable, str(importer)],
+                cwd=ROOT, capture_output=True
+            )
+            kg = _kg_status()
+        else:
+            print("  WARN: kg-importer.py no encontrado")
     if kg["ok"]:
         print(f"  KG              : {kg['builds']} builds, {kg['strategies']} estrategias, {kg['lessons']} lecciones")
     else:
