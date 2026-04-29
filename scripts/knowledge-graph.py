@@ -239,15 +239,21 @@ def add_strategy(strategy_data: dict, db_path: Path = DB_PATH) -> None:
             params
         )
 
-    # Conectar Build → Strategy con CREATE (solo si el Build existe)
-    try:
-        conn.execute(
-            "MATCH (b:Build {build_id: $bid}), (s:Strategy {strategy_id: $sid}) "
-            "CREATE (b)-[:PRODUCED]->(s)",
-            {"bid": bid, "sid": sid}
-        )
-    except Exception:
-        pass  # Edge ya existe o Build no encontrado
+    # Conectar Build → Strategy solo si la arista no existe ya
+    r = conn.execute(
+        "MATCH (b:Build {build_id: $bid})-[:PRODUCED]->(s:Strategy {strategy_id: $sid}) "
+        "RETURN count(*)",
+        {"bid": bid, "sid": sid}
+    )
+    if not (r.has_next() and r.get_next()[0] > 0):
+        try:
+            conn.execute(
+                "MATCH (b:Build {build_id: $bid}), (s:Strategy {strategy_id: $sid}) "
+                "CREATE (b)-[:PRODUCED]->(s)",
+                {"bid": bid, "sid": sid}
+            )
+        except Exception:
+            pass
 
 
 def add_gate_decision(strategy_id: str, gate_num: int, gate_name: str,
@@ -282,16 +288,22 @@ def add_gate_decision(strategy_id: str, gate_num: int, gate_name: str,
             params
         )
 
-    # Conectar Strategy → GateDecision
-    try:
-        conn.execute(
-            "MATCH (s:Strategy {strategy_id: $sid}), "
-            "(g:GateDecision {decision_id: $did}) "
-            "CREATE (s)-[:VALIDATED_BY]->(g)",
-            {"sid": strategy_id, "did": decision_id}
-        )
-    except Exception:
-        pass
+    # Conectar Strategy → GateDecision solo si no existe ya
+    r = conn.execute(
+        "MATCH (s:Strategy {strategy_id: $sid})-[:VALIDATED_BY]->"
+        "(g:GateDecision {decision_id: $did}) RETURN count(*)",
+        {"sid": strategy_id, "did": decision_id}
+    )
+    if not (r.has_next() and r.get_next()[0] > 0):
+        try:
+            conn.execute(
+                "MATCH (s:Strategy {strategy_id: $sid}), "
+                "(g:GateDecision {decision_id: $did}) "
+                "CREATE (s)-[:VALIDATED_BY]->(g)",
+                {"sid": strategy_id, "did": decision_id}
+            )
+        except Exception:
+            pass
 
 
 def add_lesson(lesson_data: dict, db_path: Path = DB_PATH) -> None:
@@ -381,15 +393,22 @@ def add_live_outcome(strategy_id: str, outcome_data: dict,
             params
         )
 
-    try:
-        conn.execute(
-            "MATCH (s:Strategy {strategy_id: $sid}), "
-            "(o:LiveOutcome {outcome_id: $oid}) "
-            "CREATE (s)-[:HAD_OUTCOME]->(o)",
-            {"sid": strategy_id, "oid": outcome_id}
-        )
-    except Exception:
-        pass
+    # Conectar Strategy → LiveOutcome solo si no existe ya
+    r = conn.execute(
+        "MATCH (s:Strategy {strategy_id: $sid})-[:HAD_OUTCOME]->"
+        "(o:LiveOutcome {outcome_id: $oid}) RETURN count(*)",
+        {"sid": strategy_id, "oid": outcome_id}
+    )
+    if not (r.has_next() and r.get_next()[0] > 0):
+        try:
+            conn.execute(
+                "MATCH (s:Strategy {strategy_id: $sid}), "
+                "(o:LiveOutcome {outcome_id: $oid}) "
+                "CREATE (s)-[:HAD_OUTCOME]->(o)",
+                {"sid": strategy_id, "oid": outcome_id}
+            )
+        except Exception:
+            pass
 
 
 # ─── Consultas ─────────────────────────────────────────────────────────────────
