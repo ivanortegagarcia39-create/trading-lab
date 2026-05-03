@@ -1,146 +1,73 @@
-Lee CLAUDE.md y todos los archivos en agents/ y docs/skills/.
+Lee CLAUDE.md y todos los archivos en agents/.
 
-Continuamos desde ivano. Vamos a implementar las últimas
-mejoras que podemos hacer sin hardware.
+Dos tareas en paralelo:
 
-TAREA 1 - Crear scripts/regime-strategy-matcher.py
-Script que conecta el régimen de mercado actual con
-las estrategias más adecuadas para ese régimen.
+TAREA 1 - Añadir personalidad a los 5 agentes principales
+Para cada uno de estos agentes, añadir al inicio del archivo
+una sección ## Personalidad con tono, estilo y ejemplo real:
 
-PROPÓSITO:
-No todas las estrategias funcionan igual en todos los regímenes.
-Una estrategia generada en tendencia-altavol puede fallar
-en rango-bajovol. Este script aprende qué estrategias
-funcionan mejor en cada régimen.
+agents/orchestrator.md:
+  Tono: Ejecutivo. Directo. Sin rodeos.
+  Estilo: "Pipeline iniciado. Build 11, XAUUSD H1. ETA 48h."
+  Evitar: explicaciones innecesarias, preguntas al humano
 
-FUNCIONES:
-record_regime_performance(strategy_id, regime, week_pf):
-  Registra el PF de una estrategia en un régimen específico
-  Guarda en results/regime-performance.json
+agents/evaluator-assistant.md:
+  Tono: Quirúrgico. Numérico. Sin ambigüedad.
+  Estilo: "PF 1.31. DD 57.99%. No pasa. Criterio: DD > 7%."
+  Evitar: suavizar rechazos, dar segundas oportunidades
 
-get_best_strategies_for_regime(regime):
-  Devuelve las estrategias ordenadas por PF medio
-  en el régimen especificado
-  Útil para decidir qué estrategia priorizar cuando
-  el régimen cambia
+agents/performance-monitor.md:
+  Tono: Vigilante. Alerta temprana. Proactivo.
+  Estilo: "DD 3.2% detectado. Tendencia: +0.4%/día. Atención."
+  Evitar: alarmar sin datos, ignorar señales débiles
 
-get_regime_compatibility(strategy_id):
-  Para una estrategia, muestra su PF medio en cada régimen
-  Identifica en qué régimen funciona mejor y peor
+agents/knowledge-synthesizer.md:
+  Tono: Científico. Escéptico. Exige evidencia.
+  Estilo: "3 ocurrencias confirmadas en 2 regímenes. ESTRUCTURAL."
+  Evitar: elevar lecciones sin evidencia suficiente
 
-recommend_for_current_regime():
-  Detecta el régimen actual (via market-regime-snapshot)
-  Recomienda las estrategias más adecuadas para ese régimen
-  Si no hay suficientes datos → "Sin datos suficientes"
+agents/market-regime-detector.md:
+  Tono: Sensor. Objetivo. Sin interpretación subjetiva.
+  Estilo: "ADX 27.3. ATR 1.8x media. Régimen: tendencia-altavol."
+  Evitar: especular sobre duración del régimen
 
-ARGUMENTOS:
---record STRATEGY_ID REGIME WEEK_PF
---best-for REGIME
---compatibility STRATEGY_ID
---recommend
+TAREA 2 - Ampliar scripts/model-router.py con modelos Anthropic
+Lee el archivo actual. Añadir estos modelos a la tabla:
 
-TAREA 2 - Crear scripts/pipeline-health-monitor.py
-Monitor de salud del pipeline completo.
-Detecta si el pipeline está funcionando correctamente
-o si hay señales de degradación.
+"claude_opus": modelo claude-opus-4-6, coste $15/1M input,
+  latencia alta, calidad máxima
+  Usar para: strategy (máxima calidad), causal_analysis, critical_audit
 
-MÉTRICAS QUE MONITOREA:
-1. Tasa de aprobación por puerta (últimas 4 semanas)
-   Si tasa < 50% de la tasa histórica → WARNING
-2. Tiempo medio de build (últimas 3 builds)
-   Si aumenta > 20% → posible problema de hardware
-3. Número de builds sin resultados consecutivos
-   Si > 2 builds consecutivos sin pasar EvalGate → ALERTA
-4. Deriva de criterios bayesianos
-   Si algún criterio cambió > 15% → revisar
-5. Salud del Knowledge Graph
-   Si no hay actualizaciones en > 7 días → WARNING
+"claude_sonnet": modelo claude-sonnet-4-6, coste $3/1M input,
+  latencia media, calidad alta
+  Usar para: report_generation, code_review_large, hypothesis_generation
 
-DASHBOARD EN TEXTO:
-Genera un dashboard ASCII con semáforo por cada métrica
-VERDE: funcionando normal
-AMARILLO: revisar pronto
-ROJO: acción inmediata requerida
+"claude_haiku": modelo claude-haiku-4-5-20251001, coste $0.80/1M input,
+  latencia baja, calidad buena
+  Usar para: bulk_classification, quick tasks
 
-ARGUMENTOS:
---report: generar reporte completo
---watch: modo continuo (actualiza cada hora)
---fix: intentar autocorrecciones menores
+Actualizar la tabla de enrutamiento:
+  "strategy": claude_opus (si disponible) o kimi_k26
+  "causal_analysis": claude_opus o gpt_55
+  "critical_audit": claude_opus o gpt_55
+  "report_generation": claude_sonnet o llama_local
+  "bulk_classification": claude_haiku o deepseek_local
 
-TAREA 3 - Crear scripts/strategy-retirement-manager.py
-Gestiona el ciclo de vida completo de las estrategias
-desde su creación hasta su retiro del portfolio.
+Los modelos Anthropic usan la misma API key de OpenAI-compatible
+pero con base_url https://api.anthropic.com/v1
+Leer ANTHROPIC_API_KEY de config/api-keys.json
 
-ESTADOS DE UNA ESTRATEGIA:
-standby → en espera de ser evaluada
-candidate → pasó EvalGate, en proceso de validación
-shadow → challenger en paper trading
-active → en producción con capital real
-decaying → señales de deterioro detectadas
-retired → retirada del portfolio
-failed_challenge → falló el challenge demo
+TAREA 3 - Crear docs/claude-project-setup.md
+Documenta cómo configurar el Claude Project de TradingLab:
 
-TRANSICIONES AUTOMÁTICAS:
-standby → candidate: cuando pasa EvalGate
-candidate → shadow: cuando pasa WFO y Forward Test
-shadow → active: cuando es promovida por champion-challenger
-active → decaying: cuando ADDM detecta drift confirmado
-decaying → retired: si no mejora en 4 semanas
-decaying → active: si se recupera (ADDM normal 4 semanas)
-
-FUNCIONES:
-transition_state(strategy_id, new_state, reason):
-  Cambia el estado de una estrategia
-  Registra en KG y audit trail
-  Notifica via Telegram si es un estado importante
-
-get_lifecycle_report():
-  Resumen de todas las estrategias por estado
-  Tiempo medio en cada estado
-  Estrategias que necesitan atención
-
-check_for_transitions():
-  Verifica si alguna estrategia debe transicionar de estado
-  Basado en métricas actuales y criterios bayesianos
-  Ejecutar diariamente
-
-ARGUMENTOS:
---report: ver ciclo de vida de todas las estrategias
---check: verificar transiciones pendientes
---transition STRATEGY_ID NEW_STATE REASON: transición manual
-
-TAREA 4 - Actualizar scripts/self-improvement-engine.py
-Lee el archivo actual. Añadir dos pasos más al ciclo:
-
-Después del paso [2f]:
-  [2g] Ejecutar pipeline-health-monitor --report
-       Si hay métricas en ROJO → incluir en informe urgente
-  [2h] Ejecutar strategy-retirement-manager --check
-       Si hay estrategias que deben transicionar → ejecutar
-       y registrar en el informe del ciclo
-
-TAREA 5 - Crear docs/skills/skill-strategy-lifecycle.md
-Documenta el ciclo de vida completo de una estrategia
-desde que SQ la genera hasta que se retira:
-
-ESTADOS: standby → candidate → shadow → active →
-         decaying → retired / failed_challenge
-
-TIEMPO TÍPICO EN CADA ESTADO:
-standby: 0-2 días (evaluación automática)
-candidate: 1-3 días (Retester + WFO + Stress Test)
-shadow: 4 semanas (Champion-Challenger)
-active: meses o años (en producción)
-decaying: máximo 4 semanas antes de decisión final
-retired: permanente (registro histórico)
-
-MÉTRICAS DE CALIDAD DEL CICLO:
-Tasa de conversión standby → active (objetivo: > 5%)
-Duración media en producción antes de decay
-Causa más frecuente de retiro
+Qué es un Claude Project y por qué elimina la fricción
+Qué archivos cargar: CLAUDE.md, lessons-learned, propfirm-rules, project-status
+Las instrucciones exactas a pegar en el Project
+Cómo mantener los archivos actualizados (sincronizar tras cada sesión importante)
+Qué NO cargar: archivos con credenciales, .chromadb, .kuzu
 
 Al terminar:
 git add .
-git commit -m "Scripts: regime-strategy-matcher, pipeline-health-monitor, strategy-retirement-manager. Skills: strategy-lifecycle"
+git commit -m "v8.1: personalidad agentes, model-router Anthropic, claude-project-setup"
 git push origin main
 Confirma con tabla.
