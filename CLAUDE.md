@@ -1,10 +1,10 @@
 # CLAUDE.md — Constitucion del Proyecto TradingLab
 
-## Estado Actual (2026-04-29)
-- Fase: Capa 0 activa — Sistema v8.0 completo
+## Estado Actual (2026-05-03)
+- Fase: Capa 0 activa — Sistema v8.1 completo
 - Build activo: Build 11 PENDIENTE en alber (spread 60 pips)
-- Planning maestro: ~185/205 tareas completadas
-- Scripts Python operativos: 55 (todos probados)
+- Planning maestro: ~202/222 tareas completadas
+- Scripts Python operativos: 62 (todos probados)
 - Autoaprendizaje: Knowledge Graph + DSPy + Bayesian + Drift + Champion-Challenger
 - Telegram bot: @tradinglab_monitor_bot activo
 - ChromaDB: 909 chunks indexados

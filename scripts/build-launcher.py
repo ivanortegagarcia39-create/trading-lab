@@ -190,12 +190,38 @@ def log_to_audit(build_n: int, activo: str, dry_run: bool) -> None:
     _ok("Entrada registrada en audit-trail.log")
 
 
+def run_auto_mode(activo: str, build_n: int, spread_real: float) -> bool:
+    """Configurar y arrancar SQ automaticamente via sq-controller."""
+    controller = SCRIPTS / "sq-controller.py"
+    if not controller.exists():
+        print("  ERROR: sq-controller.py no encontrado — modo --auto no disponible")
+        return False
+
+    spread_sq = spread_real * 2
+    print(f"\n  Modo AUTO activado — configurando SQ via Selenium...")
+
+    rc_cfg = _run([sys.executable, str(controller),
+                   "--configure", "--build", str(build_n), "--activo", activo])
+    if rc_cfg != 0:
+        print("  ERROR: sq-controller --configure fallo")
+        return False
+
+    rc_start = _run([sys.executable, str(controller), "--start"])
+    if rc_start != 0:
+        print("  ERROR: sq-controller --start fallo")
+        return False
+
+    print("  Builder iniciado automaticamente")
+    return True
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Build Launcher — TradingLab")
     parser.add_argument("--build",       type=int,   required=True, help="Numero del build (ej: 11)")
     parser.add_argument("--activo",      required=True,             help="Activo (ej: XAUUSD)")
     parser.add_argument("--spread-real", type=float, required=True, help="Spread real en pips (ej: 30)")
     parser.add_argument("--dry-run",     action="store_true",       help="Simular sin ejecutar nada")
+    parser.add_argument("--auto",        action="store_true",       help="Configurar y arrancar SQ automaticamente via Selenium")
     args = parser.parse_args()
 
     activo     = args.activo.upper()
@@ -216,14 +242,24 @@ def main() -> int:
     # Paso 2: configuracion del build
     show_build_config(activo, args.build, args.spread_real)
 
-    # Paso 3: instrucciones SQ
-    show_sq_instructions(activo, spread_sq)
+    # Paso 3: instrucciones SQ (solo en modo manual)
+    if not args.auto:
+        show_sq_instructions(activo, spread_sq)
 
-    # Paso 4: confirmacion
-    _step(4, "Confirmacion del usuario")
-    if not confirm(args.dry_run):
-        print("  Lanzamiento cancelado.")
-        return 0
+    # Paso 4: configurar/arrancar SQ o confirmar manualmente
+    if args.auto:
+        _step(4, "Modo automatico — configurando SQ via sq-controller")
+        if not args.dry_run:
+            if not run_auto_mode(activo, args.build, args.spread_real):
+                return 1
+        else:
+            print(f"  [DRY-RUN] sq-controller --configure --build {args.build} --activo {activo}")
+            print("  [DRY-RUN] sq-controller --start")
+    else:
+        _step(4, "Confirmacion del usuario")
+        if not confirm(args.dry_run):
+            print("  Lanzamiento cancelado.")
+            return 0
 
     # Paso 5: documentar configuracion
     document_build(args.build, activo, args.spread_real, args.dry_run)

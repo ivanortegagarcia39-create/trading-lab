@@ -1,6 +1,6 @@
 # Planning Maestro — Estado de Implementacion
 
-Ultima actualizacion: 2026-04-29 (v8.0 completo)
+Ultima actualizacion: 2026-05-03 (v8.1 — Selenium SQ controller + scheduler + dashboard)
 
 ---
 
@@ -11,8 +11,8 @@ Ultima actualizacion: 2026-04-29 (v8.0 completo)
 | Fase 0 | Cimientos | 6 | 6 | COMPLETA |
 | Fase 1 | Pipeline core | 45 | 45 | COMPLETA |
 | Fase 2 | Multi-activo y prop firms | 22 | 22 | COMPLETA |
-| Fase 3 | Inteligencia y aprendizaje | 56 | 61 | EN CURSO |
-| Fase 4 | Produccion y monitoreo | 19 | 20 | EN CURSO |
+| Fase 3 | Inteligencia y aprendizaje | 58 | 63 | EN CURSO |
+| Fase 4 | Produccion y monitoreo | 21 | 22 | EN CURSO |
 | Fase 5 | VPS y despliegue real | 0 | 6 | PENDIENTE (VPS) |
 | Fase 6 | Portfolio multi-estrategia | 0 | 9 | PENDIENTE (5 estrategias) |
 | Fase 7 | Auditoria y compliance | 3 | 3 | COMPLETA |
@@ -20,7 +20,7 @@ Ultima actualizacion: 2026-04-29 (v8.0 completo)
 | Fase 9 | Scaling y funded | 0 | 7 | PENDIENTE (3 estrategias) |
 | Fase 10 | Infraestructura avanzada | 26 | 26 | COMPLETA |
 
-**Total completadas: 195 / 215 tareas documentadas**
+**Total completadas: 202 / 222 tareas documentadas**
 
 ---
 
@@ -129,6 +129,15 @@ Todos los agentes y skills del pipeline principal:
 - [x] docs/skills/skill-challenge-simulation.md — simulacion challenge documentado
 - [x] docs/architecture/knowledge-graph-schema.md — esquema KG documentado
 
+### Completadas v8.1 (2026-05-03)
+- [x] scripts/sq-controller.py — control automatico de SQ via Selenium (connect, configure, start, stop, status, export)
+- [x] scripts/sq-watchdog.py — vigilancia de builds: modo simple (--watch --build N) + modo avanzado original
+- [x] scripts/multi-asset-scheduler.py — scheduler multi-activo con Thompson Sampling (--next, --schedule, --run)
+- [x] scripts/performance-dashboard.py — dashboard completo v8.1 con --watch y --compact
+- [x] scripts/lessons-auto-updater.py — actualizacion automatica lecciones KG→MD y promocion TENTATIVA→ESTRUCTURAL
+- [x] scripts/build-launcher.py — modo --auto: configura y arranca SQ automaticamente via sq-controller
+- [x] scripts/auto-reporter.py — seccion "Proxima semana" con Thompson, cola, bayesian y shadow mode
+
 ### Completadas v8.0 final (2026-04-29)
 - [x] scripts/regime-strategy-matcher.py — recomendador por régimen de mercado
 - [x] scripts/pipeline-health-monitor.py — semáforo 5 métricas, modo watch, autofix
@@ -172,6 +181,10 @@ Todos los agentes y skills del pipeline principal:
 - [x] scripts/build-launcher.py — checklist interactivo pre-build con confirmacion y audit trail
 - [x] scripts/build-finisher.py — pipeline post-build: EvalGate→analyzer→cola→versioning→re-index
 - [x] scripts/system-backup.py — backup completo con retención 7 copias y restauración
+
+### Completadas v8.1 (2026-05-03)
+- [x] scripts/sq-watchdog.py — modo simple --watch --build N con Telegram + memoria + databank
+- [x] scripts/build-launcher.py — opcion --auto: lanzamiento completamente automatico
 
 ### Pendientes — requieren VPS o produccion activa
 - [ ] Risk Manager automatico en MT5 (requiere EA desplegado en VPS)

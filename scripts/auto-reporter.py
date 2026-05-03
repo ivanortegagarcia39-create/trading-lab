@@ -146,6 +146,86 @@ def _planning_progress() -> dict:
 
 # ── 5. Próximas acciones ───────────────────────────────────────────────────
 
+def _proxima_semana() -> dict:
+    """Datos para la seccion 'Proxima semana' del informe."""
+    result: dict = {
+        "proximo_activo": "—",
+        "cola_activos":   [],
+        "bayesian_ajuste": "—",
+        "shadow_terminan": [],
+    }
+
+    # Próximo activo por Thompson Sampling
+    ts_script = SCRIPTS / "thompson-sampling.py"
+    if ts_script.exists():
+        try:
+            r = subprocess.run(
+                [sys.executable, str(ts_script), "--next-asset"],
+                capture_output=True, text=True, timeout=15,
+            )
+            for line in r.stdout.splitlines():
+                import re as _re
+                m = _re.search(r"\b([A-Z]{6}|XAU/?USD|XAG/?USD|US\d{2,3})\b", line)
+                if m:
+                    result["proximo_activo"] = m.group(1).replace("/", "")
+                    break
+        except Exception:
+            pass
+
+    # Cola de builds
+    queue = SCRIPTS / "build-queue-manager.py"
+    if queue.exists():
+        try:
+            r = subprocess.run(
+                [sys.executable, str(queue), "list"],
+                capture_output=True, text=True, timeout=10,
+            )
+            for line in r.stdout.splitlines()[:5]:
+                if line.strip() and not line.startswith("#"):
+                    result["cola_activos"].append(line.strip())
+        except Exception:
+            pass
+
+    # Criterios bayesianos candidatos a ajuste
+    bc_path = ROOT / "config" / "bayesian-criteria.json"
+    if bc_path.exists():
+        try:
+            criteria = json.loads(bc_path.read_text(encoding="utf-8"))
+            # Criterios con confidence < 0.6 son candidatos
+            candidatos = [
+                k for k, v in criteria.items()
+                if isinstance(v, dict) and v.get("confidence", 1.0) < 0.6
+            ]
+            result["bayesian_ajuste"] = ", ".join(candidatos[:3]) if candidatos else "sin ajustes pendientes"
+        except Exception:
+            pass
+
+    # Estrategias en shadow mode que terminan pronto
+    cc_path = ROOT / "results" / "champion-challenger.json"
+    if cc_path.exists():
+        try:
+            import os as _os
+            from datetime import timedelta
+            cc       = json.loads(cc_path.read_text(encoding="utf-8"))
+            today_ts = datetime.now().timestamp()
+            for cid, info in cc.get("challengers", {}).items():
+                end_str = info.get("end_date", "")
+                if end_str:
+                    try:
+                        end_ts = datetime.fromisoformat(end_str).timestamp()
+                        days_left = (end_ts - today_ts) / 86400
+                        if 0 <= days_left <= 7:
+                            result["shadow_terminan"].append(
+                                f"{cid} ({days_left:.0f}d restantes)"
+                            )
+                    except Exception:
+                        pass
+        except Exception:
+            pass
+
+    return result
+
+
 def _next_actions() -> str:
     text = _read_text(ROOT / "docs" / "project-status.md")
     in_section = False
@@ -348,7 +428,8 @@ def _ollama_summary(pipeline: dict, planning: dict) -> str | None:
 def _generate_md(pipeline: dict, portfolio: dict, lessons: list[str],
                  planning: dict, next_actions: str, sys_status: str,
                  ollama_text: str | None, week_str: str,
-                 auto_status: dict | None = None) -> str:
+                 auto_status: dict | None = None,
+                 proxima_semana: dict | None = None) -> str:
     date_str = datetime.now().strftime("%Y-%m-%d")
 
     strat_rows = ""
@@ -378,6 +459,29 @@ def _generate_md(pipeline: dict, portfolio: dict, lessons: list[str],
 | Concept Drift | {a.get('drift_label', '—')} | {a.get('drift_date', '—')} |
 | Champion-Challenger | {a.get('cc_label', '—')} | {a.get('cc_date', '—')} |
 | Self-improvement | {a.get('si_label', '—')} | {a.get('si_date', '—')} |
+
+---
+"""
+
+    # Sección próxima semana
+    proxima_section = ""
+    if proxima_semana:
+        p = proxima_semana
+        cola_str    = "\n".join(f"  - {a}" for a in p["cola_activos"]) if p["cola_activos"] else "  - (vacia)"
+        shadow_str  = "\n".join(f"  - {s}" for s in p["shadow_terminan"]) if p["shadow_terminan"] else "  - ninguna"
+        proxima_section = f"""
+## Proxima Semana
+
+| Elemento | Detalle |
+|----------|---------|
+| Proximo build (Thompson) | {p['proximo_activo']} |
+| Criterios bayesianos a revisar | {p['bayesian_ajuste']} |
+
+**Cola de activos pendientes:**
+{cola_str}
+
+**Shadow mode terminando esta semana:**
+{shadow_str}
 
 ---
 """
@@ -429,7 +533,7 @@ Health checks: OK:{portfolio['health_ok']} — WARN:{portfolio['health_warn']} �
 ## Proximas Acciones
 
 {next_actions}
-{auto_section}{ollama_section}
+{proxima_section}{auto_section}{ollama_section}
 ---
 *Generado por auto-reporter.py — TradingLab*
 """
@@ -472,13 +576,14 @@ def main():
 
     print(f"Auto Reporter — {week_str}")
 
-    pipeline     = _pipeline_state()
-    portfolio    = _portfolio_metrics()
-    lessons      = _structural_lessons()
-    planning     = _planning_progress()
-    next_actions = _next_actions()
-    sys_status   = _system_status()
-    auto_status  = _autoaprendizaje_status()
+    pipeline       = _pipeline_state()
+    portfolio      = _portfolio_metrics()
+    lessons        = _structural_lessons()
+    planning       = _planning_progress()
+    next_actions   = _next_actions()
+    sys_status     = _system_status()
+    auto_status    = _autoaprendizaje_status()
+    proxima_semana = _proxima_semana()
 
     ollama_text = None
     if not args.no_ollama:
@@ -488,7 +593,7 @@ def main():
 
     report_md = _generate_md(pipeline, portfolio, lessons, planning,
                              next_actions, sys_status, ollama_text, week_str,
-                             auto_status)
+                             auto_status, proxima_semana)
 
     out_path = output_dir / f"weekly-report-{date_str}.md"
     out_path.write_text(report_md, encoding="utf-8")
