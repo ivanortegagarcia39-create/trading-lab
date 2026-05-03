@@ -24,7 +24,7 @@ from pathlib import Path
 ROOT    = Path(__file__).parent.parent
 SCRIPTS = ROOT / "scripts"
 
-SQ_URL       = "http://localhost:19042"
+SQ_URL       = "http://localhost:8080"
 RETRY_COUNT  = 3
 RETRY_WAIT   = 10
 
