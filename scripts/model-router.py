@@ -31,13 +31,14 @@ ROUTING_TABLE: dict[str, list[str]] = {
     "build_analysis":        ["deepseek_local", "kimi_k26"],
     "strategy_evaluation":   ["deepseek_local"],
     "lesson_synthesis":      ["deepseek_local"],
-    "causal_analysis":       ["gpt_55"],
+    "strategy":              ["claude_opus", "kimi_k26"],
+    "causal_analysis":       ["claude_opus", "gpt_55"],
     "equity_curve_analysis": ["gpt_55"],
-    "report_generation":     ["llama_local", "deepseek_local"],
-    "code_review_large":     ["kimi_k26"],
-    "hypothesis_generation": ["deepseek_local"],
-    "critical_audit":        ["gpt_55"],
-    "bulk_classification":   ["kimi_k26"],
+    "report_generation":     ["claude_sonnet", "llama_local"],
+    "code_review_large":     ["claude_sonnet", "kimi_k26"],
+    "hypothesis_generation": ["claude_sonnet", "deepseek_local"],
+    "critical_audit":        ["claude_opus", "gpt_55"],
+    "bulk_classification":   ["claude_haiku", "deepseek_local"],
 }
 
 # Coste estimado por token (USD)
@@ -46,6 +47,15 @@ MODEL_COSTS: dict[str, dict] = {
     "llama_local":    {"input": 0.0,      "output": 0.0},
     "kimi_k26":       {"input": 0.00095,  "output": 0.00466},   # por 1K tokens
     "gpt_55":         {"input": 0.005,    "output": 0.030},
+    "claude_opus":    {"input": 0.015,    "output": 0.075},     # $15/1M input
+    "claude_sonnet":  {"input": 0.003,    "output": 0.015},     # $3/1M input
+    "claude_haiku":   {"input": 0.0008,   "output": 0.004},     # $0.80/1M input
+}
+
+ANTHROPIC_MODELS: dict[str, str] = {
+    "claude_opus":   "claude-opus-4-6",
+    "claude_sonnet": "claude-sonnet-4-6",
+    "claude_haiku":  "claude-haiku-4-5-20251001",
 }
 
 OLLAMA_MODELS: dict[str, str] = {
@@ -71,6 +81,7 @@ def _load_api_key(key_name: str) -> str:
     env_map = {
         "openai_api_key":    "OPENAI_API_KEY",
         "moonshot_api_key":  "MOONSHOT_API_KEY",
+        "anthropic_api_key": "ANTHROPIC_API_KEY",
         "firecrawl_api_key": "FIRECRAWL_API_KEY",
     }
     env_var = env_map.get(key_name, key_name.upper())
@@ -145,6 +156,26 @@ def _call_kimi(prompt: str, thinking: bool = False) -> str:
     return resp.choices[0].message.content or ""
 
 
+def _call_anthropic(model_key: str, prompt: str) -> str:
+    """Llama a un modelo Claude via API Anthropic (compatible con OpenAI SDK)."""
+    api_key = _load_api_key("anthropic_api_key")
+    if not api_key:
+        raise ModelUnavailableError("ANTHROPIC_API_KEY no configurada")
+
+    try:
+        from openai import OpenAI
+    except ImportError:
+        raise ModelUnavailableError("openai SDK no instalado. Ejecuta: pip install openai")
+
+    model_id = ANTHROPIC_MODELS.get(model_key, "claude-sonnet-4-6")
+    client = OpenAI(api_key=api_key, base_url="https://api.anthropic.com/v1")
+    resp = client.chat.completions.create(
+        model=model_id,
+        messages=[{"role": "user", "content": prompt}],
+    )
+    return resp.choices[0].message.content or ""
+
+
 def _call_gpt55(prompt: str, image_path: str | None = None,
                 reasoning_effort: str = "medium") -> str:
     """Llama a GPT-5.5 via OpenAI API, con soporte multimodal opcional."""
@@ -188,6 +219,8 @@ def _dispatch(model_key: str, prompt: str, image_path: str | None = None) -> str
         return _call_kimi(prompt)
     elif model_key == "gpt_55":
         return _call_gpt55(prompt, image_path=image_path)
+    elif model_key in ANTHROPIC_MODELS:
+        return _call_anthropic(model_key, prompt)
     else:
         raise ModelUnavailableError(f"Modelo desconocido: {model_key}")
 
@@ -199,6 +232,8 @@ def _is_available(model_key: str) -> bool:
         return bool(_load_api_key("moonshot_api_key"))
     elif model_key == "gpt_55":
         return bool(_load_api_key("openai_api_key"))
+    elif model_key in ANTHROPIC_MODELS:
+        return bool(_load_api_key("anthropic_api_key"))
     return False
 
 
