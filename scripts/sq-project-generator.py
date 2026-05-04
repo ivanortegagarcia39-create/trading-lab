@@ -313,23 +313,42 @@ def patch_task_xml(task_xml_str: str, activo_cfg: dict, spread_real: float,
     Modifica el Build-Task1.xml para el nuevo activo/build.
     Opera con string manipulation para no romper el XML complejo de SQ.
     """
-    spread_model = spread_real * 2
-
-    # Actualizar InstrumentInfo del activo principal
-    # Buscamos el defaultSpread y defaultSlippage en el nodo del instrumento
     import re
+    spread_model  = spread_real * 2
+    instrument    = activo_cfg["instrument"]    # e.g. "XAUUSD_ftmo"
+    data_source   = activo_cfg["data_source"]   # e.g. "XAUUSD_M1_dukas"
 
-    # Patch spread y slippage del instrumento XAUUSD_ftmo (o el que sea)
-    old_instr = activo_cfg["instrument"]
-    
-    # Actualizar defaultSpread en InstrumentInfo
+    # Patch 1: defaultSpread del instrumento de trading
     task_xml_str = re.sub(
-        r'(instrument="' + re.escape(old_instr) + r'"[^>]*defaultSpread=")[^"]*(")',
+        r'(instrument="' + re.escape(instrument) + r'"[^>]*defaultSpread=")[^"]*(")',
         lambda m: m.group(0).replace(
             'defaultSpread="' + m.group(0).split('defaultSpread="')[1].split('"')[0] + '"',
             f'defaultSpread="{spread_model}"'
         ),
         task_xml_str
+    )
+
+    # Patch 2: Chart symbol -> fuente de datos correcta
+    task_xml_str = re.sub(
+        r'symbol="[^"]*_M1_dukas"',
+        f'symbol="{data_source}"',
+        task_xml_str
+    )
+
+    # Patch 3: Eliminar bloques <Symbol> de otros activos residuales
+    task_xml_str = re.sub(
+        r'\r?\n[ \t]*<Symbol name="(?!' + re.escape(data_source) + r'")[^"]*_M1_dukas".*?</Symbol>',
+        '',
+        task_xml_str,
+        flags=re.DOTALL
+    )
+
+    # Patch 4: Eliminar InstrumentInfo de otros instrumentos residuales
+    task_xml_str = re.sub(
+        r'\r?\n[ \t]*<InstrumentInfo instrument="(?!' + re.escape(instrument) + r'")[^"]*".*?/>',
+        '',
+        task_xml_str,
+        flags=re.DOTALL
     )
 
     return task_xml_str
