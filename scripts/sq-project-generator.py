@@ -356,21 +356,76 @@ def patch_task_xml(task_xml_str: str, activo_cfg: dict, spread_real: float,
 
 # ─── Empaquetado CFX ───────────────────────────────────────────────────────────
 
-def pack_cfx(config_xml: str, task_xml: str, output_path: Path) -> None:
-    """Empaqueta config.xml + Build-Task1.xml en el archivo .cfx (ZIP)."""
-    # Backup del CFX actual si existe
+def pack_cfx(config_xml: str, task_xml: str, output_path: Path):
+    """Empaqueta config.xml + Build-Task1.xml en el archivo .cfx (ZIP). Retorna path del backup."""
+    backup_path = None
     if output_path.exists():
         backup_path = output_path.with_suffix(
             f'.cfx.bak_{datetime.now().strftime("%Y%m%d_%H%M%S")}'
         )
         shutil.copy2(output_path, backup_path)
         print(f"  Backup: {backup_path.name}")
-    
+
     with zipfile.ZipFile(output_path, "w", zipfile.ZIP_DEFLATED) as zf:
         zf.writestr("config.xml", config_xml)
         zf.writestr("Build-Task1.xml", task_xml)
-    
+
     print(f"  CFX generado: {output_path}")
+    return backup_path
+
+
+# ─── Verificación post-generación ─────────────────────────────────────────────
+
+def verify_cfx(cfx_path: Path, activo_cfg: dict, spread_real: float, backup_path) -> None:
+    """Verifica el CFX generado. Aborta y restaura backup si cualquier check falla."""
+    import re
+    errors = []
+
+    with zipfile.ZipFile(cfx_path, "r") as zf:
+        t = zf.read("Build-Task1.xml").decode("utf-8")
+
+    instrument  = activo_cfg["instrument"]   # e.g. "XAUUSD_ftmo"
+    data_source = activo_cfg["data_source"]  # e.g. "XAUUSD_M1_dukas"
+    u_symbol    = activo_cfg["u_symbol"]     # e.g. "XAUUSD"
+    spread_model = spread_real * 2
+
+    # 1. Sin referencias a activos distintos al del build
+    wrong_refs = re.findall(r'[A-Z]{6}(?:_M1_dukas|_dukascopy|_ftmo)', t)
+    wrong_refs = [r for r in wrong_refs if not r.startswith(u_symbol)]
+    if wrong_refs:
+        errors.append(f"Referencias a otros activos: {set(wrong_refs)}")
+
+    # 2. Chart symbol apunta al activo correcto
+    for cs in re.findall(r'<Chart symbol="([^"]+)"', t):
+        if cs != data_source:
+            errors.append(f"Chart symbol incorrecto: '{cs}' (esperado '{data_source}')")
+
+    # 3. Spread es spread_real × 2
+    wrong_spreads = [s for s in re.findall(r'defaultSpread="([^"]+)"', t)
+                     if float(s) != spread_model]
+    if wrong_spreads:
+        errors.append(f"Spread incorrecto: {wrong_spreads} (esperado {spread_model})")
+
+    # 4. Sin InstrumentInfo residuales de otros activos
+    wrong_instr = [i for i in re.findall(r'<InstrumentInfo instrument="([^"]+)"', t)
+                   if not i.startswith(u_symbol)]
+    if wrong_instr:
+        errors.append(f"InstrumentInfo residuales: {wrong_instr}")
+
+    if errors:
+        print("\n[ERROR] verify_cfx() FALLIDO:")
+        for e in errors:
+            print(f"  - {e}")
+        if backup_path and backup_path.exists():
+            shutil.copy2(backup_path, cfx_path)
+            print(f"  Backup restaurado: {backup_path.name}")
+        raise RuntimeError(f"CFX invalido — {len(errors)} error(s). Build abortado.")
+
+    print("[5/5] verify_cfx(): OK")
+    print(f"      Chart:      {data_source}")
+    print(f"      Spread:     {spread_model} pips")
+    print(f"      Instrumento:{instrument}")
+    print(f"      Sin activos residuales")
 
 
 # ─── Registro JSON ─────────────────────────────────────────────────────────────
@@ -533,42 +588,46 @@ def main():
         return
     
     # Leer template
-    print("[1/4] Leyendo Build-Task1.xml del proyecto actual...")
+    print("[1/5] Leyendo Build-Task1.xml del proyecto actual...")
     try:
         task_xml = read_template_task_xml()
         print(f"      OK — {len(task_xml):,} caracteres")
     except FileNotFoundError as e:
         print(f"[ERROR] {e}")
         sys.exit(1)
-    
-    # Parchear spread
-    print("[2/4] Aplicando parámetros del build...")
+
+    # Parchear parámetros del build
+    print("[2/5] Aplicando parámetros del build...")
     task_xml_patched = patch_task_xml(task_xml, activo_cfg, spread_real, build_num)
-    
-    # Verificar que el spread quedó correcto
     if f'defaultSpread="{spread_modelo}"' in task_xml_patched:
         print(f"      OK — spread {spread_modelo} pips aplicado")
     else:
         print(f"      [INFO] Spread ya era correcto o instrumento diferente")
-        # No es error — el template puede ya tener el spread correcto
-    
+
     # Generar config.xml
-    print("[3/4] Generando config.xml...")
+    print("[3/5] Generando config.xml...")
     config_xml = build_config_xml(activo_cfg)
     print(f"      OK — {len(config_xml)} caracteres")
-    
+
     # Empaquetar CFX
-    print("[4/4] Empaquetando CFX...")
+    print("[4/5] Empaquetando CFX...")
     try:
-        pack_cfx(config_xml, task_xml_patched, output_path)
+        backup_path = pack_cfx(config_xml, task_xml_patched, output_path)
     except Exception as e:
         print(f"[ERROR] No se pudo escribir el CFX: {e}")
         print("       ¿Está SQ cerrado? El CFX no puede modificarse con SQ abierto.")
         sys.exit(1)
-    
+
+    # Verificar CFX generado (obligatorio — aborta y restaura si falla)
+    try:
+        verify_cfx(output_path, activo_cfg, spread_real, backup_path)
+    except RuntimeError as e:
+        print(f"\n[ABORT] {e}")
+        sys.exit(1)
+
     # Guardar registro
     save_build_config(build_num, activo, spread_real, activo_cfg)
-    
+
     print(f"\n[OK] Build {build_num} configurado correctamente.")
     print(f"     Abre SQ y verifica el proyecto antes de iniciar el Builder.")
     print(f"\n     Verificar con:")

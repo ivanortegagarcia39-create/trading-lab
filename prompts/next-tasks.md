@@ -1,26 +1,40 @@
-Necesito que parchees el Build-Task1.xml dentro del CFX 
-D:/user/projects/Builder/project.cfx para corregir 3 nodos 
-que apuntan a EURUSD cuando deberían apuntar a XAUUSD.
+Revisa el archivo scripts/sq-project-generator.py y añade una 
+función verify_cfx() que se ejecute SIEMPRE al final de la 
+generación y verifique que:
 
-Los cambios exactos son:
-1. <Chart symbol="EURUSD_M1_dukas" → <Chart symbol="XAUUSD_M1_dukas"
-2. <Symbol name="EURUSD_M1_dukas" ... uSymbol="EURUSD" broker="3"> 
-   → name="XAUUSD_M1_dukas" ... uSymbol="XAUUSD" broker="8">
-   Y dentro: <InstrumentInfo instrument="EURUSD_dukascopy" 
-   → instrument="XAUUSD_ftmo" con los parámetros correctos de XAUUSD
-3. En <Instruments>: eliminar el nodo EURUSD_dukascopy residual
+1. El CFX no contiene NINGUNA referencia a activos distintos 
+   al activo del build (ej: si es XAUUSD, no debe haber EURUSD)
+2. El Chart symbol apunta al activo correcto
+3. El spread es el esperado (spread_real × 2)
+4. No hay InstrumentInfo residuales de otros activos
 
-Hazlo con Python leyendo el CFX como ZIP, modificando el XML 
-en memoria, y reempaquetando. Haz backup del CFX original antes.
+Si cualquier verificación falla: abortar con error claro y 
+restaurar el backup automáticamente.
 
-Luego verifica con:
-import zipfile, re
-t = zipfile.ZipFile(r'D:/user/projects/Builder/project.cfx').read('Build-Task1.xml').decode()
-print(re.findall(r'EURUSD', t)[:5])
-print(re.findall(r'XAUUSD', t)[:5])
-El resultado debe tener 0 ocurrencias de EURUSD y varias de XAUUSD.
+También añade esta entrada al archivo lessons-learned 
+(docs/lessons-learned.md o donde esté en el repo):
 
-También actualiza scripts/sq-project-generator.py para que 
-aplique estos patches automáticamente en futuros builds.
+### LECCION-005: CFX residual apunta a activo incorrecto
 
-Cuando termines: git add -A && git commit -m "fix: patch CFX EURUSD->XAUUSD datos backtest + fix sq-project-generator" && git push origin main
+Fecha: 2026-05-04
+Build(s): 11 (detectado pre-launch)
+Decision: ALERTA -> CORREGIDO
+Criterio: nodos EURUSD_dukascopy residuales en CFX de XAUUSD
+Resultado observado: CFX tenía instrument=XAUUSD_ftmo correcto
+  pero Chart symbol=EURUSD_M1_dukas incorrecto. SQ habría 
+  backtestado lógica XAUUSD con datos EURUSD.
+Leccion aplicable: verificar TODOS los nodos del CFX antes 
+  de lanzar, no solo spread e instrumento FTMO.
+  verify_cfx() obligatorio en sq-project-generator.py.
+Ocurrencias confirmadas: 1 — TENTATIVA
+
+CONTEXTO:
+  Regimen de mercado: N/A
+  Epoca del año: Q2 2026
+  Volumen relativo: N/A
+  Prop firm activa: ninguna
+  Activo principal: XAUUSD
+  Fase del proyecto: Capa 0
+
+Cuando termines:
+git add -A && git commit -m "fix: verify_cfx() en sq-project-generator + LECCION-005" && git push origin main

@@ -221,6 +221,30 @@ CONTEXTO:
 
 ---
 
+### LECCION-005: CFX residual apunta a activo incorrecto
+
+Fecha: 2026-05-04
+Build(s): 11 (detectado pre-launch)
+Decision: ALERTA -> CORREGIDO
+Criterio: nodos EURUSD_dukascopy residuales en CFX de XAUUSD
+Resultado observado: CFX tenía instrument=XAUUSD_ftmo correcto
+  pero Chart symbol=EURUSD_M1_dukas incorrecto. SQ habría
+  backtestado lógica XAUUSD con datos EURUSD.
+Leccion aplicable: verificar TODOS los nodos del CFX antes
+  de lanzar, no solo spread e instrumento FTMO.
+  verify_cfx() obligatorio en sq-project-generator.py.
+Ocurrencias confirmadas: 1 — TENTATIVA
+
+CONTEXTO:
+  Regimen de mercado: N/A
+  Epoca del año: Q2 2026
+  Volumen relativo: N/A
+  Prop firm activa: ninguna
+  Activo principal: XAUUSD
+  Fase del proyecto: Capa 0
+
+---
+
 ## LECCIONES PENDIENTES DE CONFIRMACION
 
 Las siguientes situaciones han ocurrido una vez y estan
@@ -229,6 +253,7 @@ ESTRUCTURAL y pueden modificar umbrales del sistema.
 
 - Leccion-003: PowerShell corrompe CSVs (1 ocurrencia)
 - Leccion-004: Gaps M1 XAU estructurales (1 ocurrencia)
+- Leccion-005: CFX residual activo incorrecto (1 ocurrencia)
 
 ---
 

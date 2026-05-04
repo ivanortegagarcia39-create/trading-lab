@@ -1,0 +1,17 @@
+{
+  "build": 11,
+  "activo": "XAUUSD",
+  "fecha": "2026-05-04T17:28:09.430132",
+  "spread_real": 30.0,
+  "spread_modelo": 60.0,
+  "slippage": 2.0,
+  "commission": 7,
+  "commission_type": "PerTrade",
+  "instrument": "XAUUSD_ftmo",
+  "sl_min_pips": 30,
+  "sl_max_pips": 80,
+  "pt_min_pips": 60,
+  "pt_max_pips": 200,
+  "session": "XAUUSD_ftmo",
+  "regla_spread": "spread_modelo = spread_real × 2 (anti-overfitting)"
+}
