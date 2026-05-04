@@ -1,40 +1,49 @@
-Revisa el archivo scripts/sq-project-generator.py y añade una 
-función verify_cfx() que se ejecute SIEMPRE al final de la 
-generación y verifique que:
+Restaura desde el backup original y aplica SOLO el patch 
+EURUSD->XAUUSD. Sin reempaquetar ni normalizar nada más.
 
-1. El CFX no contiene NINGUNA referencia a activos distintos 
-   al activo del build (ej: si es XAUUSD, no debe haber EURUSD)
-2. El Chart symbol apunta al activo correcto
-3. El spread es el esperado (spread_real × 2)
-4. No hay InstrumentInfo residuales de otros activos
+import zipfile, glob, shutil
 
-Si cualquier verificación falla: abortar con error claro y 
-restaurar el backup automáticamente.
+backups = sorted(glob.glob(r'D:/user/projects/Builder/project.cfx.bak_*'))
+original_cfx = backups[0]
 
-También añade esta entrada al archivo lessons-learned 
-(docs/lessons-learned.md o donde esté en el repo):
+# Leer Build-Task1.xml del backup original (sin normalizar)
+with zipfile.ZipFile(original_cfx) as z:
+    task_xml = z.read('Build-Task1.xml').decode()
+    config_xml = z.read('config.xml').decode()
 
-### LECCION-005: CFX residual apunta a activo incorrecto
+# Aplicar SOLO el patch EURUSD->XAUUSD
+task_xml_patched = task_xml.replace(
+    'symbol="EURUSD_M1_dukas"',
+    'symbol="XAUUSD_M1_dukas"'
+)
 
-Fecha: 2026-05-04
-Build(s): 11 (detectado pre-launch)
-Decision: ALERTA -> CORREGIDO
-Criterio: nodos EURUSD_dukascopy residuales en CFX de XAUUSD
-Resultado observado: CFX tenía instrument=XAUUSD_ftmo correcto
-  pero Chart symbol=EURUSD_M1_dukas incorrecto. SQ habría 
-  backtestado lógica XAUUSD con datos EURUSD.
-Leccion aplicable: verificar TODOS los nodos del CFX antes 
-  de lanzar, no solo spread e instrumento FTMO.
-  verify_cfx() obligatorio en sq-project-generator.py.
-Ocurrencias confirmadas: 1 — TENTATIVA
+# Verificar que solo cambió 1 línea
+changes = sum(1 for a, b in zip(
+    task_xml.split('\n'), 
+    task_xml_patched.split('\n')
+) if a != b)
+print(f"Líneas modificadas: {changes} (esperado: 1)")
 
-CONTEXTO:
-  Regimen de mercado: N/A
-  Epoca del año: Q2 2026
-  Volumen relativo: N/A
-  Prop firm activa: ninguna
-  Activo principal: XAUUSD
-  Fase del proyecto: Capa 0
+# Backup del CFX actual antes de sobreescribir
+shutil.copy2(
+    r'D:/user/projects/Builder/project.cfx',
+    r'D:/user/projects/Builder/project.cfx.bak_pre_restore'
+)
+
+# Reempaquetar con los bytes originales + patch mínimo
+with zipfile.ZipFile(r'D:/user/projects/Builder/project.cfx', 'w', 
+                     zipfile.ZIP_DEFLATED) as zf:
+    zf.writestr('config.xml', config_xml)
+    zf.writestr('Build-Task1.xml', task_xml_patched)
+
+print("CFX restaurado con patch mínimo")
+
+# Verificar
+with zipfile.ZipFile(r'D:/user/projects/Builder/project.cfx') as z:
+    t = z.read('Build-Task1.xml').decode()
+    print(f"EURUSD restante: {t.count('EURUSD_M1_dukas')}")
+    print(f"XAUUSD presente: {t.count('XAUUSD_M1_dukas')}")
+    print(f"undefined presente: {'undefined' in t}")
 
 Cuando termines:
-git add -A && git commit -m "fix: verify_cfx() en sq-project-generator + LECCION-005" && git push origin main
+git add -A && git commit -m "fix: restaurar CFX desde backup original con patch minimo EURUSD->XAUUSD" && git push origin main
