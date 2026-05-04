@@ -1,49 +1,38 @@
-Restaura desde el backup original y aplica SOLO el patch 
-EURUSD->XAUUSD. Sin reempaquetar ni normalizar nada más.
+Aplica un segundo patch mínimo para eliminar el bloque 
+Symbol EURUSD_M1_dukas residual. Hazlo con regex quirúrgico,
+sin tocar nada más.
 
-import zipfile, glob, shutil
+import zipfile, re
 
-backups = sorted(glob.glob(r'D:/user/projects/Builder/project.cfx.bak_*'))
-original_cfx = backups[0]
-
-# Leer Build-Task1.xml del backup original (sin normalizar)
-with zipfile.ZipFile(original_cfx) as z:
+with zipfile.ZipFile(r'D:/user/projects/Builder/project.cfx') as z:
     task_xml = z.read('Build-Task1.xml').decode()
     config_xml = z.read('config.xml').decode()
 
-# Aplicar SOLO el patch EURUSD->XAUUSD
-task_xml_patched = task_xml.replace(
-    'symbol="EURUSD_M1_dukas"',
-    'symbol="XAUUSD_M1_dukas"'
+# Eliminar bloque <Symbol name="EURUSD_M1_dukas"...>...</Symbol>
+antes = task_xml.count('EURUSD')
+task_xml_patched = re.sub(
+    r'\s*<Symbol name="EURUSD_M1_dukas"[^>]*>.*?</Symbol>',
+    '',
+    task_xml,
+    flags=re.DOTALL
 )
+despues = task_xml_patched.count('EURUSD')
+print(f"EURUSD antes: {antes}, después: {despues}")
+print(f"Líneas eliminadas: {task_xml.count(chr(10)) - task_xml_patched.count(chr(10))}")
 
-# Verificar que solo cambió 1 línea
-changes = sum(1 for a, b in zip(
-    task_xml.split('\n'), 
-    task_xml_patched.split('\n')
-) if a != b)
-print(f"Líneas modificadas: {changes} (esperado: 1)")
+# Solo escribir si quedó 0 EURUSD
+if despues == 0:
+    with zipfile.ZipFile(r'D:/user/projects/Builder/project.cfx', 
+                         'w', zipfile.ZIP_DEFLATED) as zf:
+        zf.writestr('config.xml', config_xml)
+        zf.writestr('Build-Task1.xml', task_xml_patched)
+    print("CFX actualizado - 0 referencias EURUSD")
+else:
+    print(f"[ERROR] Quedan {despues} referencias EURUSD - revisar")
 
-# Backup del CFX actual antes de sobreescribir
-shutil.copy2(
-    r'D:/user/projects/Builder/project.cfx',
-    r'D:/user/projects/Builder/project.cfx.bak_pre_restore'
-)
-
-# Reempaquetar con los bytes originales + patch mínimo
-with zipfile.ZipFile(r'D:/user/projects/Builder/project.cfx', 'w', 
-                     zipfile.ZIP_DEFLATED) as zf:
-    zf.writestr('config.xml', config_xml)
-    zf.writestr('Build-Task1.xml', task_xml_patched)
-
-print("CFX restaurado con patch mínimo")
-
-# Verificar
+# Verificación final
 with zipfile.ZipFile(r'D:/user/projects/Builder/project.cfx') as z:
     t = z.read('Build-Task1.xml').decode()
-    print(f"EURUSD restante: {t.count('EURUSD_M1_dukas')}")
-    print(f"XAUUSD presente: {t.count('XAUUSD_M1_dukas')}")
-    print(f"undefined presente: {'undefined' in t}")
-
-Cuando termines:
-git add -A && git commit -m "fix: restaurar CFX desde backup original con patch minimo EURUSD->XAUUSD" && git push origin main
+    print(f"EURUSD: {t.count('EURUSD')}")
+    print(f"XAUUSD: {t.count('XAUUSD')}")
+    print(f"undefined: {'undefined' in t}")
