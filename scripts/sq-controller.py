@@ -64,6 +64,15 @@ class SQController:
                 )
                 self.driver.get(SQ_URL)
                 self.wait = WebDriverWait(self.driver, 15)
+                # Esperar a que Angular termine de cargar (pantalla de carga desaparece)
+                from selenium.webdriver.support import expected_conditions as EC
+                from selenium.webdriver.common.by import By
+                try:
+                    WebDriverWait(self.driver, 30).until(
+                        EC.invisibility_of_element_located((By.ID, "main-load-screen"))
+                    )
+                except Exception:
+                    pass  # Sin pantalla de carga → continuar
                 logger.info(f"Conectado a SQ en {SQ_URL}")
                 return True
             except WebDriverException as e:
@@ -117,8 +126,8 @@ class SQController:
         """Configurar todos los parametros del Builder desde un dict."""
         from selenium.webdriver.common.by import By
         logger.info("Configurando Builder...")
-        self._click(By.XPATH, "//a[contains(text(),'Builder') or contains(@href,'builder')]")
-        time.sleep(1)
+        self.driver.get(f"{SQ_URL}/SQUANT#/BUILDER")
+        time.sleep(5)  # Esperar renderizado Angular
 
         field_map = {
             "symbol":         "//input[@id='symbol' or @name='symbol']",
@@ -303,6 +312,14 @@ class SQController:
             logger.warning(f"Error leyendo estado: {e}")
         return result
 
+    def get_page_source(self) -> Path:
+        """Guardar HTML renderizado de la pagina actual en results/sq-page-debug.html."""
+        output = ROOT / "results" / "sq-page-debug.html"
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(self.driver.page_source, encoding="utf-8")
+        logger.info(f"HTML guardado en {output}")
+        return output
+
     def close(self):
         if self.driver:
             self.driver.quit()
@@ -345,6 +362,12 @@ def main() -> int:
     try:
         ctrl.connect()
         print(f"  Conectado a SQ en {SQ_URL}")
+
+        if args.connect:
+            ctrl.driver.get(f"{SQ_URL}/SQUANT#/BUILDER")
+            time.sleep(5)
+            debug_path = ctrl.get_page_source()
+            print(f"  SQ cargado. HTML guardado para inspeccion: {debug_path}")
 
         if args.configure:
             if not args.build or not args.activo:
