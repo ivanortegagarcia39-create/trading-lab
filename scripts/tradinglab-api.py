@@ -90,6 +90,32 @@ def evaluation_gate():
     }
 
 
+@app.post("/pipeline/wfo")
+def run_wfo():
+    result = subprocess.run(
+        [sys.executable, str(SCRIPTS / "build-finisher.py"),
+         "--build", "11", "--activo", "XAUUSD",
+         "--results-folder", "results/"],
+        capture_output=True, text=True, cwd=str(ROOT)
+    )
+    return {
+        "status": "ok" if result.returncode == 0 else "error",
+        "output": result.stdout[-2000:]
+    }
+
+
+@app.post("/pipeline/portfolio")
+def run_portfolio():
+    result = subprocess.run(
+        [sys.executable, str(SCRIPTS / "auto-reporter.py"), "--no-ollama"],
+        capture_output=True, text=True, cwd=str(ROOT)
+    )
+    return {
+        "status": "ok" if result.returncode == 0 else "error",
+        "output": result.stdout[-2000:]
+    }
+
+
 @app.get("/pipeline/health")
 def pipeline_health():
     script = SCRIPTS / "system-health-check.py"
