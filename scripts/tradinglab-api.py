@@ -10,6 +10,7 @@ Endpoints:
     GET  /build/status     — cuenta .sq4 en results/
     POST /build/finish     — ejecuta build-finisher.py
     GET  /pipeline/health  — ejecuta system-health-check.py
+    GET  /telegram/check   — lee comando pendiente en Telegram
 """
 
 import subprocess
@@ -147,6 +148,19 @@ def pipeline_health():
         "stderr":     result.stderr[-1000:] if result.stderr else "",
         "success":    result.returncode == 0,
     }
+
+
+@app.get("/telegram/check")
+def telegram_check():
+    result = subprocess.run(
+        [sys.executable, str(SCRIPTS / "telegram-listener.py"), "--check"],
+        capture_output=True, text=True, cwd=str(ROOT)
+    )
+    try:
+        import json
+        return json.loads(result.stdout)
+    except Exception:
+        return {"error": result.stderr[-500:] or "parse error"}
 
 
 # ── Main ───────────────────────────────────────────────────────────────────
