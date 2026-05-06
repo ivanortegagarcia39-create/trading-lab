@@ -116,6 +116,20 @@ def run_portfolio():
     }
 
 
+@app.post("/sqcli/pipeline")
+def sqcli_pipeline(action: str, build: int = 11, activo: str = "XAUUSD"):
+    result = subprocess.run(
+        [sys.executable, str(SCRIPTS / "sqcli-pipeline.py"),
+         f"--{action}", "--build", str(build), "--activo", activo],
+        capture_output=True, text=True, cwd=str(ROOT)
+    )
+    return {
+        "status": "ok" if result.returncode == 0 else "error",
+        "action": action,
+        "output": result.stdout[-2000:]
+    }
+
+
 @app.get("/pipeline/health")
 def pipeline_health():
     script = SCRIPTS / "system-health-check.py"
