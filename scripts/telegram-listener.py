@@ -51,14 +51,13 @@ def _save_offset(offset: int) -> None:
 
 
 def _get_updates(token: str, offset: int) -> list:
-    import urllib.request
-    import urllib.error
-    url = f"https://api.telegram.org/bot{token}/getUpdates?offset={offset}&timeout=5&limit=10"
+    import requests
+    url = f"https://api.telegram.org/bot{token}/getUpdates"
     try:
-        with urllib.request.urlopen(url, timeout=10) as r:
-            data = json.loads(r.read().decode("utf-8"))
-            return data.get("result", []) if data.get("ok") else []
-    except (urllib.error.URLError, OSError):
+        r = requests.get(url, params={"offset": offset, "timeout": 5, "limit": 10}, timeout=10)
+        data = r.json()
+        return data.get("result", []) if data.get("ok") else []
+    except Exception:
         return []
 
 
