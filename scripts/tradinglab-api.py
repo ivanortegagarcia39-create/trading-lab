@@ -77,6 +77,19 @@ def build_finish(req: BuildFinishRequest):
     }
 
 
+@app.post("/pipeline/evaluation-gate")
+def evaluation_gate():
+    result = subprocess.run(
+        [sys.executable, str(SCRIPTS / "build-analyzer.py"), "--no-ollama"],
+        capture_output=True, text=True, cwd=str(ROOT)
+    )
+    return {
+        "status": "ok" if result.returncode == 0 else "error",
+        "output": result.stdout[-2000:],
+        "errors": result.stderr[-500:]
+    }
+
+
 @app.get("/pipeline/health")
 def pipeline_health():
     script = SCRIPTS / "system-health-check.py"
