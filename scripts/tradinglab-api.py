@@ -150,6 +150,20 @@ def pipeline_health():
     }
 
 
+@app.get("/sq/status")
+def sq_status():
+    import glob
+    builder_results = glob.glob(r'D:\user\projects\Builder\databanks\Results\*.sqx')
+    builder_last    = glob.glob(r'D:\user\projects\Builder\databanks\Last generation\*.sqx')
+    retester_results = glob.glob(r'D:\user\projects\Retester\databanks\Results\*.sqx')
+    return {
+        "builder_results":        len(builder_results),
+        "builder_last_generation": len(builder_last),
+        "retester_results":        len(retester_results),
+        "retester_files":          [f.split("\\")[-1] for f in retester_results[:5]],
+    }
+
+
 @app.get("/telegram/check")
 def telegram_check():
     result = subprocess.run(
