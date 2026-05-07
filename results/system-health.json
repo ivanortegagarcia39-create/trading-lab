@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-05-07T12:03:27.978834",
+  "timestamp": "2026-05-07T12:28:00.426521",
   "checks": [
     {
       "check": "  pandas",
@@ -93,8 +93,8 @@
     },
     {
       "check": "  results/pipeline.lock",
-      "status": "OK",
-      "detail": "sin lock activo"
+      "status": "WARN",
+      "detail": "lock activo: {\n  \"build\": 11,\n  \"activo\": \"XAUUSD\",\n  \"spread_real\": 30,\n"
     },
     {
       "check": "  git repo",
@@ -143,8 +143,8 @@
     }
   ],
   "summary": {
-    "ok": 24,
-    "warn": 4,
+    "ok": 23,
+    "warn": 5,
     "fail": 0
   }
 }

@@ -50,8 +50,11 @@ def _show_build_status():
     """Muestra estado del build activo desde pipeline.lock."""
     lock_path = RESULTS_DIR / "pipeline.lock"
     if lock_path.exists():
-        content = lock_path.read_text(encoding="utf-8").strip()
-        print(f"  Build activo    : {content}")
+        try:
+            lock = json.loads(lock_path.read_text(encoding="utf-8"))
+            print(f"  Build activo    : Build {lock['build']} | {lock['activo']} | spread {lock['spread_real']} | {lock['status']}")
+        except Exception:
+            print(f"  Build activo    : {lock_path.read_text(encoding='utf-8').strip()}")
     else:
         print("  Build activo    : sin pipeline.lock — no hay build corriendo")
 
@@ -124,7 +127,7 @@ def _kg_status() -> dict:
     try:
         import re as _re
         result = subprocess.run(
-            [sys.executable, str(kg_script), "stats"],
+            [sys.executable, str(kg_script), "--mode", "stats"],
             capture_output=True, text=True, cwd=ROOT, timeout=15
         )
         output = result.stdout + result.stderr
