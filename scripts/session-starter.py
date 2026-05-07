@@ -42,7 +42,7 @@ def _run_health_check() -> str:
     lines = result.stdout.strip().splitlines()
     for line in reversed(lines):
         if any(v in line for v in ["SISTEMA LISTO", "ADVERTENCIAS", "SISTEMA CON ERRORES"]):
-            return line.strip().lstrip("→ ").strip()
+            return line.strip().lstrip("→ ").lstrip("-> ").strip()
     return "SISTEMA LISTO" if result.returncode == 0 else "ADVERTENCIAS"
 
 
@@ -271,7 +271,7 @@ def main():
     # 1. Health check
     print("\n[1/7] Ejecutando system-health-check...")
     health = _run_health_check()
-    print(f"      → {health}")
+    print(f"      -> {health}")
 
     # 2. Build activo
     print("\n[2/7] Estado del build activo")
@@ -296,7 +296,7 @@ def main():
     # 6. Proxima accion
     print("\n[6/7] Proxima accion (project-status.md)")
     action = _next_action()
-    print(f"  → {action}")
+    print(f"  -> {action}")
 
     # 7. Autoaprendizaje
     print("\n[7/8] Estado del sistema de autoaprendizaje")

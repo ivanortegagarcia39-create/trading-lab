@@ -10,5 +10,29 @@
     "device": "ivano",
     "health": "ADVERTENCIAS",
     "type": "start"
+  },
+  {
+    "timestamp": "2026-05-07T11:59:07.781510",
+    "device": "ivano",
+    "health": "ADVERTENCIAS",
+    "type": "start"
+  },
+  {
+    "timestamp": "2026-05-07T12:01:18.162941",
+    "device": "ivano",
+    "health": "→ ADVERTENCIAS",
+    "type": "start"
+  },
+  {
+    "timestamp": "2026-05-07T12:01:55.087055",
+    "device": "ivano",
+    "health": "ADVERTENCIAS",
+    "type": "start"
+  },
+  {
+    "timestamp": "2026-05-07T12:03:36.544584",
+    "device": "ivano",
+    "health": "ADVERTENCIAS",
+    "type": "start"
   }
 ]
