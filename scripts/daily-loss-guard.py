@@ -27,7 +27,6 @@ Constantes FTMO:
 import argparse
 import io
 import json
-import subprocess
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -45,6 +44,8 @@ ROOT          = Path(__file__).parent.parent
 MT5_STATE     = ROOT / "results" / "mt5-state.json"
 GUARD_STATE   = ROOT / "results" / "daily-loss-guard-state.json"
 CLOSE_TRIGGER = ROOT / "results" / "close-all-trigger.json"
+GUARD_LOG     = ROOT / "results" / "daily-loss-guard.log"
+TG_CONFIG     = ROOT / "config" / "telegram-config.json"
 
 PRAGUE_TZ    = pytz.timezone("Europe/Prague")
 DD_LIMIT_PCT = 0.05   # 5%  — FTMO Daily Loss Limit
@@ -149,17 +150,37 @@ def calculate_daily_loss(balance_midnight: float, current_equity: float, initial
 # ─── Notificaciones ───────────────────────────────────────────────────────────
 
 def _send_alert(level: str, message: str, dry_run: bool = False):
-    notifier = ROOT / "scripts" / "telegram-notifier.py"
+    emoji = {"INFO": "✅", "WARNING": "⚠️", "CRITICAL": "🔴"}.get(level, "")
+    text = f"{emoji} {message}"
     if dry_run:
-        print(f"[DRY-RUN] [{level}] {message}")
+        print(f"[DRY-RUN] [{level}] {text}")
         return
-    if not notifier.exists():
+    if not TG_CONFIG.exists():
         print(f"[{level}] {message}")
         return
-    subprocess.run(
-        [sys.executable, str(notifier), "--level", level, "--message", message],
-        check=False, capture_output=True,
+    import requests
+    cfg = json.loads(TG_CONFIG.read_text(encoding="utf-8"))
+    token = cfg["token"]
+    chat_ids = cfg.get("chat_ids", [cfg.get("chat_id", "")])
+    url = f"https://api.telegram.org/bot{token}/sendMessage"
+    for cid in chat_ids:
+        try:
+            requests.post(url, json={"chat_id": cid, "text": text}, timeout=10)
+        except Exception as e:
+            print(f"  ERROR Telegram {cid}: {e}")
+
+
+def _log_critical(dd: dict, capital: float):
+    now = datetime.now(PRAGUE_TZ).strftime("%Y-%m-%d %H:%M:%S")
+    line = (
+        f"{now} | CRITICAL | capital={capital:.2f} | "
+        f"loss={dd['loss_pct']:.2f}% | equity={dd['current_equity']:.2f} | "
+        f"limit_equity={dd['limit_equity']:.2f}\n"
     )
+    GUARD_LOG.parent.mkdir(parents=True, exist_ok=True)
+    with GUARD_LOG.open("a", encoding="utf-8") as f:
+        f.write(line)
+    print(f"  Log escrito: {GUARD_LOG}")
 
 
 def _build_warning_msg(dd: dict, capital: float) -> str:
@@ -236,6 +257,7 @@ def run_check(initial_capital: float, dry_run: bool = False):
         if not guard.get("close_triggered"):
             trigger_close_all(dd, dry_run)
             _send_alert("CRITICAL", _build_critical_msg(dd, initial_capital), dry_run)
+            _log_critical(dd, initial_capital)
             guard["close_triggered"] = True
             _save_json(GUARD_STATE, guard)
         else:
