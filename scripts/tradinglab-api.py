@@ -164,6 +164,19 @@ def sq_status():
     }
 
 
+@app.get("/daily-loss-guard")
+def daily_loss_guard():
+    result = subprocess.run(
+        [sys.executable, str(SCRIPTS / "daily-loss-guard.py"),
+         "--capital", "25000", "--check"],
+        capture_output=True, text=True, cwd=str(ROOT)
+    )
+    return {
+        "status": "ok" if result.returncode == 0 else "error",
+        "output": result.stdout[-1000:]
+    }
+
+
 @app.get("/telegram/check")
 def telegram_check():
     result = subprocess.run(
