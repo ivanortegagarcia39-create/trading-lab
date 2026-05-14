@@ -192,8 +192,8 @@ def copy_databank(from_project: str, to_project: str,
         "action=copy",
         f"project={from_project}",
         f"name={from_db}",
-        f"toproject={to_project}",
-        f"toname={to_db}",
+        f"destproject={to_project}",
+        f"destdatabank={to_db}",
     )
     if rc != 0:
         print(f"  ERROR copy databank: {out}")
