@@ -1,0 +1,17 @@
+{
+  "build": 12,
+  "activo": "EURUSD",
+  "fecha": "2026-05-14T23:33:39.300924",
+  "spread_real": 0.5,
+  "spread_modelo": 1.0,
+  "slippage": 0.5,
+  "commission": 7,
+  "commission_type": "SizeBased",
+  "instrument": "EURUSD_ftmo",
+  "sl_min_pips": 10,
+  "sl_max_pips": 40,
+  "pt_min_pips": 20,
+  "pt_max_pips": 100,
+  "session": "EURUSD_ftmo",
+  "regla_spread": "spread_modelo = spread_real × 2 (anti-overfitting)"
+}

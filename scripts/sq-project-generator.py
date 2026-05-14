@@ -314,11 +314,26 @@ def patch_task_xml(task_xml_str: str, activo_cfg: dict, spread_real: float,
     Opera con string manipulation para no romper el XML complejo de SQ.
     """
     import re
-    spread_model  = spread_real * 2
-    instrument    = activo_cfg["instrument"]    # e.g. "XAUUSD_ftmo"
-    data_source   = activo_cfg["data_source"]   # e.g. "XAUUSD_M1_dukas"
+    spread_model = spread_real * 2
+    instrument   = activo_cfg["instrument"]   # e.g. "EURUSD_ftmo"
+    data_source  = activo_cfg["data_source"]  # e.g. "EURUSD_M1_dukas"
+    u_symbol     = activo_cfg["u_symbol"]     # e.g. "EURUSD"
 
-    # Patch 1: defaultSpread del instrumento de trading
+    # Patch 1: Reemplazar todos los patrones del activo anterior
+    for a_cfg in ACTIVOS.values():
+        if a_cfg["u_symbol"] == u_symbol:
+            continue
+        old = a_cfg["u_symbol"]
+        for old_pat, new_pat in [
+            (f"{old}_ftmo",         f"{u_symbol}_ftmo"),
+            (f"{old}_M1_dukas",     f"{u_symbol}_M1_dukas"),
+            (f"{old}_dukascopy",    f"{u_symbol}_dukascopy"),
+            (f'uSymbol="{old}"',    f'uSymbol="{u_symbol}"'),
+            (f'uSymbolName="{old}"', f'uSymbolName="{u_symbol}"'),
+        ]:
+            task_xml_str = task_xml_str.replace(old_pat, new_pat)
+
+    # Patch 2: Actualizar defaultSpread del instrumento objetivo
     task_xml_str = re.sub(
         r'(instrument="' + re.escape(instrument) + r'"[^>]*defaultSpread=")[^"]*(")',
         lambda m: m.group(0).replace(
@@ -326,29 +341,6 @@ def patch_task_xml(task_xml_str: str, activo_cfg: dict, spread_real: float,
             f'defaultSpread="{spread_model}"'
         ),
         task_xml_str
-    )
-
-    # Patch 2: Chart symbol -> fuente de datos correcta
-    task_xml_str = re.sub(
-        r'symbol="[^"]*_M1_dukas"',
-        f'symbol="{data_source}"',
-        task_xml_str
-    )
-
-    # Patch 3: Eliminar bloques <Symbol> de otros activos residuales
-    task_xml_str = re.sub(
-        r'\r?\n[ \t]*<Symbol name="(?!' + re.escape(data_source) + r'")[^"]*_M1_dukas".*?</Symbol>',
-        '',
-        task_xml_str,
-        flags=re.DOTALL
-    )
-
-    # Patch 4: Eliminar InstrumentInfo de otros instrumentos residuales
-    task_xml_str = re.sub(
-        r'\r?\n[ \t]*<InstrumentInfo instrument="(?!' + re.escape(instrument) + r'")[^"]*".*?/>',
-        '',
-        task_xml_str,
-        flags=re.DOTALL
     )
 
     return task_xml_str
@@ -411,6 +403,11 @@ def verify_cfx(cfx_path: Path, activo_cfg: dict, spread_real: float, backup_path
                    if not i.startswith(u_symbol)]
     if wrong_instr:
         errors.append(f"InstrumentInfo residuales: {wrong_instr}")
+
+    # 5. uSymbol y uSymbolName apuntan al activo correcto
+    wrong_usym = [s for s in re.findall(r'uSymbol="([^"]+)"', t) if s != u_symbol]
+    if wrong_usym:
+        errors.append(f"uSymbol incorrecto: {set(wrong_usym)} (esperado '{u_symbol}')")
 
     if errors:
         print("\n[ERROR] verify_cfx() FALLIDO:")
