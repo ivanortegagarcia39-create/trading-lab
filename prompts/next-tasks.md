@@ -1,36 +1,20 @@
-Modifica el CFX del Builder para relajar los filtros de aceptación:
+import zipfile, re
 
-import zipfile, re, shutil
+with zipfile.ZipFile(r'D:\user\projects\Builder\project.cfx') as z:
+    xml = z.read('Build-Task1.xml').decode()
 
-shutil.copy2(r'D:/user/projects/Builder/project.cfx',
-             r'D:/user/projects/Builder/project.cfx.bak_filters')
-
-with zipfile.ZipFile(r'D:/user/projects/Builder/project.cfx') as z:
-    task = z.read('Build-Task1.xml').decode()
-    config = z.read('config.xml').decode()
-
-# Cambiar PF mínimo de 1.3 a 1.1
-task = task.replace(
-    '<Condition>ProfitFactor > 1.3</Condition>',
-    '<Condition>ProfitFactor > 1.1</Condition>'
-)
-
-# Cambiar ReturnDDRatio de 4 a 2
-task = task.replace(
-    '<Condition>ReturnDDRatio > 4</Condition>',
-    '<Condition>ReturnDDRatio > 2</Condition>'
-)
-
-with zipfile.ZipFile(r'D:/user/projects/Builder/project.cfx',
-                     'w', zipfile.ZIP_DEFLATED) as z:
-    z.writestr('config.xml', config)
-    z.writestr('Build-Task1.xml', task)
-
-print("Filtros relajados")
-
-# Verificar
-with zipfile.ZipFile(r'D:/user/projects/Builder/project.cfx') as z:
-    t = z.read('Build-Task1.xml').decode()
-    conditions = re.findall(r'<Condition>[^<]+</Condition>', t)
-    for c in conditions:
-        print(c)
+print("=== VERIFICACION COMPLETA BUILD 11 ===")
+print(f"Capital: {re.findall(r'<InitialCapital>(\d+)</InitialCapital>', xml)}")
+print(f"Spread: {re.findall(r'defaultSpread=\"([^\"]+)\"', xml)[:2]}")
+print(f"Slippage: {re.findall(r'slippage=\"([^\"]+)\"', xml)[:3]}")
+print(f"Simbolo: {re.findall(r'symbol=\"([^\"]+)\"', xml)[:3]}")
+print(f"Timeframe: {re.findall(r'timeframe=\"([^\"]+)\"', xml)[:3]}")
+print(f"MM activo: {re.findall(r'<Method type=\"([^\"]+)\" use=\"true\">', xml)}")
+print(f"SL min-max: {re.findall(r'SLmin|SLmax|minSL|maxSL|MinimumSL|MaximumSL', xml)[:5]}")
+print(f"PT min-max: {re.findall(r'PTmin|PTmax|minPT|maxPT|MinimumPT|MaximumPT', xml)[:5]}")
+print(f"Trades/mes min: {re.findall(r'AvgTradesPerMonth[^>]*>([^<]+)', xml)[:3]}")
+print(f"PF minimo: {re.findall(r'ProfitFactor[^>]*>([^<]+)|Numeric-Value value=\"([\d.]+)\"[^/]*/>[^<]*</Right', xml)[:3]}")
+print(f"Indicadores activos: {xml.count('use=\"true\"')} de {xml.count('<Block ')}")
+print(f"Max estrategias: {re.findall(r'maxStrategies|MaxStrategies|databankSize', xml)[:3]}")
+print(f"Modo continuo: {re.findall(r'restartWhenFinished|StartAgainWhenFinished|continueWhenFinished', xml)[:3]}")
+print(f"IS periodo: {re.findall(r'dateFrom|dateTo', xml)[:4]}")
