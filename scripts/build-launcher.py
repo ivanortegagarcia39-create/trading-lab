@@ -175,7 +175,7 @@ def document_build(build_n: int, activo: str, spread_real: float, dry_run: bool)
 
 
 def log_to_audit(build_n: int, activo: str, dry_run: bool) -> None:
-    _step(7, "Registrando inicio en audit trail...")
+    _step(8, "Registrando inicio en audit trail...")
     logger = SCRIPTS / "hash-logger.py"
     if not logger.exists():
         _warn("hash-logger.py no encontrado — saltando audit")
@@ -274,8 +274,8 @@ def main() -> int:
     else:
         print(f"  [DRY-RUN] Telegram: {msg}")
 
-    # Paso 6b: escribir pipeline.lock
-    _step(6, "Actualizando pipeline.lock...")
+    # Paso 7: escribir pipeline.lock
+    _step(7, "Actualizando pipeline.lock...")
     lock = {
         "build": args.build,
         "activo": activo,
@@ -290,7 +290,7 @@ def main() -> int:
     else:
         print(f"  [DRY-RUN] pipeline.lock: {json.dumps(lock)}")
 
-    # Paso 7: audit trail
+    # Paso 8: audit trail
     log_to_audit(args.build, activo, args.dry_run)
 
     _header(f"Build {args.build} lanzado correctamente")

@@ -1,13 +1,13 @@
 {
-  "timestamp": "2026-05-03T20:58:33.442436Z",
-  "activo": "XAUUSD",
-  "spread_configurado": 60.0,
+  "timestamp": "2026-05-15T17:22:19.593391Z",
+  "activo": "USDJPY",
+  "spread_configurado": 1.0,
   "resultado_global": "WARN",
   "checks": [
     {
       "check": "Spread 2x configurado",
       "status": "PASS",
-      "message": "Spread 60.0 pips >= 60.0 pips (OK)"
+      "message": "Spread 1.0 pips >= 1.0 pips (OK)"
     },
     {
       "check": "OOS date reciente",
@@ -17,12 +17,12 @@
     {
       "check": "Datos M1 disponibles",
       "status": "WARN",
-      "message": "Ruta de datos no especificada para XAUUSD. Verificar manualmente que los datos M1 estan disponibles en SQ."
+      "message": "Ruta de datos no especificada para USDJPY. Verificar manualmente que los datos M1 estan disponibles en SQ."
     },
     {
       "check": "Sin pipeline.lock activo",
-      "status": "PASS",
-      "message": "No hay pipeline.lock activo"
+      "status": "WARN",
+      "message": "pipeline.lock existe (modificado: 2026-05-15 13:37). Puede haber otro proceso corriendo."
     }
   ]
 }
