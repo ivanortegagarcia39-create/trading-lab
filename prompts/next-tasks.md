@@ -1,42 +1,27 @@
 PYTHONUTF8=1 python -c "
-import zipfile, shutil, io, re
+import json
+from datetime import datetime
 
-cfx = r'D:\user\projects\Optimizer\project.cfx'
-shutil.copy2(cfx, cfx + '.bak_build12')
+ranking = {
+    'fecha': datetime.now().isoformat(),
+    'capital': 25000,
+    'riesgo_pct': 1,
+    'sl_referencia': 50,
+    'ranking': [
+        {'activo': 'EURUSD', 'coste_trade': 14.50, 'pct_riesgo': 5.8, 'estado': 'ACTIVO - Build 12'},
+        {'activo': 'USDJPY', 'coste_trade': 15.00, 'pct_riesgo': 6.0, 'estado': 'Build 13'},
+        {'activo': 'AUDUSD', 'coste_trade': 16.00, 'pct_riesgo': 6.5, 'estado': 'Build 14'},
+        {'activo': 'GBPUSD', 'coste_trade': 18.00, 'pct_riesgo': 7.2, 'estado': 'Build 15'},
+        {'activo': 'USDCHF', 'coste_trade': 19.00, 'pct_riesgo': 7.6, 'estado': 'Pendiente'},
+        {'activo': 'NZDUSD', 'coste_trade': 22.00, 'pct_riesgo': 8.8, 'estado': 'Pendiente'},
+        {'activo': 'USDCAD', 'coste_trade': 23.00, 'pct_riesgo': 9.2, 'estado': 'Pendiente'},
+        {'activo': 'XAUUSD', 'coste_trade': 317.00, 'pct_riesgo': 126.8, 'estado': 'DESCARTADO'},
+    ]
+}
 
-with zipfile.ZipFile(cfx) as z:
-    task = z.read('Optimize-Task1.xml').decode()
-    config = z.read('config.xml').decode()
-
-# Reemplazar XAUUSD por EURUSD
-for old, new in [
-    ('XAUUSD_M1_dukas', 'EURUSD_M1_dukas'),
-    ('XAUUSD_ftmo', 'EURUSD_ftmo'),
-    ('XAUUSD_dukascopy', 'EURUSD_dukascopy'),
-    ('uSymbol=\"XAUUSD\"', 'uSymbol=\"EURUSD\"'),
-    ('uSymbolName=\"XAUUSD\"', 'uSymbolName=\"EURUSD\"'),
-    ('defaultSpread=\"60\"', 'defaultSpread=\"1.0\"'),
-    ('defaultSpread=\"60.0\"', 'defaultSpread=\"1.0\"'),
-    ('defaultSpread=\"0.3\"', 'defaultSpread=\"1.0\"'),
-    ('defaultSlippage=\"2.0\"', 'defaultSlippage=\"0.5\"'),
-    ('slippage=\"2\"', 'slippage=\"0.5\"'),
-]:
-    task = task.replace(old, new)
-
-buf = io.BytesIO()
-with zipfile.ZipFile(buf, 'w', zipfile.ZIP_DEFLATED) as zout:
-    zout.writestr('config.xml', config)
-    zout.writestr('Optimize-Task1.xml', task)
-
-with open(cfx, 'wb') as f:
-    f.write(buf.getvalue())
-
-with zipfile.ZipFile(cfx) as z:
-    t = z.read('Optimize-Task1.xml').decode()
-
-print(f'XAUUSD residual: {t.count(\"XAUUSD\")}')
-print(f'EURUSD presente: {t.count(\"EURUSD\")}')
-print(f'Spreads: {re.findall(r\"defaultSpread=.([^.]+).\", t)}')
-print(f'Slippages: {re.findall(r\"defaultSlippage=.([^.]+).\", t)}')
-print('OK' if t.count('XAUUSD') == 0 else 'FALLO')
+with open('results/asset-viability-ranking.json', 'w') as f:
+    json.dump(ranking, f, indent=2)
+print('Ranking guardado')
 "
+
+git add -A && git commit -m "feat: asset viability ranking - XAUUSD descartado, EURUSD primero" && git push origin main

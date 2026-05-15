@@ -1,0 +1,56 @@
+{
+  "fecha": "2026-05-15T12:35:16.516578",
+  "capital": 25000,
+  "riesgo_pct": 1,
+  "sl_referencia": 50,
+  "ranking": [
+    {
+      "activo": "EURUSD",
+      "coste_trade": 14.5,
+      "pct_riesgo": 5.8,
+      "estado": "ACTIVO - Build 12"
+    },
+    {
+      "activo": "USDJPY",
+      "coste_trade": 15.0,
+      "pct_riesgo": 6.0,
+      "estado": "Build 13"
+    },
+    {
+      "activo": "AUDUSD",
+      "coste_trade": 16.0,
+      "pct_riesgo": 6.5,
+      "estado": "Build 14"
+    },
+    {
+      "activo": "GBPUSD",
+      "coste_trade": 18.0,
+      "pct_riesgo": 7.2,
+      "estado": "Build 15"
+    },
+    {
+      "activo": "USDCHF",
+      "coste_trade": 19.0,
+      "pct_riesgo": 7.6,
+      "estado": "Pendiente"
+    },
+    {
+      "activo": "NZDUSD",
+      "coste_trade": 22.0,
+      "pct_riesgo": 8.8,
+      "estado": "Pendiente"
+    },
+    {
+      "activo": "USDCAD",
+      "coste_trade": 23.0,
+      "pct_riesgo": 9.2,
+      "estado": "Pendiente"
+    },
+    {
+      "activo": "XAUUSD",
+      "coste_trade": 317.0,
+      "pct_riesgo": 126.8,
+      "estado": "DESCARTADO"
+    }
+  ]
+}
