@@ -1,0 +1,19 @@
+{
+  "build": 13,
+  "activo": "USDJPY",
+  "spread_real": 0.5,
+  "spread_modelo": 1.0,
+  "sl_min": 10,
+  "sl_max": 40,
+  "pt_min": 20,
+  "pt_max": 100,
+  "capital": 25000,
+  "riesgo_pct": 1,
+  "comision": 7,
+  "slippage": 0.5,
+  "timeframe": "H1",
+  "is_start": "2003.05.05",
+  "is_end": "2020.12.31",
+  "estado": "PENDIENTE - esperando fin Build 12",
+  "creado": "2026-05-15T19:30:14.010377"
+}
