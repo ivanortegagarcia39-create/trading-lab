@@ -1,4 +1,4 @@
-# Skill: Evaluation Gate Automatico — Sin Intervencion Humana
+﻿# Skill: Evaluation Gate Automatico — Sin Intervencion Humana
 
 ## Proposito
 Define los criterios numericos exactos que el
@@ -28,9 +28,9 @@ de las candidatas.
 Estas estrategias nunca llegan al Evaluation Gate
 porque SQ las descarta internamente:
 
-- PF < 1.3 → no entra en el databank
-- Trades/mes < 6 → no entra en el databank
-- Ratio Ret/DD < 0.8 → no entra en el databank
+- PF < 1.1 → no entra en el databank
+- Trades/mes > 0 (sin limite minimo)
+- Ret/DD > 0 (sin limite minimo)
 
 Solo las estrategias que superan estos filtros
 aparecen en el databank para ser evaluadas.
