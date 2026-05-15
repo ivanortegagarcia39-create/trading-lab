@@ -186,6 +186,20 @@ def sq_status():
     }
 
 
+@app.get("/pipeline/active")
+def pipeline_active():
+    import json
+    lock = ROOT / "results" / "pipeline.lock"
+    if lock.exists():
+        data = json.loads(lock.read_text())
+        return {
+            "build": data.get("build", 12),
+            "activo": data.get("activo", "EURUSD"),
+            "status": data.get("status", "unknown")
+        }
+    return {"build": 12, "activo": "EURUSD", "status": "no_lock"}
+
+
 @app.get("/daily-loss-guard")
 def daily_loss_guard():
     result = subprocess.run(
