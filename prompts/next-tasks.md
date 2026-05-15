@@ -1,27 +1,36 @@
-PYTHONUTF8=1 python -c "
-import json
-from datetime import datetime
+# Añadir LECCION-005 al lessons-learned sobre XAUUSD inviable
 
-ranking = {
-    'fecha': datetime.now().isoformat(),
-    'capital': 25000,
-    'riesgo_pct': 1,
-    'sl_referencia': 50,
-    'ranking': [
-        {'activo': 'EURUSD', 'coste_trade': 14.50, 'pct_riesgo': 5.8, 'estado': 'ACTIVO - Build 12'},
-        {'activo': 'USDJPY', 'coste_trade': 15.00, 'pct_riesgo': 6.0, 'estado': 'Build 13'},
-        {'activo': 'AUDUSD', 'coste_trade': 16.00, 'pct_riesgo': 6.5, 'estado': 'Build 14'},
-        {'activo': 'GBPUSD', 'coste_trade': 18.00, 'pct_riesgo': 7.2, 'estado': 'Build 15'},
-        {'activo': 'USDCHF', 'coste_trade': 19.00, 'pct_riesgo': 7.6, 'estado': 'Pendiente'},
-        {'activo': 'NZDUSD', 'coste_trade': 22.00, 'pct_riesgo': 8.8, 'estado': 'Pendiente'},
-        {'activo': 'USDCAD', 'coste_trade': 23.00, 'pct_riesgo': 9.2, 'estado': 'Pendiente'},
-        {'activo': 'XAUUSD', 'coste_trade': 317.00, 'pct_riesgo': 126.8, 'estado': 'DESCARTADO'},
-    ]
-}
+$leccion = @"
 
-with open('results/asset-viability-ranking.json', 'w') as f:
-    json.dump(ranking, f, indent=2)
-print('Ranking guardado')
-"
+---
 
-git add -A && git commit -m "feat: asset viability ranking - XAUUSD descartado, EURUSD primero" && git push origin main
+### LECCION-005: XAUUSD H1 inviable con spread 60 pips y reglas FTMO
+
+Fecha: 2026-05-15
+Build(s): 9, 10, 11
+Decision: DESCARTAR activo permanentemente
+Criterio que activo la decision: Coste por trade supera el riesgo permitido
+Resultado observado: Con spread 60 pips (30 real x2), SL 50 pips y capital
+  25000 USD al 1% de riesgo, el coste por trade es 317 USD vs riesgo de 250 USD.
+  El coste supera el riesgo en un 26.8%. Con ratio 2:1 el ratio efectivo real
+  es 1.6:1, por debajo del minimo del sistema. 3 builds consecutivos con 0
+  estrategias en Results confirman la inviabilidad.
+Leccion aplicable: XAUUSD descartado permanentemente con las reglas actuales.
+  Activos viables: EURUSD (5.8%), USDJPY (6%), AUDUSD (6.5%), GBPUSD (7.2%).
+  Ver results/asset-viability-ranking.json para ranking completo.
+Ocurrencias confirmadas: 3 — ESTRUCTURAL
+Estado: ESTRUCTURAL
+
+CONTEXTO:
+  Regimen de mercado: mixto (3 builds en periodos diferentes)
+  Epoca del año: Q1-Q2 2026
+  Volumen relativo: normal
+  Prop firm activa: FTMO (objetivo)
+  Activo principal: XAUUSD
+  Fase del proyecto: Capa 0
+"@
+
+Add-Content "docs\lessons-learned.md" -Value $leccion -Encoding UTF8
+Write-Host "LECCION-005 añadida"
+
+git add -A && git commit -m "docs: LECCION-005 XAUUSD inviable - estructural confirmada" && git push origin main
