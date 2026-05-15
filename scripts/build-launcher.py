@@ -9,6 +9,7 @@ Uso:
 """
 
 import argparse
+import json
 import subprocess
 import sys
 from datetime import datetime
@@ -272,6 +273,22 @@ def main() -> int:
         _ok("Telegram notificado")
     else:
         print(f"  [DRY-RUN] Telegram: {msg}")
+
+    # Paso 6b: escribir pipeline.lock
+    _step(6, "Actualizando pipeline.lock...")
+    lock = {
+        "build": args.build,
+        "activo": activo,
+        "spread_real": args.spread_real,
+        "started": datetime.now().isoformat(),
+        "status": "running",
+    }
+    lock_path = RESULTS / "pipeline.lock"
+    if not args.dry_run:
+        lock_path.write_text(json.dumps(lock, indent=2), encoding="utf-8")
+        _ok(f"pipeline.lock actualizado — Build {args.build} {activo}")
+    else:
+        print(f"  [DRY-RUN] pipeline.lock: {json.dumps(lock)}")
 
     # Paso 7: audit trail
     log_to_audit(args.build, activo, args.dry_run)
