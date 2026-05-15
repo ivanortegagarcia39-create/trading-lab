@@ -1,7 +1,7 @@
 {
-  "build": 11,
-  "activo": "XAUUSD",
-  "spread_real": 30,
-  "started": "2026-05-05T21:39:00Z",
+  "build": 12,
+  "activo": "EURUSD",
+  "spread_real": 0.5,
+  "started": "2026-05-15T13:37:48.941859",
   "status": "running"
 }
