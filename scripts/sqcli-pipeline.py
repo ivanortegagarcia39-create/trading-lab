@@ -50,6 +50,21 @@ def _sq_running() -> bool:
         return False
 
 
+def close_sq_gui() -> bool:
+    """Cierra SQ GUI si esta corriendo. Devuelve True si el puerto quedo libre."""
+    if not _sq_running():
+        return True
+    print("  SQ GUI detectado — cerrando via taskkill...")
+    subprocess.run(
+        ["taskkill", "/F", "/IM", "StrategyQuantX.exe"],
+        capture_output=True,
+    )
+    time.sleep(5)
+    libre = not _sq_running()
+    print(f"  Puerto 5050: {'libre' if libre else 'OCUPADO — fallo al cerrar'}")
+    return libre
+
+
 def _sqcli(*args: str, timeout: int = 120) -> tuple[int, str]:
     """
     Ejecuta sqcli.exe con los argumentos dados.
@@ -224,10 +239,8 @@ def main() -> int:
         print(f"ERROR: sqcli.exe no encontrado en {SQCLI}")
         return 1
 
-    if _sq_running():
-        print("ERROR: SQ GUI esta corriendo en el puerto 5050.")
-        print("       sqcli no puede ejecutarse simultaneamente con el GUI.")
-        print("       Cierra StrategyQuant X antes de usar este script.")
+    if not close_sq_gui():
+        print("ERROR: no se pudo cerrar SQ GUI. Cierra StrategyQuant X manualmente.")
         return 1
 
     if args.retester:

@@ -13,8 +13,10 @@ Endpoints:
     GET  /telegram/check   — lee comando pendiente en Telegram
 """
 
+import socket
 import subprocess
 import sys
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -25,6 +27,23 @@ ROOT    = Path(__file__).parent.parent
 SCRIPTS = ROOT / "scripts"
 
 app = FastAPI(title="TradingLab API", version="1.0.0")
+
+
+def _sq_running() -> bool:
+    try:
+        with socket.create_connection(("localhost", 5050), timeout=1):
+            return True
+    except OSError:
+        return False
+
+
+def close_sq_gui() -> bool:
+    """Cierra SQ GUI si esta corriendo. Devuelve True si el puerto quedo libre."""
+    if not _sq_running():
+        return True
+    subprocess.run(["taskkill", "/F", "/IM", "StrategyQuantX.exe"], capture_output=True)
+    time.sleep(5)
+    return not _sq_running()
 
 
 # ── Modelos ────────────────────────────────────────────────────────────────
@@ -119,6 +138,9 @@ def run_portfolio():
 
 @app.post("/sqcli/pipeline")
 def sqcli_pipeline(action: str, build: int = 11, activo: str = "XAUUSD"):
+    if not close_sq_gui():
+        return {"status": "error", "action": action,
+                "output": "No se pudo cerrar SQ GUI. Cierra StrategyQuant X manualmente."}
     result = subprocess.run(
         [sys.executable, str(SCRIPTS / "sqcli-pipeline.py"),
          f"--{action}", "--build", str(build), "--activo", activo],
