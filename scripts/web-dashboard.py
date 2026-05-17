@@ -216,6 +216,13 @@ HTML = """<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
+<meta name="theme-color" content="#00bcd4">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="TradingLab">
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/icon-192.png">
 <title>TradingLab Dashboard</title>
 <style>
   :root {
@@ -438,9 +445,64 @@ async function refresh() {
 
 refresh();
 setInterval(refresh, INTERVAL * 1000);
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js').catch(() => {});
+}
 </script>
 </body>
 </html>"""
+
+
+# ── PWA assets ────────────────────────────────────────────────────────────
+
+MANIFEST_JSON = json.dumps({
+    "name": "TradingLab",
+    "short_name": "TradingLab",
+    "description": "Dashboard del sistema TradingLab de trading algorítmico",
+    "display": "standalone",
+    "orientation": "portrait",
+    "theme_color": "#00bcd4",
+    "background_color": "#0d0d0d",
+    "start_url": "/",
+    "scope": "/",
+    "icons": [
+        {"src": "/icon-192.png", "sizes": "192x192", "type": "image/svg+xml", "purpose": "any maskable"},
+    ],
+}, ensure_ascii=False, indent=2)
+
+SW_JS = """\
+const CACHE = 'tradinglab-v1';
+const SHELL = ['/'];
+
+self.addEventListener('install', e => {
+  e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)));
+  self.skipWaiting();
+});
+
+self.addEventListener('activate', e => {
+  e.waitUntil(caches.keys().then(keys =>
+    Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
+  ));
+  self.clients.claim();
+});
+
+self.addEventListener('fetch', e => {
+  const url = new URL(e.request.url);
+  if (url.pathname === '/api/data') return;  // siempre en red
+  e.respondWith(
+    fetch(e.request).catch(() => caches.match(e.request))
+  );
+});
+"""
+
+ICON_SVG = """\
+<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 192 192">
+  <rect width="192" height="192" rx="28" fill="#0d0d0d"/>
+  <rect x="4" y="4" width="184" height="184" rx="24" fill="none" stroke="#00bcd4" stroke-width="6"/>
+  <text x="96" y="128" font-family="Consolas,monospace" font-size="88" font-weight="bold"
+        fill="#00bcd4" text-anchor="middle">TL</text>
+</svg>"""
 
 
 # ── Servidor HTTP ──────────────────────────────────────────────────────────
@@ -468,6 +530,12 @@ class Handler(BaseHTTPRequestHandler):
                 self._send(500, "application/json", body)
         elif self.path in ("/", "/index.html"):
             self._send(200, "text/html; charset=utf-8", HTML.encode("utf-8"))
+        elif self.path == "/manifest.json":
+            self._send(200, "application/manifest+json; charset=utf-8", MANIFEST_JSON.encode("utf-8"))
+        elif self.path == "/sw.js":
+            self._send(200, "application/javascript; charset=utf-8", SW_JS.encode("utf-8"))
+        elif self.path == "/icon-192.png":
+            self._send(200, "image/svg+xml; charset=utf-8", ICON_SVG.encode("utf-8"))
         else:
             self._send(404, "text/plain", b"Not found")
 
