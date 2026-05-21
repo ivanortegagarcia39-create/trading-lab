@@ -296,3 +296,33 @@ CONTEXTO:
   Prop firm activa: FTMO (objetivo)
   Activo principal: XAUUSD
   Fase del proyecto: Capa 0
+
+---
+
+### LECCION-006: IS period < 100% genera muestra insuficiente en Retester
+
+Fecha: 2026-05-21
+Build(s): 12 (confirmado en builds anteriores)
+Decision: DESCARTAR build completo
+Criterio que activo la decision: Todas las estrategias con 5-23 trades en IS —
+  por debajo del minimo de 80 trades requerido por el Evaluation Gate
+Resultado observado: Build 12 configurado con IS period al 76%. El Builder
+  divide el IS internamente cuando el periodo no es 100%, generando estrategias
+  optimizadas sobre un subperiodo reducido. Resultado: 5-23 trades por
+  estrategia en el periodo de evaluacion. El Retester descarto el build
+  completo por muestra estadisticamente insuficiente. Ninguna estrategia
+  supero los 80 trades minimos.
+Leccion aplicable: IS period siempre al 100% en el Builder sin excepcion.
+  Con IS parcial SQ sobreajusta a un subperiodo minimo y las estrategias
+  no tienen muestra suficiente para validacion estadistica.
+  Verificar IS period = 100% en checklist pre-build obligatorio.
+Ocurrencias confirmadas: 2+ — ESTRUCTURAL (build 12 + builds anteriores)
+Estado: ESTRUCTURAL
+
+CONTEXTO:
+  Regimen de mercado: N/A (error de configuracion del Builder)
+  Epoca del año: Q2 2026
+  Volumen relativo: N/A
+  Prop firm activa: FTMO (objetivo)
+  Activo principal: EURUSD
+  Fase del proyecto: Capa 0
