@@ -13,5 +13,7 @@
   "pt_min_pips": 60,
   "pt_max_pips": 200,
   "session": "XAUUSD_ftmo",
-  "regla_spread": "spread_modelo = spread_real × 2 (anti-overfitting)"
+  "regla_spread": "spread_modelo = spread_real \u00d7 2 (anti-overfitting)",
+  "estado": "DESCARTADO - XAUUSD inviable coste 127% riesgo",
+  "updated": "2026-05-21T13:48:14.144993"
 }

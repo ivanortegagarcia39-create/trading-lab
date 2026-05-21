@@ -13,5 +13,7 @@
   "pt_min_pips": 20,
   "pt_max_pips": 100,
   "session": "EURUSD_ftmo",
-  "regla_spread": "spread_modelo = spread_real × 2 (anti-overfitting)"
+  "regla_spread": "spread_modelo = spread_real \u00d7 2 (anti-overfitting)",
+  "estado": "DESCARTADO - IS period corto 5-23 trades",
+  "updated": "2026-05-21T13:48:14.145952"
 }
