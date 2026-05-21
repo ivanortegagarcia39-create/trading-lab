@@ -1,5 +1,5 @@
 # Project Status — TradingLab
-Ultima actualizacion: 2026-04-21
+Ultima actualizacion: 2026-05-21
 
 ---
 
@@ -41,25 +41,25 @@ Con el enfoque actual SQ decide la logica. Los numeros deciden que avanza.
 
 ## 2. ESTADO ACTUAL
 
-**Fecha:** 2026-04-28
-**Situacion:** Capa 0 activa. Sistema completamente construido en ivano.
-Build 10 completado (spread 30 pips — incorrecto, pendiente exportar resultados).
-Build 11 pendiente de lanzar en alber con spread corregido a 60 pips.
-41 scripts Python operativos y probados en ivano.
+**Fecha:** 2026-05-21
+**Situacion:** Capa 0 activa. Sistema completamente construido.
+Build 13 EURUSD en curso (lanzado 2026-05-21 12:56, SL 20-60, PT 40-120, IS 100%).
+Builds 11 y 12 descartados automaticamente por criterios numericos.
+74 scripts Python operativos y probados.
 Telegram bot activo (@tradinglab_monitor_bot).
 ChromaDB indexado con 909 chunks.
-Python 3.13 instalado en ivano.
-Planning maestro: 163/183 tareas completadas (89%).
-Pendiente solo de hardware: Ollama en alber, Build 11, VPS.
-Proxima accion inmediata: ir a alber, git pull, lanzar Build 11.
-Comando exacto: python scripts/build-launcher.py --build 11 --activo XAUUSD --spread-real 30
+PWA dashboard operativo en puerto 8766.
+N8N: 8 workflows activos.
+Retester automatizado via sqcli confirmado en pipeline.
+Planning maestro: ~202/222 tareas completadas.
+Proxima accion: esperar resultados Build 13 EURUSD (48h).
 
 ### Planning Maestro
 
 | Metrica | Valor |
 |---------|-------|
-| Total tareas | 183 |
-| Completadas | 163 (89%) |
+| Total tareas | 222 |
+| Completadas | ~202 (91%) |
 | Fase 0 | COMPLETA |
 | Fases 1-2 | COMPLETAS |
 | Fases 3-4 | EN CURSO (pendiente solo hardware) |
@@ -78,10 +78,10 @@ Comando exacto: python scripts/build-launcher.py --build 11 --activo XAUUSD --sp
 | docs\roadmap-v2.md | Roadmap por capas |
 | docs\project-status.md | Este archivo |
 
-**Agentes activos:** 19
+**Agentes activos:** 11
 **Skills operativas:** 44+ en docs\skills\
-**Scripts Python operativos:** 41 en scripts\
-**Tickets activos:** 1 — TICKET-002-BUILD-9-XAUUSD en fase build-pending
+**Scripts Python operativos:** 74 en scripts\
+**Build activo:** Build 13 EURUSD — RUNNING (lanzado 2026-05-21)
 **Portfolio actual:** 0 estrategias (objetivo minimo: 3)
 
 ---
@@ -190,11 +190,13 @@ Comando exacto: python scripts/build-launcher.py --build 11 --activo XAUUSD --sp
 | Build 4 | Hipotesis humana | EMACross-ADX M15 sin comisiones | 6 candidatas PF 1.53-1.70 — Retester negativo | DESCARTADO |
 | Build 5 | Hipotesis humana | EMACross-ADX M15 con comisiones | PF max 1.27 — edge insuficiente en M15 | DESCARTADO |
 | Build 6 | Hipotesis humana | NBARBreakout-RSI M15 | PF max 1.18 — M15 con comisiones inviable | DESCARTADO |
-| Build 7 | Hipotesis humana | NBARBreakout-RSI H1 | Resultado desconocido — dispositivo anterior | PENDIENTE |
-| Build 8 | Hipotesis humana | TrendFollowing EURUSD H1 EMA50+ADX | EN EJECUCION en dispositivo alber — ultimo build con sesgo humano | EN CURSO |
-| Build 9 | Builder libre | XAUUSD H1 — Paleta completa — Comisiones FTMO reales | EN CURSO — Ciclo 1 iniciado 2026-04-15 — TICKET-002 | EN CURSO |
-| Build 10 | Builder libre | XAUUSD H1 — datos corregidos, instrumentos FTMO reales | COMPLETADO 2026-04-27 — 2 estrategias — Spread 30 pips (incorrecto, deberia ser 60) | COMPLETADO |
-| Build 11 | Builder libre | XAUUSD H1 — spread 60 pips corregido | PENDIENTE — lanzar en alber proxima sesion | PENDIENTE |
+| Build 7 | Hipotesis humana | NBARBreakout-RSI H1 | Resultado desconocido — dispositivo anterior | DESCARTADO |
+| Build 8 | Hipotesis humana | TrendFollowing EURUSD H1 EMA50+ADX | Ultimo build con sesgo humano | DESCARTADO |
+| Build 9 | Builder libre | XAUUSD H1 — Paleta completa — Comisiones FTMO reales | Ciclo inicial — datos insuficientes | DESCARTADO |
+| Build 10 | Builder libre | XAUUSD H1 — datos corregidos, instrumentos FTMO reales | Spread 30 pips (incorrecto, deberia ser 60) — 2 estrategias | DESCARTADO |
+| Build 11 | Builder libre | XAUUSD H1 — spread 60 pips | XAUUSD inviable — coste transaccion 127% del riesgo | DESCARTADO |
+| Build 12 | Builder libre | EURUSD H1 — SL/PT ajustados | IS period demasiado corto — solo 5-23 trades | DESCARTADO |
+| Build 13 | Builder libre | EURUSD H1 — SL 20-60 PT 40-120 IS 100% | EN CURSO — lanzado 2026-05-21 12:56 — spread 0.5 pips | RUNNING |
 
 ### Aprendizajes acumulados
 
@@ -553,39 +555,28 @@ Detalle en: docs\roadmap-v2.md
 
 ## 14. SIGUIENTE ACCION CONCRETA
 
-**Estado:** Sistema Capa 0 completamente construido en ivano (163/183 tareas).
-Build 10 completado. Build 11 pendiente con spread corregido a 60 pips.
-**Proximo hito:** Ir a alber, git pull, lanzar Build 11 (XAUUSD H1, spread 60 pips). Dejar correr 48 horas.
+**Estado:** Sistema Capa 0 activo. 74 scripts operativos. Build 13 EURUSD en curso.
+Builds 1-12 todos descartados (1-8 sesgo humano, 9-12 criterios numericos automaticos).
+**Proximo hito:** Esperar resultados Build 13 (~48h desde 2026-05-21 12:56). Evaluation Gate automatico.
 
-**Comando exacto para la proxima sesion en alber:**
+**Cuando termine Build 13:**
 ```
-python scripts/build-launcher.py --build 11 --activo XAUUSD --spread-real 30
+python scripts/build-finisher.py --build 13 --activo EURUSD --results-folder results/
 ```
 
-### Paso 1 — Verificar datos disponibles en SQ
-1. data-manager verifica que activos tienen datos M1 disponibles en SQ
-2. Confirmar periodo: 2003-2020 para IS, 2021-actual para OOS
-3. Actualizar inventario de datos por activo
+### Si Build 13 genera candidatas aprobadas
+1. Evaluation Gate automatico — evaluator-assistant + orchestrator
+2. Retester via sqcli automatizado
+3. Paso 12b OOS automatico
+4. WFO — dictamen automatico
+5. Si aprobadas: correlation-analyst + portfolio-builder
+6. Export a MT5 — forward test demo 2 semanas
 
-### Paso 2 — market-selector prioriza activos por scoring
-1. Aplicar los 5 criterios a todos los activos disponibles
-2. Ordenar de mayor a menor score
-3. El activo con mayor score recibe el primer ciclo de Builder libre
-4. Generar plan de ciclos para los siguientes activos
+### Si Build 13 es descartado
+1. Revisar motivo del descarte con build-analyzer.py
+2. Ajustar parametros SL/PT segun aprendizaje
+3. Lanzar Build 14 con config corregida
 
-### Paso 3 — market-analyst configura Builder libre
-1. Confirmar activo elegido por market-selector
-2. Verificar comisiones exactas con propfirm-analyst
-3. Configurar Builder segun skill-builder-libre.md
-4. Verificar paleta completa activada, Monte Carlo activado
-5. Crear archivo strategyquant\builder\build-9-config.md
-
-### Paso 4 — Lanzar Build 9 en modo continuo
-1. Lanzar en SQ con Start again when finished ACTIVADO
-2. Dejar correr minimo 48 horas
-3. Parar cuando PF maximo no sube en 6+ horas consecutivas
-4. orchestrator aplica Evaluation Gate automatico
-
-**Objetivo de Build 9:** generar las primeras candidatas del nuevo enfoque sin sesgo humano.
+**Activo siguiente en cola:** GBPUSD H1 (segun market-selector scoring)
 El portfolio minimo requiere 3 estrategias no correlacionadas aprobadas por el WFO.
 El market-selector decide el activo — no el humano.
