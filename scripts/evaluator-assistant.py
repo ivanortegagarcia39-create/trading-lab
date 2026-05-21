@@ -38,12 +38,13 @@ GLOBAL = {
 
 # Aliases de columnas para distintas versiones de SQ
 COLUMN_ALIASES = {
-    "pf":     ["Profit Factor", "ProfitFactor", "PF"],
-    "dd":     ["Max DD", "MaxDD", "Max Drawdown", "MaxDrawdown", "DrawDown"],
-    "trades": ["Total Trades", "TotalTrades", "Trades", "# Trades"],
-    "wr":     ["Win Rate", "WinRate", "Win%", "Percent Profitable"],
-    "sharpe": ["Sharpe Ratio", "SharpeRatio", "Sharpe"],
-    "net":    ["Net Profit", "NetProfit", "Profit", "Total Net Profit"],
+    "pf":     ["Profit Factor", "ProfitFactor", "PF", "Profit factor (IS)", "Profit factor (OOS)"],
+    "dd":     ["Max DD", "MaxDD", "Max Drawdown", "MaxDrawdown", "DrawDown", "Max. Drawdown (IS)", "Max. Drawdown (OOS)"],
+    "trades": ["Total Trades", "TotalTrades", "Trades", "# Trades", "# of trades (IS)", "# of trades (OOS)"],
+    "wr":     ["Win Rate", "WinRate", "Win%", "Percent Profitable", "Win rate (IS)", "Win rate (OOS)"],
+    "sharpe": ["Sharpe Ratio", "SharpeRatio", "Sharpe", "Sharpe Ratio (IS)", "Sharpe Ratio (OOS)"],
+    "net":    ["Net Profit", "NetProfit", "Profit", "Total Net Profit", "Net profit (IS)", "Net profit (OOS)"],
+    "name":   ["Strategy Name", "Name", "Strategy"],
 }
 
 

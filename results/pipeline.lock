@@ -1,7 +1,12 @@
 {
-  "build": 12,
+  "build": 13,
   "activo": "EURUSD",
   "spread_real": 0.5,
-  "started": "2026-05-15T13:37:48.941859",
-  "status": "running"
+  "started": "2026-05-21T12:56:47.589656",
+  "status": "running",
+  "sl_min": 20,
+  "sl_max": 60,
+  "pt_min": 40,
+  "pt_max": 120,
+  "is_period": "100%"
 }

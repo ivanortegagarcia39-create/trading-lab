@@ -98,12 +98,12 @@ class BuildSummary:
 # Columnas conocidas del export CSV de SQ (separador ;, decimal ,)
 # Los nombres exactos pueden variar segun la version de SQ.
 COLUMN_ALIASES = {
-    "pf":          ["Profit Factor", "PF", "Profit_Factor", "profitFactor"],
-    "dd_max":      ["Max. Drawdown [%]", "Max DD", "MaxDrawdown", "drawdown", "Max. Drawdown"],
-    "trades":      ["# Trades", "Trades", "Total Trades", "NumTrades", "totalTrades"],
-    "win_rate":    ["Win Rate [%]", "Win Rate", "WinRate", "winRate"],
-    "tpm":         ["Avg. Trades/Month", "Trades/Month", "TradesPerMonth", "tradesPerMonth"],
-    "sharpe":      ["Sharpe Ratio", "Sharpe", "sharpeRatio"],
+    "pf":          ["Profit Factor", "PF", "Profit_Factor", "profitFactor", "Profit factor (IS)", "Profit factor (OOS)"],
+    "dd_max":      ["Max. Drawdown [%]", "Max DD", "MaxDrawdown", "drawdown", "Max. Drawdown", "Max. Drawdown (IS)", "Max. Drawdown (OOS)"],
+    "trades":      ["# Trades", "Trades", "Total Trades", "NumTrades", "totalTrades", "# of trades (IS)", "# of trades (OOS)"],
+    "win_rate":    ["Win Rate [%]", "Win Rate", "WinRate", "winRate", "Win rate (IS)", "Win rate (OOS)"],
+    "tpm":         ["Avg. Trades/Month", "Trades/Month", "TradesPerMonth", "tradesPerMonth", "Avg trades/month (IS)"],
+    "sharpe":      ["Sharpe Ratio", "Sharpe", "sharpeRatio", "Sharpe Ratio (IS)", "Sharpe Ratio (OOS)"],
 }
 
 
@@ -139,7 +139,10 @@ def load_strategies_from_csv(csv_path: Path) -> list[StrategyMetrics]:
     """Carga metricas de estrategias desde un CSV exportado por SQ."""
     strategies = []
     with csv_path.open(encoding="utf-8-sig", errors="replace") as f:
-        reader = csv.DictReader(f, delimiter=";")
+        sample = f.read(2048)
+        f.seek(0)
+        delimiter = "," if sample.count(",") > sample.count(";") else ";"
+        reader = csv.DictReader(f, delimiter=delimiter)
         headers = reader.fieldnames or []
 
         col_pf       = _find_column(headers, COLUMN_ALIASES["pf"])
@@ -153,7 +156,7 @@ def load_strategies_from_csv(csv_path: Path) -> list[StrategyMetrics]:
             print(f"  [WARN] No se encontro columna PF en {csv_path.name}. Columnas: {headers[:10]}")
 
         for row in reader:
-            name = row.get("Name", row.get("Strategy", csv_path.stem))
+            name = row.get("Strategy Name", row.get("Name", row.get("Strategy", csv_path.stem)))
             pf        = _parse_float(row.get(col_pf, "0") if col_pf else "0")
             dd        = _parse_float(row.get(col_dd, "0") if col_dd else "0")
             trades    = _parse_int(row.get(col_trades, "0") if col_trades else "0")
@@ -180,11 +183,13 @@ def load_strategies_from_csv(csv_path: Path) -> list[StrategyMetrics]:
 def scan_results_folder(results_folder: Path) -> list[StrategyMetrics]:
     """Busca todos los CSV de estrategias en la carpeta de resultados."""
     all_strategies = []
-    csv_files = list(results_folder.glob("Strategy*.csv")) + list(results_folder.glob("strategy*.csv"))
+    csv_files = list({p.resolve() for p in results_folder.glob("Strategy*.csv")} |
+                     {p.resolve() for p in results_folder.glob("strategy*.csv")})
 
     if not csv_files:
         # Buscar tambien en subcarpetas un nivel
-        csv_files = list(results_folder.glob("*/Strategy*.csv")) + list(results_folder.glob("*/strategy*.csv"))
+        csv_files = list({p.resolve() for p in results_folder.glob("*/Strategy*.csv")} |
+                         {p.resolve() for p in results_folder.glob("*/strategy*.csv")})
 
     if not csv_files:
         print(f"  [WARN] No se encontraron archivos Strategy*.csv en {results_folder}")
