@@ -1,47 +1,40 @@
 PYTHONUTF8=1 python -c "
-import zipfile, glob, re, os, base64, struct
+import zipfile, io, shutil
 
-def parse_sqstats(data):
-    s = {}
-    trades_set = False
-    i = 0
-    while i < len(data) - 5:
-        t = data[i]
-        if t == 0x03:
-            fid = data[i+1]
-            val = struct.unpack('>f', data[i+2:i+6])[0]
-            if ('F', fid) not in s:
-                s[('F', fid)] = val
-            i += 6
-        elif t == 0x01:
-            fid = data[i+1]
-            val = struct.unpack('>I', data[i+2:i+6])[0]
-            if fid == 0x01 and not trades_set:
-                s['trades'] = val
-                trades_set = True
-            i += 6
-        else:
-            i += 1
-    return s
+cfx = r'D:/user/projects/Builder/project.cfx'
+shutil.copy2(cfx, cfx + '.bak_sl_fix')
 
-files = sorted(glob.glob(r'D:\user\projects\Builder\databanks\Results\*.sqx'))
-print(f'Total: {len(files)}')
-print(f'{\"Nombre\":<22} {\"PF\":>5} {\"DD%\":>5} {\"Trades\":>7}')
-print('-' * 42)
+with zipfile.ZipFile(cfx) as z:
+    task = z.read('Build-Task1.xml').decode()
+    config = z.read('config.xml').decode()
 
-for f in files:
-    try:
-        with zipfile.ZipFile(f) as z:
-            rx = next(n for n in z.namelist() if n.endswith('Results.xml'))
-            xml = z.read(rx).decode(errors='ignore')
-        m = re.search(r'<RobustnessOriginalResults>.*?<SQStats[^>]*>(.*?)</SQStats>', xml, re.DOTALL)
-        if not m: continue
-        data = base64.b64decode(m.group(1).strip())
-        s = parse_sqstats(data)
-        pf = round(s.get(('F', 0x2E), 0.0), 2)
-        dd = round(s.get(('F', 0x5B), 0.0), 2)
-        trades = s.get('trades', 0)
-        nombre = os.path.basename(f).replace('.sqx','')[-20:]
-        print(f'{nombre:<22} {pf:>5.2f} {dd:>5.2f} {trades:>7}')
-    except: pass
+# Cambiar SL 30-80 -> 20-60
+task = task.replace(
+    '<Param key=\"MinimumSL\" className=\"MinMaxSLPT\">30</Param>',
+    '<Param key=\"MinimumSL\" className=\"MinMaxSLPT\">20</Param>'
+)
+task = task.replace(
+    '<Param key=\"MaximumSL\" className=\"MinMaxSLPT\">80</Param>',
+    '<Param key=\"MaximumSL\" className=\"MinMaxSLPT\">60</Param>'
+)
+
+# Cambiar PT 60-200 -> 40-120
+task = task.replace(
+    '<Param key=\"MinimumPT\" className=\"MinMaxSLPT\">60</Param>',
+    '<Param key=\"MinimumPT\" className=\"MinMaxSLPT\">40</Param>'
+)
+task = task.replace(
+    '<Param key=\"MaximumPT\" className=\"MinMaxSLPT\">200</Param>',
+    '<Param key=\"MaximumPT\" className=\"MinMaxSLPT\">120</Param>'
+)
+
+buf = io.BytesIO()
+with zipfile.ZipFile(buf, 'w', zipfile.ZIP_DEFLATED) as zout:
+    zout.writestr('config.xml', config)
+    zout.writestr('Build-Task1.xml', task)
+
+with open(cfx, 'wb') as f:
+    f.write(buf.getvalue())
+
+print('SL/PT actualizados: SL 20-60, PT 40-120')
 "
