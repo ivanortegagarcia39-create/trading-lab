@@ -13,6 +13,7 @@ Uso:
 """
 
 import argparse
+import shutil
 import socket
 import subprocess
 import sys
@@ -20,9 +21,11 @@ import time
 from datetime import datetime
 from pathlib import Path
 
-ROOT   = Path(__file__).parent.parent
-SQCLI  = Path(r"D:\sqcli.exe")
+ROOT    = Path(__file__).parent.parent
+SQCLI   = Path(r"D:\sqcli.exe")
 CONFIGS = Path(r"D:\user\settings\Configs")
+BUILDER_RESULTS  = Path(r"D:\user\projects\Builder\databanks\Results")
+RETESTER_RESULTS = Path(r"D:\user\projects\Retester\databanks\Results")
 
 # Nombre de databank usado como origen/destino entre proyectos
 DB_RESULTS = "Results"
@@ -99,10 +102,20 @@ def _cfx_path(activo: str) -> Path | None:
 
 def run_retester(build: int, activo: str) -> bool:
     """
-    Carga la config del activo en el proyecto Retester y lo arranca.
-    Prerequisito: estrategias ya copiadas al databank Input de Retester.
+    Copia .sqx de Builder/Results a Retester/Results, carga config y arranca.
     """
     activo = activo.upper()
+
+    # Copiar .sqx Builder/Results → Retester/Results
+    sqx_files = sorted(BUILDER_RESULTS.glob("*.sqx")) if BUILDER_RESULTS.exists() else []
+    if not sqx_files:
+        print(f"  ABORT: no hay .sqx en {BUILDER_RESULTS}")
+        return False
+    RETESTER_RESULTS.mkdir(parents=True, exist_ok=True)
+    for f in sqx_files:
+        shutil.copy2(f, RETESTER_RESULTS / f.name)
+    print(f"  Copiados {len(sqx_files)} .sqx → {RETESTER_RESULTS}")
+
     cfx = _cfx_path(activo)
     if cfx is None:
         print(f"  ERROR: no se encontro .cfx para {activo} en {CONFIGS}")
