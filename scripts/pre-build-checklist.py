@@ -11,10 +11,15 @@ Uso:
 """
 
 import argparse
+import importlib.util
 import json
+import re
 import sys
+import zipfile
 from datetime import datetime, timezone
 from pathlib import Path
+
+CFX_DEFAULT = Path(r"D:\user\projects\Builder\project.cfx")
 
 # Spreads minimos requeridos: 2x spread real (skill-builder-libre.md)
 REQUIRED_SPREADS = {
@@ -38,6 +43,107 @@ REQUIRED_SPREADS = {
     "NAS100": 10.0,
     "DE40":    6.0,
 }
+
+
+def _read_cfx_task_xml(cfx_path: Path):
+    p = cfx_path or CFX_DEFAULT
+    if not p.exists():
+        return None, f"CFX no encontrado: {p}"
+    try:
+        with zipfile.ZipFile(p, "r") as zf:
+            return zf.read("Build-Task1.xml").decode("utf-8", errors="ignore"), None
+    except Exception as e:
+        return None, f"Error leyendo CFX: {e}"
+
+
+def check_is_period(cfx_path):
+    xml, err = _read_cfx_task_xml(cfx_path)
+    if xml is None:
+        return "WARN", err
+    m = re.search(r'<EvoInSamplePeriod ratio="(\d+)"', xml)
+    if not m:
+        return "WARN", "EvoInSamplePeriod no encontrado en CFX — verificar manualmente"
+    ratio = int(m.group(1))
+    if ratio < 100:
+        return "FAIL", f"IS period = {ratio}% — debe ser 100%. Corregir en SQ antes de lanzar."
+    return "PASS", f"IS period = {ratio}% (OK)"
+
+
+def check_slpt_ratio(cfx_path):
+    xml, err = _read_cfx_task_xml(cfx_path)
+    if xml is None:
+        return "WARN", err
+    sl_m = re.search(r'<Param key="MinimumSL" className="MinMaxSLPT">(\d+)</Param>', xml)
+    pt_m = re.search(r'<Param key="MinimumPT" className="MinMaxSLPT">(\d+)</Param>', xml)
+    if not sl_m or not pt_m:
+        return "WARN", "MinimumSL/MinimumPT no encontrados en CFX — verificar manualmente"
+    sl_min = int(sl_m.group(1))
+    pt_min = int(pt_m.group(1))
+    ratio = pt_min / sl_min if sl_min > 0 else 0.0
+    if ratio < 2.0:
+        return "FAIL", f"PT_min ({pt_min}) / SL_min ({sl_min}) = {ratio:.2f} — ratio minimo 2:1 requerido"
+    return "PASS", f"PT_min {pt_min} / SL_min {sl_min} = ratio {ratio:.1f}:1 (OK)"
+
+
+def check_asset_viability(activo, results_dir):
+    avr = Path(results_dir) / "asset-viability-ranking.json"
+    if not avr.exists():
+        return "WARN", f"asset-viability-ranking.json no encontrado en {results_dir} — verificar manualmente"
+    try:
+        data = json.loads(avr.read_text(encoding="utf-8"))
+        for entry in data.get("ranking", []):
+            if entry.get("activo", "").upper() == activo.upper():
+                estado = entry.get("estado", "")
+                if "DESCARTADO" in estado.upper():
+                    return "FAIL", f"{activo} estado: {estado} — activo descartado, no lanzar build"
+                return "PASS", f"{activo} estado: {estado} (OK)"
+        return "WARN", f"{activo} no encontrado en asset-viability-ranking.json — verificar manualmente"
+    except Exception as e:
+        return "WARN", f"Error leyendo asset-viability-ranking.json: {e}"
+
+
+def check_slpt_cfx(cfx_path, activo):
+    sqpg = Path(__file__).parent / "sq-project-generator.py"
+    if not sqpg.exists():
+        return "WARN", "sq-project-generator.py no encontrado — no se puede verificar catalogo SL/PT"
+    try:
+        spec = importlib.util.spec_from_file_location("sqpg", str(sqpg))
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        catalog = getattr(mod, "ACTIVOS", None)
+        if catalog is None:
+            return "WARN", "ACTIVOS no encontrado en sq-project-generator.py"
+        cfg = catalog.get(activo.upper())
+        if cfg is None:
+            return "WARN", f"{activo} no esta en el catalogo de sq-project-generator.py"
+    except Exception as e:
+        return "WARN", f"Error cargando catalogo SL/PT: {e}"
+
+    xml, err = _read_cfx_task_xml(cfx_path)
+    if xml is None:
+        return "WARN", err
+
+    sl_min_m = re.search(r'<Param key="MinimumSL" className="MinMaxSLPT">(\d+)</Param>', xml)
+    sl_max_m = re.search(r'<Param key="MaximumSL" className="MinMaxSLPT">(\d+)</Param>', xml)
+    pt_min_m = re.search(r'<Param key="MinimumPT" className="MinMaxSLPT">(\d+)</Param>', xml)
+    pt_max_m = re.search(r'<Param key="MaximumPT" className="MinMaxSLPT">(\d+)</Param>', xml)
+
+    if not all([sl_min_m, sl_max_m, pt_min_m, pt_max_m]):
+        return "WARN", "MinimumSL/MaximumSL/MinimumPT/MaximumPT no encontrados en CFX"
+
+    sl_min, sl_max = int(sl_min_m.group(1)), int(sl_max_m.group(1))
+    pt_min, pt_max = int(pt_min_m.group(1)), int(pt_max_m.group(1))
+    exp = (cfg["sl_min_pips"], cfg["sl_max_pips"], cfg["pt_min_pips"], cfg["pt_max_pips"])
+
+    mismatches = []
+    if sl_min != exp[0]: mismatches.append(f"MinimumSL {sl_min} != {exp[0]}")
+    if sl_max != exp[1]: mismatches.append(f"MaximumSL {sl_max} != {exp[1]}")
+    if pt_min != exp[2]: mismatches.append(f"MinimumPT {pt_min} != {exp[2]}")
+    if pt_max != exp[3]: mismatches.append(f"MaximumPT {pt_max} != {exp[3]}")
+
+    if mismatches:
+        return "FAIL", "CFX SL/PT no coincide con catalogo: " + ", ".join(mismatches)
+    return "PASS", f"SL [{sl_min}-{sl_max}] PT [{pt_min}-{pt_max}] coincide con catalogo (OK)"
 
 
 def check_spread(activo, spread_configurado):
@@ -121,6 +227,7 @@ def main():
     parser.add_argument("--oos-end",                    help="Fecha fin del periodo OOS (YYYY-MM-DD)")
     parser.add_argument("--data-path",                  help="Ruta a carpeta/archivo de datos M1")
     parser.add_argument("--results-dir", default="results", help="Carpeta de resultados del pipeline")
+    parser.add_argument("--cfx-path",    default=str(CFX_DEFAULT), help="Ruta al .cfx del proyecto Builder")
     parser.add_argument("--output",      default="results/pre-build-check.json")
     args = parser.parse_args()
 
@@ -135,10 +242,16 @@ def main():
         elif status == "WARN" and overall == "PASS":
             overall = "WARN"
 
+    cfx_path = Path(args.cfx_path)
+
     add("Spread 2x configurado",    *check_spread(args.activo, args.spread))
     add("OOS date reciente",        *check_oos_date(args.oos_end))
     add("Datos M1 disponibles",     *check_data(args.data_path, args.activo))
     add("Sin pipeline.lock activo", *check_pipeline_lock(args.results_dir))
+    add("IS period 100%",           *check_is_period(cfx_path))
+    add("Ratio PT/SL >= 2:1",       *check_slpt_ratio(cfx_path))
+    add("Activo no descartado",     *check_asset_viability(args.activo, args.results_dir))
+    add("SL/PT coincide catalogo",  *check_slpt_cfx(cfx_path, args.activo))
 
     result = {
         "timestamp":          datetime.utcnow().isoformat() + "Z",
