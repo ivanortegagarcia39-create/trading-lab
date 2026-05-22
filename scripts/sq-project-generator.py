@@ -375,6 +375,7 @@ def verify_cfx(cfx_path: Path, activo_cfg: dict, spread_real: float, backup_path
 
     with zipfile.ZipFile(cfx_path, "r") as zf:
         t = zf.read("Build-Task1.xml").decode("utf-8")
+        config_xml = zf.read("config.xml").decode("utf-8")
 
     instrument  = activo_cfg["instrument"]   # e.g. "XAUUSD_ftmo"
     data_source = activo_cfg["data_source"]  # e.g. "XAUUSD_M1_dukas"
@@ -418,10 +419,45 @@ def verify_cfx(cfx_path: Path, activo_cfg: dict, spread_real: float, backup_path
             print(f"  Backup restaurado: {backup_path.name}")
         raise RuntimeError(f"CFX invalido — {len(errors)} error(s). Build abortado.")
 
+    # 6. Verificar/parchear SL/PT
+    sl_min_exp = activo_cfg["sl_min_pips"]
+    sl_max_exp = activo_cfg["sl_max_pips"]
+    pt_min_exp = activo_cfg["pt_min_pips"]
+    pt_max_exp = activo_cfg["pt_max_pips"]
+
+    sl_min_m = re.search(r'<Param key="MinimumSL" className="MinMaxSLPT">(\d+)</Param>', t)
+    sl_max_m = re.search(r'<Param key="MaximumSL" className="MinMaxSLPT">(\d+)</Param>', t)
+    pt_min_m = re.search(r'<Param key="MinimumPT" className="MinMaxSLPT">(\d+)</Param>', t)
+    pt_max_m = re.search(r'<Param key="MaximumPT" className="MinMaxSLPT">(\d+)</Param>', t)
+
+    slpt_matches = (
+        sl_min_m and int(sl_min_m.group(1)) == sl_min_exp and
+        sl_max_m and int(sl_max_m.group(1)) == sl_max_exp and
+        pt_min_m and int(pt_min_m.group(1)) == pt_min_exp and
+        pt_max_m and int(pt_max_m.group(1)) == pt_max_exp
+    )
+
+    if not slpt_matches:
+        t = re.sub(r'(<Param key="MinimumSL" className="MinMaxSLPT">)\d+(</Param>)',
+                   rf'\g<1>{sl_min_exp}\g<2>', t)
+        t = re.sub(r'(<Param key="MaximumSL" className="MinMaxSLPT">)\d+(</Param>)',
+                   rf'\g<1>{sl_max_exp}\g<2>', t)
+        t = re.sub(r'(<Param key="MinimumPT" className="MinMaxSLPT">)\d+(</Param>)',
+                   rf'\g<1>{pt_min_exp}\g<2>', t)
+        t = re.sub(r'(<Param key="MaximumPT" className="MinMaxSLPT">)\d+(</Param>)',
+                   rf'\g<1>{pt_max_exp}\g<2>', t)
+        with zipfile.ZipFile(cfx_path, "w", zipfile.ZIP_DEFLATED) as zf:
+            zf.writestr("config.xml", config_xml)
+            zf.writestr("Build-Task1.xml", t)
+        slpt_status = f"PARCHEADO [{sl_min_exp}-{sl_max_exp} / {pt_min_exp}-{pt_max_exp}]"
+    else:
+        slpt_status = f"OK [{sl_min_exp}-{sl_max_exp} / {pt_min_exp}-{pt_max_exp}]"
+
     print("[5/5] verify_cfx(): OK")
     print(f"      Chart:      {data_source}")
     print(f"      Spread:     {spread_model} pips")
     print(f"      Instrumento:{instrument}")
+    print(f"      SL/PT:      {slpt_status}")
     print(f"      Sin activos residuales")
 
 
