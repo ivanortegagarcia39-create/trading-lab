@@ -182,6 +182,56 @@ def run_kg_integration(build_n: int, activo: str, gate_results: dict) -> None:
     _ok(f"KG: build B{str(build_n).zfill(2)} y {inserted} estrategias insertados")
 
 
+def run_thompson_sampling(activo: str, pasan: int) -> None:
+    ts = SCRIPTS / "thompson-sampling.py"
+    if not ts.exists():
+        _warn("thompson-sampling.py no encontrado — saltando")
+        return
+    success = "1" if pasan >= 1 else "0"
+    try:
+        _run_quiet([sys.executable, str(ts), "--update-asset", activo, "H1", success])
+        _ok(f"Thompson Sampling actualizado — {activo} H1 success={success}")
+    except Exception as e:
+        _warn(f"Thompson Sampling fallo: {e}")
+
+
+def run_lessons_analyzer() -> None:
+    la = SCRIPTS / "lessons-analyzer.py"
+    if not la.exists():
+        _warn("lessons-analyzer.py no encontrado — saltando")
+        return
+    try:
+        _run_quiet([sys.executable, str(la), "--no-ollama"])
+        _ok("Lessons Analyzer ejecutado")
+    except Exception as e:
+        _warn(f"Lessons Analyzer fallo: {e}")
+
+
+def run_concept_drift() -> None:
+    cd = SCRIPTS / "concept-drift-detector.py"
+    if not cd.exists():
+        _warn("concept-drift-detector.py no encontrado — saltando")
+        return
+    try:
+        _run_quiet([sys.executable, str(cd), "--check"])
+        _ok("Concept Drift check ejecutado")
+    except Exception as e:
+        _warn(f"Concept Drift fallo: {e}")
+
+
+def run_champion_challenger(build_n: int, activo: str, pasan: int) -> None:
+    cc = SCRIPTS / "champion-challenger.py"
+    if not cc.exists():
+        _warn("champion-challenger.py no encontrado — saltando")
+        return
+    try:
+        _run_quiet([sys.executable, str(cc),
+                    "--update-build", str(build_n), activo, str(pasan)])
+        _ok(f"Champion Challenger actualizado — build {build_n} {activo} aprobadas={pasan}")
+    except Exception as e:
+        _warn(f"Champion Challenger fallo: {e}")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Build Finisher — TradingLab")
     parser.add_argument("--build",          type=int, required=True, help="Numero del build (ej: 11)")
@@ -241,8 +291,24 @@ def main() -> int:
     _step(8, "Insertando en Knowledge Graph (knowledge-graph.py)...")
     run_kg_integration(args.build, activo, gate)
 
-    # Paso 8: informe Telegram
-    _step(9, "Enviando informe Telegram...")
+    # Paso 8b: Thompson Sampling
+    _step(9, "Thompson Sampling — actualizando resultado del build...")
+    run_thompson_sampling(activo, pasan)
+
+    # Paso 8c: Lessons Analyzer
+    _step(10, "Lessons Analyzer — analizando lecciones del build...")
+    run_lessons_analyzer()
+
+    # Paso 8d: Concept Drift
+    _step(11, "Concept Drift — registrando metricas del build...")
+    run_concept_drift()
+
+    # Paso 8e: Champion Challenger
+    _step(12, "Champion Challenger — actualizando estado...")
+    run_champion_challenger(args.build, activo, pasan)
+
+    # Paso 9: informe Telegram
+    _step(13, "Enviando informe Telegram...")
     nivel = "INFO" if pasan > 0 else "WARNING"
     msg = (
         f"Build {args.build} completado — {activo}. "
