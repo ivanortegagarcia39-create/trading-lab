@@ -1,14 +1,14 @@
 # CLAUDE.md — Constitucion del Proyecto TradingLab
 
-## Estado Actual (2026-05-03)
+## Estado Actual (2026-05-22)
 - Fase: Capa 0 activa — Sistema v8.1 completo
-- Build activo: Build 11 PENDIENTE en alber (spread 60 pips)
+- Build activo: Build 13 RUNNING — EURUSD H1 SL 20-60 PT 40-120 IS 100%
 - Planning maestro: ~202/222 tareas completadas
-- Scripts Python operativos: 62 (todos probados)
+- Scripts Python operativos: 74 (todos probados)
 - Autoaprendizaje: Knowledge Graph + DSPy + Bayesian + Drift + Champion-Challenger
 - Telegram bot: @tradinglab_monitor_bot activo
 - ChromaDB: 909 chunks indexados
-- Proximo hito: Primera estrategia aprobada por WFO (Build 11)
+- Proximo hito: Primera estrategia aprobada por WFO (Build 13)
 
 ### Contexto para esta sesion
 - Documentacion completa en agents/ y docs/skills/
@@ -20,10 +20,10 @@
 ### Comandos del pipeline
 
 Antes de lanzar un build en alber:
-  python scripts/build-launcher.py --build 11 --activo XAUUSD --spread-real 30
+  python scripts/build-launcher.py --build 13 --activo EURUSD --spread-real 0.5
 
 Cuando termina un build en alber:
-  python scripts/build-finisher.py --build 11 --activo XAUUSD --results-folder results/
+  python scripts/build-finisher.py --build 13 --activo EURUSD --results-folder results/
 
 Ver estado de la cola de builds:
   python scripts/build-queue-manager.py list
@@ -191,7 +191,11 @@ En NINGUN otro momento el humano decide nada.
 
 ## Historial
 Builds 1-8: enfoque hipotesis humana — TODOS FALLIDOS
-Build 9+: enfoque Builder libre multi-activo sin sesgo
+Build 9: XAUUSD H1 — datos insuficientes — DESCARTADO
+Build 10: XAUUSD H1 — spread 30 pips incorrecto — DESCARTADO
+Build 11: XAUUSD H1 — coste transaccion 127% del riesgo — DESCARTADO
+Build 12: EURUSD H1 — IS period 76% genera solo 5-23 trades — DESCARTADO
+Build 13: EURUSD H1 — SL 20-60 PT 40-120 IS 100% — RUNNING
 
 ## Roadmap
 Capa 0: pipeline automatico multi-activo (actual)
