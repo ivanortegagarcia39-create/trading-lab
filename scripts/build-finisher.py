@@ -9,6 +9,7 @@ Uso:
 
 import argparse
 import json
+import os
 import subprocess
 import sys
 from datetime import datetime
@@ -304,6 +305,89 @@ Fecha: {fecha}
         _warn(f"Error generando nota Obsidian: {e}")
 
 
+def run_notion_report(build_n: int, activo: str, gate: dict) -> None:
+    try:
+        import requests
+    except ImportError:
+        _warn("requests no instalado — saltando Notion report")
+        return
+
+    token = os.environ.get("NOTION_TOKEN", "")
+    if not token:
+        _warn("NOTION_TOKEN no definido — saltando Notion report")
+        return
+
+    config_path = ROOT / "config" / "notion-config.json"
+    if not config_path.exists():
+        _warn("notion-config.json no encontrado — saltando Notion report")
+        return
+
+    try:
+        notion_cfg = json.loads(config_path.read_text(encoding="utf-8"))
+        builds_page_id = notion_cfg["pages"]["builds"]
+    except Exception as e:
+        _warn(f"Error leyendo notion-config.json: {e}")
+        return
+
+    pasan     = gate.get("pasan", 0)
+    total     = gate.get("total", 0)
+    aprobadas = [s for s in gate.get("strategies", []) if str(s.get("resultado", "")).upper() == "PASA"]
+    pf_avg    = round(sum(float(s.get("pf", 0)) for s in aprobadas) / len(aprobadas), 2) if aprobadas else 0.0
+    dd_avg    = round(sum(float(s.get("dd", 0)) for s in aprobadas) / len(aprobadas), 2) if aprobadas else 0.0
+    decision  = "PASA_RETESTER" if pasan > 0 else "DESCARTADO"
+    causa     = "" if pasan > 0 else gate.get("causa", "Ninguna estrategia superó el EvalGate")
+    fecha     = datetime.now().strftime("%Y-%m-%d")
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    titulo    = f"Build {build_n} — {activo} — {fecha}"
+
+    def _p(content):
+        return {"object": "block", "type": "paragraph",
+                "paragraph": {"rich_text": [{"type": "text", "text": {"content": content}}]}}
+
+    def _h2(content):
+        return {"object": "block", "type": "heading_2",
+                "heading_2": {"rich_text": [{"type": "text", "text": {"content": content}}]}}
+
+    children = [
+        _h2("Resumen del Build"),
+        _p(f"Build: {build_n}"),
+        _p(f"Activo: {activo}"),
+        _h2("EvalGate"),
+        _p(f"Total estrategias generadas: {total}"),
+        _p(f"Estrategias que pasan EvalGate: {pasan}"),
+        _p(f"PF promedio (aprobadas): {pf_avg}"),
+        _p(f"DD promedio (aprobadas): {dd_avg}%"),
+        _h2("Decisión"),
+        _p(f"Decisión: {decision}"),
+    ]
+    if causa:
+        children.append(_p(f"Causa: {causa}"))
+    children += [_h2("Timestamp"), _p(timestamp)]
+
+    payload = {
+        "parent": {"page_id": builds_page_id},
+        "properties": {"title": {"title": [{"type": "text", "text": {"content": titulo}}]}},
+        "children": children,
+    }
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json",
+        "Notion-Version": "2022-06-28",
+    }
+    try:
+        resp = requests.post("https://api.notion.com/v1/pages",
+                             headers=headers, json=payload, timeout=15)
+        if resp.status_code == 200:
+            url = resp.json().get("url", "")
+            _ok(f"Página Notion creada: {titulo}")
+            if url:
+                _ok(f"URL: {url}")
+        else:
+            _warn(f"Notion API {resp.status_code}: {resp.text[:200]}")
+    except Exception as e:
+        _warn(f"Error creando página Notion: {e}")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Build Finisher — TradingLab")
     parser.add_argument("--build",          type=int, required=True, help="Numero del build (ej: 11)")
@@ -390,8 +474,12 @@ def main() -> int:
     _notify(nivel, msg)
     _ok("Telegram notificado")
 
-    # Paso 13b: nota Obsidian
-    _step(14, "Generando nota Obsidian en 06_Decisions...")
+    # Paso 13b: página Notion
+    _step(14, "Creando página Notion en Builds...")
+    run_notion_report(args.build, activo, gate)
+
+    # Paso 13c: nota Obsidian
+    _step(15, "Generando nota Obsidian en 06_Decisions...")
     generate_obsidian_note(args.build, activo, gate)
 
     # Paso 9: proxima accion
