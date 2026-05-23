@@ -236,7 +236,7 @@ def run_champion_challenger(build_n: int, activo: str, pasan: int) -> None:
 OBSIDIAN_DECISIONS = Path(r"C:\Users\ivano\Documents\TradingLab\TradingLab\06_Decisions")
 
 
-def generate_obsidian_note(build_n: int, activo: str, gate: dict) -> None:
+def run_obsidian_report(build_n: int, activo: str, gate: dict) -> None:
     if not OBSIDIAN_DECISIONS.exists():
         _warn(f"Carpeta Obsidian no encontrada: {OBSIDIAN_DECISIONS} — saltando nota")
         return
@@ -312,7 +312,7 @@ def run_notion_report(build_n: int, activo: str, gate: dict) -> None:
         _warn("requests no instalado — saltando Notion report")
         return
 
-    token = os.environ.get("NOTION_TOKEN", "")
+    token = os.environ.get("NOTION_API_KEY", "")
     if not token:
         _warn("NOTION_TOKEN no definido — saltando Notion report")
         return
@@ -480,7 +480,7 @@ def main() -> int:
 
     # Paso 13c: nota Obsidian
     _step(15, "Generando nota Obsidian en 06_Decisions...")
-    generate_obsidian_note(args.build, activo, gate)
+    run_obsidian_report(args.build, activo, gate)
 
     # Paso 9: proxima accion
     _header("Pipeline post-build completado")
