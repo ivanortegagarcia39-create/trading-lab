@@ -232,6 +232,78 @@ def run_champion_challenger(build_n: int, activo: str, pasan: int) -> None:
         _warn(f"Champion Challenger fallo: {e}")
 
 
+OBSIDIAN_DECISIONS = Path(r"C:\Users\ivano\Documents\TradingLab\TradingLab\06_Decisions")
+
+
+def generate_obsidian_note(build_n: int, activo: str, gate: dict) -> None:
+    if not OBSIDIAN_DECISIONS.exists():
+        _warn(f"Carpeta Obsidian no encontrada: {OBSIDIAN_DECISIONS} — saltando nota")
+        return
+
+    try:
+        pasan = gate.get("pasan", 0)
+        total = gate.get("total", 0)
+        strategies = gate.get("strategies", [])
+        aprobadas = [s for s in strategies if str(s.get("resultado", "")).upper() == "PASA"]
+
+        pf_avg = round(sum(float(s.get("pf", 0)) for s in aprobadas) / len(aprobadas), 2) if aprobadas else 0.0
+        dd_avg = round(sum(float(s.get("dd", 0)) for s in aprobadas) / len(aprobadas), 2) if aprobadas else 0.0
+        trades_avg = round(sum(int(s.get("trades", 0)) for s in aprobadas) / len(aprobadas)) if aprobadas else 0
+
+        decision = "PASA_RETESTER" if pasan > 0 else "DESCARTADO"
+        siguiente = (
+            f"Abrir SQ → Retester → cargar las {pasan} estrategias aprobadas"
+            if pasan > 0
+            else "Revisar criterios del EvalGate o relanzar build con diferente configuracion"
+        )
+        fecha = datetime.now().strftime("%Y-%m-%d")
+
+        contenido = f"""---
+fecha: {fecha}
+ticket: Build-{build_n}
+estrategia: {activo} H1
+fase: EvalGate
+decision: {decision}
+---
+
+# Decision: {decision}
+
+## Contexto
+Estrategia: {activo} H1
+Ticket: Build-{build_n}
+Fase del pipeline: EvalGate
+Fecha: {fecha}
+
+## Metricas en este momento
+- Estrategias generadas: {total}
+- Estrategias aprobadas: {pasan}
+- Tasa de aprobacion: {round(pasan / total * 100, 1) if total > 0 else 0}%
+- PF promedio (aprobadas): {pf_avg}
+- DD promedio (aprobadas): {dd_avg}%
+- Trades promedio (aprobadas): {trades_avg}
+
+## Razon de la decision
+{"EvalGate: " + str(pasan) + " de " + str(total) + " estrategias cumplen criterios numericos." if pasan > 0 else "Ninguna estrategia supero los criterios del EvalGate."}
+
+## Decidido por
+[ ] Humano
+[x] Orchestrator automatico
+
+## Siguiente accion
+{siguiente}
+
+## Archivos afectados
+- results/evaluation-gate-results.json
+- results/build-{build_n}-analysis.md
+"""
+        nombre = f"Build-{build_n}-{activo}-{fecha}.md"
+        out = OBSIDIAN_DECISIONS / nombre
+        out.write_text(contenido, encoding="utf-8")
+        _ok(f"Nota Obsidian generada: {out.name}")
+    except Exception as e:
+        _warn(f"Error generando nota Obsidian: {e}")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Build Finisher — TradingLab")
     parser.add_argument("--build",          type=int, required=True, help="Numero del build (ej: 11)")
@@ -317,6 +389,10 @@ def main() -> int:
     )
     _notify(nivel, msg)
     _ok("Telegram notificado")
+
+    # Paso 13b: nota Obsidian
+    _step(14, "Generando nota Obsidian en 06_Decisions...")
+    generate_obsidian_note(args.build, activo, gate)
 
     # Paso 9: proxima accion
     _header("Pipeline post-build completado")
