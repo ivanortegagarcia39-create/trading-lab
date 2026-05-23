@@ -1,8 +1,8 @@
 {
-  "timestamp": "2026-05-15T17:22:19.593391Z",
-  "activo": "USDJPY",
+  "timestamp": "2026-05-22T15:26:23.076550Z",
+  "activo": "EURUSD",
   "spread_configurado": 1.0,
-  "resultado_global": "WARN",
+  "resultado_global": "FAIL",
   "checks": [
     {
       "check": "Spread 2x configurado",
@@ -17,12 +17,32 @@
     {
       "check": "Datos M1 disponibles",
       "status": "WARN",
-      "message": "Ruta de datos no especificada para USDJPY. Verificar manualmente que los datos M1 estan disponibles en SQ."
+      "message": "Ruta de datos no especificada para EURUSD. Verificar manualmente que los datos M1 estan disponibles en SQ."
     },
     {
       "check": "Sin pipeline.lock activo",
       "status": "WARN",
-      "message": "pipeline.lock existe (modificado: 2026-05-15 13:37). Puede haber otro proceso corriendo."
+      "message": "pipeline.lock existe (modificado: 2026-05-21 12:58). Puede haber otro proceso corriendo."
+    },
+    {
+      "check": "IS period 100%",
+      "status": "FAIL",
+      "message": "IS period = 50% — debe ser 100%. Corregir en SQ antes de lanzar."
+    },
+    {
+      "check": "Ratio PT/SL >= 2:1",
+      "status": "PASS",
+      "message": "PT_min 40 / SL_min 20 = ratio 2.0:1 (OK)"
+    },
+    {
+      "check": "Activo no descartado",
+      "status": "PASS",
+      "message": "EURUSD estado: ACTIVO - Build 12 (OK)"
+    },
+    {
+      "check": "SL/PT coincide catalogo",
+      "status": "PASS",
+      "message": "SL [20-60] PT [40-120] coincide con catalogo (OK)"
     }
   ]
 }

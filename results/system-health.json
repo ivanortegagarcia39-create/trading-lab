@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-05-07T12:28:00.426521",
+  "timestamp": "2026-05-21T13:20:13.685953",
   "checks": [
     {
       "check": "  pandas",
@@ -94,7 +94,7 @@
     {
       "check": "  results/pipeline.lock",
       "status": "WARN",
-      "detail": "lock activo: {\n  \"build\": 11,\n  \"activo\": \"XAUUSD\",\n  \"spread_real\": 30,\n"
+      "detail": "lock activo: {\n  \"build\": 13,\n  \"activo\": \"EURUSD\",\n  \"spread_real\": 0.5,"
     },
     {
       "check": "  git repo",
@@ -103,8 +103,8 @@
     },
     {
       "check": "  working tree",
-      "status": "WARN",
-      "detail": "3 archivo(s) sin commitear"
+      "status": "OK",
+      "detail": "limpio"
     },
     {
       "check": "  sincronizado con origin/main",
@@ -112,7 +112,7 @@
       "detail": ""
     },
     {
-      "check": "  71 scripts",
+      "check": "  74 scripts",
       "status": "OK",
       "detail": "sin errores de sintaxis"
     },
@@ -143,8 +143,8 @@
     }
   ],
   "summary": {
-    "ok": 23,
-    "warn": 5,
+    "ok": 24,
+    "warn": 4,
     "fail": 0
   }
 }

@@ -1,40 +1,47 @@
-PYTHONUTF8=1 python -c "
-import zipfile, io, shutil
+$env:PYTHONUTF8=1; python -c "
+from pathlib import Path
+import json
 
-cfx = r'D:/user/projects/Builder/project.cfx'
-shutil.copy2(cfx, cfx + '.bak_sl_fix')
+ROOT = Path(r'C:\Users\ivano\trading-lab')
 
-with zipfile.ZipFile(cfx) as z:
-    task = z.read('Build-Task1.xml').decode()
-    config = z.read('config.xml').decode()
+# Ver qué scripts de autoaprendizaje existen y si tienen datos
+scripts_auto = [
+    'thompson-sampling.py',
+    'concept-drift-detector.py', 
+    'kg-importer.py',
+    'knowledge-graph.py',
+    'lessons-analyzer.py',
+    'bayesian-optimizer.py',
+    'champion-challenger.py',
+    'dspy-optimizer.py',
+]
 
-# Cambiar SL 30-80 -> 20-60
-task = task.replace(
-    '<Param key=\"MinimumSL\" className=\"MinMaxSLPT\">30</Param>',
-    '<Param key=\"MinimumSL\" className=\"MinMaxSLPT\">20</Param>'
-)
-task = task.replace(
-    '<Param key=\"MaximumSL\" className=\"MinMaxSLPT\">80</Param>',
-    '<Param key=\"MaximumSL\" className=\"MinMaxSLPT\">60</Param>'
-)
+for s in scripts_auto:
+    p = ROOT / 'scripts' / s
+    exists = p.exists()
+    print(f'  {\"OK\" if exists else \"FALTA\"} {s}')
 
-# Cambiar PT 60-200 -> 40-120
-task = task.replace(
-    '<Param key=\"MinimumPT\" className=\"MinMaxSLPT\">60</Param>',
-    '<Param key=\"MinimumPT\" className=\"MinMaxSLPT\">40</Param>'
-)
-task = task.replace(
-    '<Param key=\"MaximumPT\" className=\"MinMaxSLPT\">200</Param>',
-    '<Param key=\"MaximumPT\" className=\"MinMaxSLPT\">120</Param>'
-)
+# Ver si build-finisher.py llama a estos scripts
+print()
+finisher = (ROOT / 'scripts' / 'build-finisher.py').read_text(encoding='utf-8', errors='ignore')
+for s in scripts_auto:
+    nombre = s.replace('.py', '')
+    if nombre in finisher:
+        print(f'  build-finisher llama a: {s}')
 
-buf = io.BytesIO()
-with zipfile.ZipFile(buf, 'w', zipfile.ZIP_DEFLATED) as zout:
-    zout.writestr('config.xml', config)
-    zout.writestr('Build-Task1.xml', task)
-
-with open(cfx, 'wb') as f:
-    f.write(buf.getvalue())
-
-print('SL/PT actualizados: SL 20-60, PT 40-120')
-"
+# Ver si hay datos reales en los JSONs de autoaprendizaje
+print()
+auto_jsons = [
+    'results/thompson-state.json',
+    'results/drift-detection.json', 
+    'results/kg-data.json',
+    'results/champion-challenger.json',
+]
+for j in auto_jsons:
+    p = ROOT / j
+    if p.exists():
+        size = p.stat().st_size
+        print(f'  {j}: {size:,} bytes')
+    else:
+        print(f'  FALTA: {j}')
+" 2>&1 | Out-String
