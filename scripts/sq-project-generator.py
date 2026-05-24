@@ -31,6 +31,7 @@ import xml.etree.ElementTree as ET
 REPO_ROOT = Path(__file__).parent.parent
 SQ_PROJECT_PATH = Path(r"D:\user\projects\Builder\project.cfx")
 SQ_EXTRACTED_DIR = Path(r"D:\user\projects\Builder\extracted")
+SQ_CONFIGS_DIR   = Path(r"D:\user\settings\Configs")
 RESULTS_DIR = REPO_ROOT / "results" / "builds"
 CONFIG_DEFAULTS = REPO_ROOT / "config" / "build-defaults.json"
 
@@ -657,6 +658,15 @@ def main():
     except RuntimeError as e:
         print(f"\n[ABORT] {e}")
         sys.exit(1)
+
+    # Copiar a Configs/ para sqcli (solo con ruta por defecto)
+    if not args.output:
+        market_type = "FX" if activo_cfg["sector"] == "Currency" else "CFD"
+        configs_name = f"{activo} {market_type} H1.cfx"
+        configs_path = SQ_CONFIGS_DIR / configs_name
+        SQ_CONFIGS_DIR.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(output_path, configs_path)
+        print(f"  Config guardada en Configs/ para sqcli: {configs_name}")
 
     # Guardar registro
     save_build_config(build_num, activo, spread_real, activo_cfg)
