@@ -93,6 +93,24 @@ def _sqcli(*args: str, timeout: int = 120) -> tuple[int, str]:
         return -1, f"sqcli no encontrado en {SQCLI}"
 
 
+def _sqcli_start_detached(project_name: str, verify_wait: int = 15) -> bool:
+    """
+    Lanza 'action=start' en background (no bloqueante) y verifica via
+    'action=status' que el proyecto quedo en RUNNING.
+    """
+    cmd = [str(SQCLI), "-project", "action=start", f"name={project_name}"]
+    subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    print(f"  Esperando {verify_wait}s para verificar arranque...")
+    time.sleep(verify_wait)
+    rc, out = _sqcli("-project", "action=status", f"name={project_name}", timeout=30)
+    if rc != 0:
+        print(f"  WARN status: {out}")
+        return False
+    running = "RUNNING" in out.upper()
+    print(f"  Estado: {'RUNNING OK' if running else 'NO RUNNING — ' + out[:120]}")
+    return running
+
+
 def _cfx_path(activo: str) -> Path | None:
     """Devuelve la ruta al .cfx del activo, o None si no existe."""
     name = CFX_MAP.get(activo.upper())
@@ -119,9 +137,8 @@ def run_builder(build: int, activo: str) -> bool:
         return False
 
     print("  Iniciando proyecto Builder...")
-    rc, out = _sqcli("-project", "action=start", "name=Builder")
-    if rc != 0:
-        print(f"  ERROR start: {out}")
+    if not _sqcli_start_detached("Builder"):
+        print("  ERROR: Builder no arranco correctamente")
         return False
 
     print(f"  Builder iniciado — Build {build} | {activo}")
@@ -156,9 +173,8 @@ def run_retester(build: int, activo: str) -> bool:
         return False
 
     print("  Iniciando proyecto Retester...")
-    rc, out = _sqcli("-project", "action=start", "name=Retester")
-    if rc != 0:
-        print(f"  ERROR start: {out}")
+    if not _sqcli_start_detached("Retester"):
+        print("  ERROR: Retester no arranco correctamente")
         return False
 
     print(f"  Retester iniciado — Build {build} | {activo}")
@@ -183,9 +199,8 @@ def run_wfo(build: int, activo: str) -> bool:
         return False
 
     print("  Iniciando proyecto Optimizer (WFO)...")
-    rc, out = _sqcli("-project", "action=start", "name=Optimizer")
-    if rc != 0:
-        print(f"  ERROR start: {out}")
+    if not _sqcli_start_detached("Optimizer"):
+        print("  ERROR: Optimizer no arranco correctamente")
         return False
 
     print(f"  WFO iniciado — Build {build} | {activo}")
