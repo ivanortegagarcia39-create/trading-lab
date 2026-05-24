@@ -15,6 +15,12 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
+try:
+    from dotenv import load_dotenv
+    load_dotenv(Path(__file__).parent.parent / ".env")
+except ImportError:
+    pass
+
 ROOT    = Path(__file__).parent.parent
 SCRIPTS = ROOT / "scripts"
 
