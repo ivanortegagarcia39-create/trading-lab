@@ -112,7 +112,7 @@ def run_builder(build: int, activo: str) -> bool:
         print(f"  ERROR: no se encontro .cfx para {activo} en {CONFIGS}")
         return False
 
-    print(f"  Cargando config: {cfx.name} → Builder")
+    print(f"  Cargando config: {cfx.name} -> Builder")
     rc, out = _sqcli("-project", "action=loadconfig", "name=Builder", f"file={cfx}")
     if rc != 0:
         print(f"  ERROR loadconfig: {out}")
@@ -142,14 +142,14 @@ def run_retester(build: int, activo: str) -> bool:
     RETESTER_RESULTS.mkdir(parents=True, exist_ok=True)
     for f in sqx_files:
         shutil.copy2(f, RETESTER_RESULTS / f.name)
-    print(f"  Copiados {len(sqx_files)} .sqx → {RETESTER_RESULTS}")
+    print(f"  Copiados {len(sqx_files)} .sqx -> {RETESTER_RESULTS}")
 
     cfx = _cfx_path(activo)
     if cfx is None:
         print(f"  ERROR: no se encontro .cfx para {activo} en {CONFIGS}")
         return False
 
-    print(f"  Cargando config: {cfx.name} → Retester")
+    print(f"  Cargando config: {cfx.name} -> Retester")
     rc, out = _sqcli("-project", f"action=loadconfig", f"name=Retester", f"file={cfx}")
     if rc != 0:
         print(f"  ERROR loadconfig: {out}")
@@ -176,7 +176,7 @@ def run_wfo(build: int, activo: str) -> bool:
         print(f"  ERROR: no se encontro .cfx para {activo} en {CONFIGS}")
         return False
 
-    print(f"  Cargando config: {cfx.name} → Optimizer")
+    print(f"  Cargando config: {cfx.name} -> Optimizer")
     rc, out = _sqcli("-project", "action=loadconfig", "name=Optimizer", f"file={cfx}")
     if rc != 0:
         print(f"  ERROR loadconfig: {out}")
@@ -242,7 +242,7 @@ def copy_databank(from_project: str, to_project: str,
     Copia el databank from_db del proyecto origen al databank to_db del destino.
     Uso tipico: Builder/Results → Retester/Input, Retester/Results → Optimizer/Input.
     """
-    print(f"  Copiando {from_project}/{from_db} → {to_project}/{to_db}...")
+    print(f"  Copiando {from_project}/{from_db} -> {to_project}/{to_db}...")
     rc, out = _sqcli(
         "-databank",
         "action=copy",
