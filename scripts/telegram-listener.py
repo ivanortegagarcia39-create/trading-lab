@@ -75,7 +75,7 @@ def _send_telegram(token: str, chat_id: str, text: str) -> None:
 
 def _handle_metrics(token: str, chat_id: str) -> None:
     try:
-        lock_path = ROOT / "pipeline.lock"
+        lock_path = ROOT / "results" / "pipeline.lock"
         if not lock_path.exists():
             _send_telegram(token, chat_id, "📊 METRICS\nNo hay build activo (pipeline.lock no encontrado).")
             return
@@ -168,7 +168,7 @@ def _handle_portfolio(token: str, chat_id: str) -> None:
 
 def _handle_build(token: str, chat_id: str) -> None:
     try:
-        lock_path = ROOT / "pipeline.lock"
+        lock_path = ROOT / "results" / "pipeline.lock"
         if not lock_path.exists():
             _send_telegram(token, chat_id, "🔨 BUILD\nNo hay build activo (pipeline.lock no encontrado).")
             return
