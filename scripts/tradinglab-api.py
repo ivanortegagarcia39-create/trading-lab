@@ -213,6 +213,35 @@ def daily_loss_guard():
     }
 
 
+@app.post("/circuit-breaker")
+def circuit_breaker(dry_run: bool = False):
+    script = SCRIPTS / "circuit-breaker.py"
+    if not script.exists():
+        raise HTTPException(status_code=404, detail=f"Script no encontrado: {script}")
+
+    cmd = [sys.executable, str(script)]
+    if dry_run:
+        cmd.append("--dry-run")
+
+    result = subprocess.run(cmd, capture_output=True, text=True, cwd=str(ROOT))
+
+    state = {}
+    state_path = ROOT / "results" / "circuit-breaker-state.json"
+    if state_path.exists():
+        try:
+            import json
+            state = json.loads(state_path.read_text(encoding="utf-8"))
+        except Exception:
+            pass
+
+    return {
+        "returncode": result.returncode,
+        "success":    result.returncode == 0,
+        "output":     result.stdout[-2000:] if result.stdout else "",
+        "state":      state,
+    }
+
+
 @app.get("/telegram/check")
 def telegram_check():
     result = subprocess.run(
