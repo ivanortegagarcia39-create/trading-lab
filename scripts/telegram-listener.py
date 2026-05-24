@@ -88,7 +88,9 @@ def _handle_metrics(token: str, chat_id: str) -> None:
         elapsed = ""
         if start:
             try:
-                t0 = datetime.fromisoformat(start.replace("Z", "+00:00"))
+                t0 = datetime.fromisoformat(start)
+                if t0.tzinfo is None:
+                    t0 = t0.replace(tzinfo=timezone.utc)
                 delta = datetime.now(timezone.utc) - t0
                 h, rem = divmod(int(delta.total_seconds()), 3600)
                 m = rem // 60
