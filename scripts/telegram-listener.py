@@ -83,7 +83,7 @@ def _handle_metrics(token: str, chat_id: str) -> None:
         lock = json.loads(lock_path.read_text(encoding="utf-8"))
         build  = lock.get("build", "?")
         activo = lock.get("activo", "?")
-        start  = lock.get("timestamp_inicio", "")
+        start  = lock.get("started", "")
 
         elapsed = ""
         if start:
@@ -97,7 +97,7 @@ def _handle_metrics(token: str, chat_id: str) -> None:
                 elapsed = start
 
         sqx_count = 0
-        builder_results = ROOT / "Builder" / "Results"
+        builder_results = Path(r"D:\user\projects\Builder\databanks\Results")
         if builder_results.exists():
             sqx_count = len(list(builder_results.glob("*.sqx")))
 
