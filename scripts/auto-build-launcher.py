@@ -122,7 +122,7 @@ def update_ranking_estado(activo: str, build: int, dry_run: bool) -> None:
             item["estado"] = f"ACTIVO - Build {build}"
             break
     if dry_run:
-        print(f"  [DRY-RUN] ranking: {activo} → ACTIVO - Build {build}")
+        print(f"  [DRY-RUN] ranking: {activo} -> ACTIVO - Build {build}")
         return
     RANKING_PATH.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
     _ok(f"Ranking actualizado: {activo} → ACTIVO - Build {build}")
@@ -201,7 +201,7 @@ def main() -> int:
     _step(2, "Calculando número de build...")
     current_build = get_current_build()
     next_build    = current_build + 1
-    _ok(f"Build actual: {current_build} → Siguiente: {next_build}")
+    _ok(f"Build actual: {current_build} -> Siguiente: {next_build}")
 
     # Paso 3: generar proyecto SQ
     _step(3, f"Generando proyecto SQ (build {next_build} — {activo})...")
