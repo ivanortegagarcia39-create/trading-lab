@@ -43,11 +43,12 @@ aparecen en el databank para ser evaluadas.
 Si cumple CUALQUIERA de estos → DESCARTAR
 sin consultar al humano:
 
-- PF in-sample < 1.4
-- Max DD in-sample > 7%
-- Trades totales < 80 (criterio base — ver tabla TF abajo)
-- Trades por mes < 8 (criterio base — ver tabla TF abajo)
-- Win Rate < 30%
+- PF in-sample < 1.8
+- Max DD in-sample > 4%
+- Trades totales < 300
+- Trades por mes < 15
+- Win Rate < 35%
+- Avg Trade < 7 pips
 - Ratio TP/SL efectivo < 1.8:1
 - Años con PF < 1.0 superan el 35% del total
 - Mas del 45% del beneficio en un solo mes
@@ -64,13 +65,15 @@ sin consultar al humano:
 Si cumple TODOS estos → PASA al Retester
 sin consultar al humano:
 
-- PF in-sample >= 1.5
-- Max DD in-sample <= 6%
-- Trades totales >= 120
-- Trades por mes >= 10
-- Win Rate >= 38%
+- PF in-sample >= 1.8
+- Max DD in-sample <= 4%
+- Trades totales >= 300
+- Trades por mes >= 15
+- Win Rate >= 40%
+- Avg Trade >= 7 pips
 - Ratio TP/SL efectivo >= 2:1
-- Años con PF >= 1.0 superan el 75% del total
+- Años positivos >= 75% del total
+- PF ultimos 3 años >= 1.2
 - Ningun mes con mas del 40% del beneficio total
 - DD maximo NO en los ultimos 3 meses del IS
 - Max racha perdedora <= 6 trades consecutivos
@@ -81,12 +84,12 @@ Si no cae en descarte ni en aprobacion el
 orchestrator clasifica como REVISION PENDIENTE.
 
 Criterios de revision automatica:
-- PF entre 1.4 y 1.5 → revisar si trades > 150
-  Si trades > 150 → PASA (mayor muestra compensa)
-  Si trades <= 150 → DESCARTAR
-- DD entre 6% y 7% → revisar si PF > 1.6
-  Si PF > 1.6 → PASA (alto PF compensa DD marginal)
-  Si PF <= 1.6 → DESCARTAR
+- PF entre 1.8 y 2.0 → revisar si trades > 350
+  Si trades > 350 → PASA (mayor muestra compensa)
+  Si trades <= 350 → DESCARTAR
+- DD entre 3.5% y 4% → revisar si PF > 2.0
+  Si PF > 2.0 → PASA (alto PF compensa DD marginal)
+  Si PF <= 2.0 → DESCARTAR
 - Años negativos entre 25% y 35% → revisar si
   los años negativos coinciden con crisis conocidas
   (2008, 2015, 2020) → PASA
@@ -238,15 +241,15 @@ para H1. Las demas temporalidades tienen sus propios umbrales.
 | Timeframe | Trades totales minimos | Trades/mes minimos | Categoria |
 |-----------|----------------------|-------------------|-----------|
 | H4 | >= 50 | >= 3 | Produccion Core |
-| H1 | >= 120 | >= 8 | Produccion Core |
-| M30 | >= 180 | >= 15 | Incubadora Tactica |
+| H1 | >= 300 | >= 15 | Produccion Core |
+| M30 | >= 300 | >= 15 | Incubadora Tactica |
 | M15 | >= 300 | >= 25 | Incubadora Tactica |
 
 Razon de los umbrales crecientes en TF menores:
 Las temporalidades cortas tienen mas ruido. Para que la
 muestra sea estadisticamente significativa necesitan mas trades.
-Un H1 con 120 trades tiene la misma validez estadistica
-que un M15 con 300 trades.
+El umbral H1 se endurece a 300 trades para garantizar
+significancia estadistica y reducir overfit.
 
 El evaluator-assistant detecta automaticamente el timeframe
 de la estrategia desde el nombre del simbolo o la configuracion

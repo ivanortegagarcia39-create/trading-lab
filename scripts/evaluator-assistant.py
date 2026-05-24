@@ -20,20 +20,23 @@ from pathlib import Path
 
 # Umbrales por timeframe
 THRESHOLDS = {
-    "H1":  {"min_trades": 120, "trades_per_month": 8},
+    "H1":  {"min_trades": 300, "trades_per_month": 15},
     "H4":  {"min_trades": 50,  "trades_per_month": 3},
-    "M30": {"min_trades": 180, "trades_per_month": 15},
+    "M30": {"min_trades": 300, "trades_per_month": 15},
     "M15": {"min_trades": 300, "trades_per_month": 25},
 }
 
 # Umbrales globales (skill-evaluation-auto.md)
 GLOBAL = {
-    "min_win_rate":          38.0,
-    "max_drawdown":           7.0,
+    "min_pf":                 1.8,
+    "min_win_rate":          35.0,
+    "max_drawdown":           4.0,
     "min_sharpe":             0.5,
     "max_dd_per_year":        8.0,
     "max_neg_years_pct":     35.0,
     "max_single_month_pct":  45.0,
+    "min_avg_trade_pips":     7.0,
+    "min_tp_sl_ratio":        1.8,
 }
 
 # Aliases de columnas para distintas versiones de SQ
@@ -44,7 +47,10 @@ COLUMN_ALIASES = {
     "wr":     ["Win Rate", "WinRate", "Win%", "Percent Profitable", "Win rate (IS)", "Win rate (OOS)"],
     "sharpe": ["Sharpe Ratio", "SharpeRatio", "Sharpe", "Sharpe Ratio (IS)", "Sharpe Ratio (OOS)"],
     "net":    ["Net Profit", "NetProfit", "Profit", "Total Net Profit", "Net profit (IS)", "Net profit (OOS)"],
-    "name":   ["Strategy Name", "Name", "Strategy"],
+    "name":      ["Strategy Name", "Name", "Strategy"],
+    "avg_trade": ["Avg Trade", "AvgTrade", "Average Trade", "Avg. Trade", "Avg trade (IS)"],
+    "avg_profit":["Avg Profit", "AvgProfit", "Average Profit", "Avg Win", "Avg profit (IS)"],
+    "avg_loss":  ["Avg Loss", "AvgLoss", "Average Loss", "Avg Lose", "Avg loss (IS)"],
 }
 
 
@@ -95,43 +101,70 @@ def evaluate_row(row, tf, filepath):
         col = find_column(headers, COLUMN_ALIASES.get(key, [key]))
         return parse_float(row.get(col)) if col else None
 
-    pf     = get("pf")
-    dd     = get("dd")
-    trades = get("trades")
-    wr     = get("wr")
-    sharpe = get("sharpe")
+    pf         = get("pf")
+    dd         = get("dd")
+    trades     = get("trades")
+    wr         = get("wr")
+    sharpe     = get("sharpe")
+    avg_trade  = get("avg_trade")
+    avg_profit = get("avg_profit")
+    avg_loss   = get("avg_loss")
 
     # Sharpe estimado si no esta disponible directamente
     if sharpe is None and pf is not None:
         sharpe = round((pf - 1.0) * 0.8, 3)  # aproximacion conservadora
 
+    # Ratio TP/SL efectivo desde avg_profit / abs(avg_loss)
+    tp_sl_ratio = None
+    if avg_profit is not None and avg_loss is not None and avg_loss != 0:
+        tp_sl_ratio = round(avg_profit / abs(avg_loss), 2)
+
     metrics = {
-        "file":      Path(filepath).name,
-        "timeframe": tf,
-        "pf":        pf,
-        "dd":        dd,
-        "trades":    trades,
-        "wr":        wr,
-        "sharpe":    sharpe,
+        "file":         Path(filepath).name,
+        "timeframe":    tf,
+        "pf":           pf,
+        "dd":           dd,
+        "trades":       trades,
+        "wr":           wr,
+        "sharpe":       sharpe,
+        "avg_trade":    avg_trade,
+        "tp_sl_ratio":  tp_sl_ratio,
     }
 
     reasons = []
 
-    # Filtro 1: Trades minimos por timeframe
+    # Filtro 1: PF IS
+    if pf is None or pf < GLOBAL["min_pf"]:
+        reasons.append(f"PF {pf} < {GLOBAL['min_pf']}")
+
+    # Filtro 2: Trades minimos por timeframe
     if trades is None or trades < thresholds["min_trades"]:
         reasons.append(
             f"Trades {trades} < {thresholds['min_trades']} minimos para {tf}"
         )
 
-    # Filtro 2: Win Rate
+    # Filtro 3: Trades/mes
+    if trades is not None and thresholds.get("trades_per_month"):
+        # aproximacion: asumir 12 meses promedio si no hay dato directo
+        pass  # trades_per_month se valida en el caller si disponible
+
+    # Filtro 4: Win Rate
     if wr is None or wr < GLOBAL["min_win_rate"]:
         reasons.append(f"Win Rate {wr}% < {GLOBAL['min_win_rate']}%")
 
-    # Filtro 3: Max Drawdown
+    # Filtro 5: Max Drawdown
     if dd is None or dd > GLOBAL["max_drawdown"]:
         reasons.append(f"DD {dd}% > {GLOBAL['max_drawdown']}%")
 
-    # Filtro 4: Sharpe estimado
+    # Filtro 6: Avg Trade en pips
+    if avg_trade is not None and avg_trade < GLOBAL["min_avg_trade_pips"]:
+        reasons.append(f"Avg Trade {avg_trade} pips < {GLOBAL['min_avg_trade_pips']} pips")
+
+    # Filtro 7: Ratio TP/SL efectivo
+    if tp_sl_ratio is not None and tp_sl_ratio < GLOBAL["min_tp_sl_ratio"]:
+        reasons.append(f"Ratio TP/SL {tp_sl_ratio} < {GLOBAL['min_tp_sl_ratio']}")
+
+    # Filtro 8: Sharpe estimado
     if sharpe is None or sharpe < GLOBAL["min_sharpe"]:
         reasons.append(f"Sharpe {sharpe} < {GLOBAL['min_sharpe']}")
 
