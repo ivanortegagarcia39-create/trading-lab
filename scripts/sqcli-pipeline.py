@@ -100,6 +100,30 @@ def _cfx_path(activo: str) -> Path | None:
     return matches[0] if matches else None
 
 
+def run_builder(build: int, activo: str) -> bool:
+    """Carga config del activo en Builder y lo arranca."""
+    activo = activo.upper()
+    cfx = _cfx_path(activo)
+    if cfx is None:
+        print(f"  ERROR: no se encontro .cfx para {activo} en {CONFIGS}")
+        return False
+
+    print(f"  Cargando config: {cfx.name} → Builder")
+    rc, out = _sqcli("-project", "action=loadconfig", "name=Builder", f"file={cfx}")
+    if rc != 0:
+        print(f"  ERROR loadconfig: {out}")
+        return False
+
+    print("  Iniciando proyecto Builder...")
+    rc, out = _sqcli("-project", "action=start", "name=Builder")
+    if rc != 0:
+        print(f"  ERROR start: {out}")
+        return False
+
+    print(f"  Builder iniciado — Build {build} | {activo}")
+    return True
+
+
 def run_retester(build: int, activo: str) -> bool:
     """
     Copia .sqx de Builder/Results a Retester/Results, carga config y arranca.
@@ -232,6 +256,7 @@ def copy_databank(from_project: str, to_project: str,
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="sqcli Pipeline — TradingLab")
+    parser.add_argument("--builder",       action="store_true", help="Cargar config y arrancar Builder")
     parser.add_argument("--retester",     action="store_true", help="Cargar config y arrancar Retester")
     parser.add_argument("--wfo",          action="store_true", help="Cargar config y arrancar WFO (Optimizer)")
     parser.add_argument("--monitor",      action="store_true", help="Monitorear proyecto hasta que termine")
@@ -244,7 +269,7 @@ def main() -> int:
     parser.add_argument("--poll",         type=int, default=30, help="Segundos entre polls (default: 30)")
     args = parser.parse_args()
 
-    if not any([args.retester, args.wfo, args.monitor, args.copy_db]):
+    if not any([args.builder, args.retester, args.wfo, args.monitor, args.copy_db]):
         parser.print_help()
         return 0
 
@@ -255,6 +280,13 @@ def main() -> int:
     if not close_sq_gui():
         print("ERROR: no se pudo cerrar SQ GUI. Cierra StrategyQuant X manualmente.")
         return 1
+
+    if args.builder:
+        if not args.build or not args.activo:
+            print("ERROR: --builder requiere --build y --activo")
+            return 1
+        ok = run_builder(args.build, args.activo)
+        return 0 if ok else 1
 
     if args.retester:
         if not args.build or not args.activo:

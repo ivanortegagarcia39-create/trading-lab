@@ -488,6 +488,15 @@ def main() -> int:
     _step(15, "Generando nota Obsidian en 06_Decisions...")
     run_obsidian_report(args.build, activo, gate)
 
+    # Paso 16: auto-lanzar siguiente build si ninguna estrategia pasó
+    if pasan == 0:
+        _step(16, "Ninguna estrategia paso EvalGate — lanzando siguiente build automaticamente...")
+        launcher = SCRIPTS / "auto-build-launcher.py"
+        if launcher.exists():
+            subprocess.run([sys.executable, str(launcher)], capture_output=False)
+        else:
+            _warn("auto-build-launcher.py no encontrado — lanzamiento manual requerido")
+
     # Paso 9: proxima accion
     _header("Pipeline post-build completado")
     print(f"  Build     : {args.build}")
