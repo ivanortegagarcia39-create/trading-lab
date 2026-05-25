@@ -9,11 +9,15 @@ Uso:
 
 import argparse
 import importlib
+import io
 import json
 import subprocess
 import sys
 from datetime import datetime
 from pathlib import Path
+
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
+sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8", errors="replace")
 
 ROOT = Path(__file__).parent.parent
 RESULTS_DIR = ROOT / "results"
