@@ -254,6 +254,7 @@ ESTRUCTURAL y pueden modificar umbrales del sistema.
 - Leccion-003: PowerShell corrompe CSVs (1 ocurrencia)
 - Leccion-004: Gaps M1 XAU estructurales (1 ocurrencia)
 - Leccion-005: CFX residual activo incorrecto (1 ocurrencia)
+- Leccion-007: sqcli action=start bloqueante (1 ocurrencia)
 
 ---
 
@@ -324,5 +325,30 @@ CONTEXTO:
   Epoca del año: Q2 2026
   Volumen relativo: N/A
   Prop firm activa: FTMO (objetivo)
+  Activo principal: EURUSD
+  Fase del proyecto: Capa 0
+
+---
+
+### LECCION-007: sqcli action=start es bloqueante hasta fin del build
+
+Fecha: 2026-05-21
+Build(s): 13
+Decision: CONFIGURACION — bug critico corregido
+Criterio que activo la decision: sqcli action=start bloqueante causaba timeout siempre
+Resultado observado: sqcli -project action=start es bloqueante hasta que el build
+  termina (24-48h). El script esperaba respuesta y siempre llegaba al timeout
+  (120s, luego 300s). El Builder nunca arrancaba correctamente via sqcli.
+Leccion aplicable: Usar Popen para lanzar action=start en background + action=status
+  para verificar que arranco. Nunca usar _sqcli() bloqueante para comandos de
+  larga duracion. Implementado en _sqcli_start_detached() en sqcli-pipeline.py.
+Ocurrencias confirmadas: 1 — TENTATIVA
+Estado: ESTRUCTURAL
+
+CONTEXTO:
+  Regimen de mercado: N/A (bug de configuracion)
+  Epoca del año: Q2 2026
+  Volumen relativo: N/A
+  Prop firm activa: ninguna
   Activo principal: EURUSD
   Fase del proyecto: Capa 0
