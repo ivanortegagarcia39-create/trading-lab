@@ -32,3 +32,12 @@ config/dspy-training/
 config/bayesian-criteria.json
 config/bayesian-audit-trail.jsonl
 config/self-improvement-log.jsonl
+
+# Runtime outputs (generados automaticamente, no versionar)
+results/debug-screenshots/
+results/ftmo-compliance-state.json
+results/circuit-breaker-state.json
+results/system-health.json
+results/session-log.json
+results/weekly-report-*.md
+config/telegram-offset.json

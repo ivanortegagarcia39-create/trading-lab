@@ -1,19 +1,17 @@
 {
   "build": 13,
   "activo": "EURUSD",
-  "fecha": "2026-05-21T13:00:43.149487",
+  "fecha": "2026-05-24T23:55:41.961812",
   "spread_real": 0.5,
   "spread_modelo": 1.0,
   "slippage": 0.5,
   "commission": 7,
   "commission_type": "SizeBased",
   "instrument": "EURUSD_ftmo",
-  "sl_min_pips": 10,
-  "sl_max_pips": 40,
-  "pt_min_pips": 20,
-  "pt_max_pips": 100,
+  "sl_min_pips": 20,
+  "sl_max_pips": 60,
+  "pt_min_pips": 40,
+  "pt_max_pips": 120,
   "session": "EURUSD_ftmo",
-  "regla_spread": "spread_modelo = spread_real \u00d7 2 (anti-overfitting)",
-  "estado": "RUNNING",
-  "updated": "2026-05-21T13:48:14.146662"
+  "regla_spread": "spread_modelo = spread_real × 2 (anti-overfitting)"
 }

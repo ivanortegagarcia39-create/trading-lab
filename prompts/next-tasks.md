@@ -1,47 +1,27 @@
-$env:PYTHONUTF8=1; python -c "
-from pathlib import Path
-import json
+Añade estos comandos a scripts/telegram-listener.py:
 
-ROOT = Path(r'C:\Users\ivano\trading-lab')
+/METRICS — responde con métricas del build activo:
+  - Lee pipeline.lock → build, activo, tiempo corriendo
+  - Cuenta .sqx en Builder/Results
+  - Formatea y envía mensaje Telegram
 
-# Ver qué scripts de autoaprendizaje existen y si tienen datos
-scripts_auto = [
-    'thompson-sampling.py',
-    'concept-drift-detector.py', 
-    'kg-importer.py',
-    'knowledge-graph.py',
-    'lessons-analyzer.py',
-    'bayesian-optimizer.py',
-    'champion-challenger.py',
-    'dspy-optimizer.py',
-]
+/STRATEGIES — lista las estrategias aprobadas:
+  - Lee evaluation-gate-results.json si existe
+  - Muestra nombre, PF, DD, trades de cada aprobada
+  - Si no hay ninguna → "Sin estrategias aprobadas aún"
 
-for s in scripts_auto:
-    p = ROOT / 'scripts' / s
-    exists = p.exists()
-    print(f'  {\"OK\" if exists else \"FALTA\"} {s}')
+/PORTFOLIO — estado del portfolio:
+  - Lee strategies-registry.json si existe
+  - Muestra estrategias activas, DD combinado
+  - Si vacío → "Portfolio vacío — objetivo 3 estrategias"
 
-# Ver si build-finisher.py llama a estos scripts
-print()
-finisher = (ROOT / 'scripts' / 'build-finisher.py').read_text(encoding='utf-8', errors='ignore')
-for s in scripts_auto:
-    nombre = s.replace('.py', '')
-    if nombre in finisher:
-        print(f'  build-finisher llama a: {s}')
+/BUILD — info del build activo:
+  - Lee pipeline.lock
+  - Muestra build, activo, spread, SL/PT, IS period, timestamp inicio
 
-# Ver si hay datos reales en los JSONs de autoaprendizaje
-print()
-auto_jsons = [
-    'results/thompson-state.json',
-    'results/drift-detection.json', 
-    'results/kg-data.json',
-    'results/champion-challenger.json',
-]
-for j in auto_jsons:
-    p = ROOT / j
-    if p.exists():
-        size = p.stat().st_size
-        print(f'  {j}: {size:,} bytes')
-    else:
-        print(f'  FALTA: {j}')
-" 2>&1 | Out-String
+Cada comando debe:
+- Enviar la respuesta directamente al chat de Telegram via bot
+- Funcionar en modo --check igual que los comandos existentes
+- Si falla → responder "Error al obtener datos" sin abortar
+
+git add -A && git commit -m "feat: telegram-listener añade comandos METRICS STRATEGIES PORTFOLIO BUILD" && git push origin main
