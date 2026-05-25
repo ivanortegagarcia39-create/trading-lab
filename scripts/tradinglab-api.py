@@ -207,9 +207,21 @@ def daily_loss_guard():
          "--capital", "25000", "--check"],
         capture_output=True, text=True, cwd=str(ROOT)
     )
+    compliance = subprocess.run(
+        [sys.executable, str(SCRIPTS / "ftmo-compliance-checker.py"),
+         "--capital", "25000", "--mode", "challenge", "--check"],
+        capture_output=True, text=True, cwd=str(ROOT)
+    )
+    import json as _json
+    compliance_data = {}
+    try:
+        compliance_data = _json.loads(compliance.stdout)
+    except Exception:
+        pass
     return {
-        "status": "ok" if result.returncode == 0 else "error",
-        "output": result.stdout[-1000:]
+        "status":     "ok" if result.returncode == 0 else "error",
+        "output":     result.stdout[-1000:],
+        "compliance": compliance_data,
     }
 
 
@@ -240,6 +252,24 @@ def circuit_breaker(dry_run: bool = False):
         "output":     result.stdout[-2000:] if result.stdout else "",
         "state":      state,
     }
+
+
+@app.get("/ftmo-compliance")
+def ftmo_compliance(capital: float = 25000, mode: str = "challenge"):
+    result = subprocess.run(
+        [sys.executable, str(SCRIPTS / "ftmo-compliance-checker.py"),
+         "--capital", str(capital), "--mode", mode, "--check"],
+        capture_output=True, text=True, cwd=str(ROOT)
+    )
+    try:
+        import json as _json
+        return _json.loads(result.stdout)
+    except Exception:
+        return {
+            "status": "error",
+            "output": result.stdout[-1000:],
+            "errors": result.stderr[-500:],
+        }
 
 
 @app.get("/telegram/check")
